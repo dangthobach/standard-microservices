@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Silent Refresh</title>
+</head>
+<body>
+    <script>
+        // This file is loaded in a hidden iframe to silently refresh tokens
+        // The angular-oauth2-oidc library handles the token refresh flow
+        parent.postMessage(location.hash, location.origin);
+    </script>
+</body>
+</html>
