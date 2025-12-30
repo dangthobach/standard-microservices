@@ -104,7 +104,7 @@ public class DownstreamServicesHealthIndicator implements ReactiveHealthIndicato
                 .get()
                 .uri(url)
                 .retrieve()
-                .bodyToMono(Map.class)
+                .bodyToMono(HashMap.class)
                 .timeout(Duration.ofSeconds(2))
                 .map(response -> {
                     long responseTime = System.currentTimeMillis() - startTime;

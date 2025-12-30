@@ -5,7 +5,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.Refill;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
@@ -94,10 +93,6 @@ public class DistributedRateLimitingFilter implements GlobalFilter, Ordered {
 
             // Create Bucket4j ProxyManager with Redis backend
             proxyManager = LettuceBasedProxyManager.builderFor(redisConnection)
-                    .withExpirationStrategy(
-                            io.github.bucket4j.distributed.ExpirationAfterWriteStrategy
-                                    .basedOnTimeForRefillingBucketUpToMax(Duration.ofMinutes(5))
-                    )
                     .build();
 
             log.info("✅ Distributed Rate Limiting initialized with Redis backend: {}:{}",
@@ -187,10 +182,10 @@ public class DistributedRateLimitingFilter implements GlobalFilter, Ordered {
         return () -> {
             long capacity = getCapacityForTier(userTier);
 
-            Bandwidth limit = Bandwidth.classic(
-                    capacity,
-                    Refill.intervally(capacity, Duration.ofMinutes(1))
-            );
+            Bandwidth limit = Bandwidth.builder()
+                    .capacity(capacity)
+                    .refillGreedy(capacity, Duration.ofMinutes(1))
+                    .build();
 
             return BucketConfiguration.builder()
                     .addLimit(limit)
@@ -204,10 +199,10 @@ public class DistributedRateLimitingFilter implements GlobalFilter, Ordered {
     private Bucket createLocalBucket(String userTier) {
         long capacity = getCapacityForTier(userTier);
 
-        Bandwidth limit = Bandwidth.classic(
-                capacity,
-                Refill.intervally(capacity, Duration.ofMinutes(1))
-        );
+        Bandwidth limit = Bandwidth.builder()
+                .capacity(capacity)
+                .refillGreedy(capacity, Duration.ofMinutes(1))
+                .build();
 
         return Bucket.builder()
                 .addLimit(limit)

@@ -124,7 +124,7 @@ public class KeycloakService {
 
         try {
             String url = "http://keycloak:8080/admin/realms/enterprise/users";
-            var users = restTemplate.getForObject(url, String.class);
+            restTemplate.getForObject(url, String.class);
 
             log.info("Successfully synced users from Keycloak");
         } catch (Exception e) {

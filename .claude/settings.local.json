@@ -16,7 +16,8 @@
       "Bash(mvn dependency:tree:*)",
       "Bash(mvn clean package:*)",
       "Bash(mvn clean install:*)",
-      "Bash(jar -tf:*)"
+      "Bash(jar -tf:*)",
+      "Bash(mvn compiler:compile:*)"
     ]
   }
 }
