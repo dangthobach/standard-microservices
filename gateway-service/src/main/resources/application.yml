@@ -73,6 +73,26 @@ spring:
   # Security OAuth2 Configuration
   security:
     oauth2:
+      # OAuth2 Client (for Login flow)
+      client:
+        registration:
+          keycloak:
+            client-id: ${KEYCLOAK_CLIENT_ID:gateway-service}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid,profile,email
+            client-name: Keycloak
+        provider:
+          keycloak:
+            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}
+            authorization-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}/protocol/openid-connect/auth
+            token-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}/protocol/openid-connect/token
+            user-info-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}/protocol/openid-connect/userinfo
+            jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/enterprise/protocol/openid-connect/certs}
+            user-name-attribute: preferred_username
+
+      # OAuth2 Resource Server (for JWT validation)
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}
