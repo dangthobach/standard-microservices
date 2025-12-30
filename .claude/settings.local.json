@@ -5,7 +5,18 @@
       "Bash(find:*)",
       "Bash(ls:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Enterprise Microservices Platform\n\nFeatures:\n- ✅ Spring Boot 3.4.1 with Java 21 Virtual Threads\n- ✅ Reactive API Gateway \\(Spring Cloud Gateway WebFlux\\)\n- ✅ Distributed Rate Limiting \\(Redis-backed Bucket4j\\)\n- ✅ Resilience Patterns \\(Circuit Breaker, Retry, Bulkhead\\)\n- ✅ Multi-level Caching \\(L1 Caffeine + L2 Redis\\)\n- ✅ OAuth2 PKCE with Keycloak\n- ✅ Distributed Tracing \\(Zipkin\\)\n- ✅ Event-Driven Architecture \\(Kafka ready\\)\n- ✅ Kubernetes-native deployment\n- ✅ Production-ready monitoring \\(Prometheus + Grafana\\)\n\nServices:\n- Gateway Service \\(Reactive WebFlux\\)\n- IAM Service \\(Virtual Threads\\)\n- Business Service \\(Virtual Threads\\)\n- Common Library \\(Base entities, repositories, patterns\\)\n\nInfrastructure:\n- Docker Compose for local development\n- Kubernetes manifests for production\n- PostgreSQL, Redis, Kafka, Zipkin, Keycloak\n\nCritical Fixes:\n- ✅ Memory leak fixed \\(Caffeine cache with eviction\\)\n- ✅ Distributed rate limiting \\(Redis-backed\\)\n- ✅ Connection pool optimized \\(100 connections\\)\n\nDocumentation:\n- Comprehensive guides and references\n- Production-ready checklist\n- Verification procedures\n- Quick start guide\n\n🤖 Generated with Claude Code \\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(echo:*)",
+      "Bash(git commit:*)",
+      "Bash(cat:*)",
+      "Bash(mvn dependency:tree:*)",
+      "Bash(mvn clean package:*)",
+      "Bash(mvn clean install:*)",
+      "Bash(jar -tf:*)"
     ]
   }
 }
