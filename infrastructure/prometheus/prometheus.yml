@@ -21,6 +21,12 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
+  # Keycloak (IAM)
+  - job_name: 'keycloak'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['keycloak:8080']
+
   # Gateway Service
   - job_name: 'gateway-service'
     metrics_path: '/actuator/prometheus'
