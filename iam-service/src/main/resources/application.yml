@@ -1,0 +1,206 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: iam-service
+
+  # DataSource Configuration
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:iam_db}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # Production-ready connection pool settings for 1M CCU
+      maximum-pool-size: 100          # Increased from 20 for high load
+      minimum-idle: 20                # Keep warm connections
+      connection-timeout: 30000       # 30s
+      idle-timeout: 600000            # 10min
+      max-lifetime: 1800000           # 30min
+      leak-detection-threshold: 60000 # Detect leaks after 60s
+
+      # Performance optimizations
+      auto-commit: false
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+
+      # Connection pool monitoring
+      register-mbeans: true
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Security OAuth2 Configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/enterprise/protocol/openid-connect/certs}
+
+# Keycloak Admin Client Configuration
+keycloak:
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8180}
+  realm: ${KEYCLOAK_REALM:enterprise}
+  client-id: ${KEYCLOAK_CLIENT_ID:iam-service}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+  admin-username: ${KEYCLOAK_ADMIN_USER:admin}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+
+# Redis Configuration
+spring.data.redis:
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
+  password: ${REDIS_PASSWORD:}
+  database: 1
+  lettuce:
+    pool:
+      max-active: 20
+      max-idle: 10
+      min-idle: 5
+  timeout: 3000ms
+
+# Cache Configuration
+spring.cache:
+  type: redis
+  redis:
+    time-to-live: 300000  # 5 minutes
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.enterprise: DEBUG
+    org.hibernate.SQL: DEBUG
+    io.github.resilience4j: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [traceId=%X{traceId:-}] - %msg%n"
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 100
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2000ms
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 10
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+    instances:
+      keycloak:
+        baseConfig: default
+        failureRateThreshold: 60
+      database:
+        baseConfig: default
+        slidingWindowSize: 50
+      redis:
+        baseConfig: default
+
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 100ms
+
+    instances:
+      keycloak:
+        baseConfig: default
+        maxAttempts: 3
+      keycloak-sync:
+        maxAttempts: 5
+        waitDuration: 1000ms
+      database:
+        maxAttempts: 2
+        waitDuration: 50ms
+
+  ratelimiter:
+    configs:
+      default:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 100ms
+
+    instances:
+      keycloak:
+        limitForPeriod: 100
+      redis:
+        limitForPeriod: 1000
+
+  bulkhead:
+    configs:
+      default:
+        maxConcurrentCalls: 50
+        maxWaitDuration: 100ms
+
+    instances:
+      keycloak:
+        maxConcurrentCalls: 25
+      database:
+        maxConcurrentCalls: 100
+
+  thread-pool-bulkhead:
+    configs:
+      default:
+        maxThreadPoolSize: 10
+        coreThreadPoolSize: 5
+        queueCapacity: 100
+
+    instances:
+      keycloak-sync:
+        maxThreadPoolSize: 5
+        coreThreadPoolSize: 2
+        queueCapacity: 50
+
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 5s
+
+    instances:
+      keycloak:
+        timeoutDuration: 3s
+      keycloak-sync:
+        timeoutDuration: 30s
+      database:
+        timeoutDuration: 2s

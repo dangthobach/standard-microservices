@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: default
+data:
+  # Keycloak Configuration
+  keycloak.issuer.uri: "http://keycloak-service:8080/realms/enterprise"
+  keycloak.jwk.set.uri: "http://keycloak-service:8080/realms/enterprise/protocol/openid-connect/certs"
+  keycloak.server.url: "http://keycloak-service:8080"
+  keycloak.realm: "enterprise"
+
+  # PostgreSQL Configuration
+  postgres.iam.host: "postgres-iam-service"
+  postgres.business.host: "postgres-business-service"
+  postgres.process.host: "postgres-process-service"
+
+  # Redis Configuration
+  redis.host: "redis-service"
+  redis.port: "6379"
+
+  # Kafka Configuration
+  kafka.bootstrap.servers: "kafka-service:9092"
+
+  # Zipkin Configuration
+  zipkin.endpoint: "http://zipkin-service:9411/api/v2/spans"
+
+  # Prometheus Configuration
+  prometheus.url: "http://prometheus-service:9090"
+
+  # Application Configuration
+  app.environment: "production"
+  app.log.level: "INFO"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: default
+type: Opaque
+stringData:
+  username: "postgres"
+  password: "CHANGE_ME_IN_PRODUCTION"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-secret
+  namespace: default
+type: Opaque
+stringData:
+  password: "CHANGE_ME_IN_PRODUCTION"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak-secret
+  namespace: default
+type: Opaque
+stringData:
+  admin-username: "admin"
+  admin-password: "CHANGE_ME_IN_PRODUCTION"
+  client-secret: "CHANGE_ME_IN_PRODUCTION"

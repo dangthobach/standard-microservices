@@ -1,0 +1,99 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'microservices-platform'
+    environment: 'development'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Load rules once and periodically evaluate them
+rule_files: []
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Gateway Service
+  - job_name: 'gateway-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gateway-service:8080']
+        labels:
+          service: 'gateway'
+          tier: 'edge'
+
+  # IAM Service
+  - job_name: 'iam-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['iam-service:8081']
+        labels:
+          service: 'iam'
+          tier: 'core'
+
+  # Business Service
+  - job_name: 'business-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['business-service:8082']
+        labels:
+          service: 'business'
+          tier: 'core'
+
+  # Process Management Service
+  - job_name: 'process-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['process-service:8083']
+        labels:
+          service: 'process'
+          tier: 'core'
+
+  # Integration Service
+  - job_name: 'integration-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['integration-service:8084']
+        labels:
+          service: 'integration'
+          tier: 'integration'
+
+  # Zipkin
+  - job_name: 'zipkin'
+    static_configs:
+      - targets: ['zipkin:9411']
+        labels:
+          service: 'zipkin'
+          tier: 'observability'
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          service: 'redis'
+          tier: 'infrastructure'
+
+  # Kafka
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9092']
+        labels:
+          service: 'kafka'
+          tier: 'infrastructure'
+
+  # PostgreSQL Exporters (if installed)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: []
+        labels:
+          service: 'postgres'
+          tier: 'infrastructure'
