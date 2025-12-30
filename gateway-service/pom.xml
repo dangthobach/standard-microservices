@@ -19,10 +19,33 @@
 
     <dependencies>
         <!-- Common Library -->
+        <!-- ⚠️ CRITICAL: Exclude blocking dependencies for Reactive Gateway -->
         <dependency>
             <groupId>com.enterprise</groupId>
             <artifactId>common-lib</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <!-- ❌ Exclude Tomcat (blocking) - Gateway uses Netty (reactive) -->
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </exclusion>
+                <!-- ❌ Exclude JPA (blocking) - Gateway doesn't need database -->
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-data-jpa</artifactId>
+                </exclusion>
+                <!-- ❌ Exclude Hibernate (blocking) -->
+                <exclusion>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <!-- ❌ Exclude Tomcat JDBC (blocking) -->
+                <exclusion>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Spring Cloud Gateway (Reactive WebFlux) -->
