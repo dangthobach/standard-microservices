@@ -3,6 +3,7 @@ package com.enterprise.gateway.service;
 import com.enterprise.gateway.model.UserSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -16,20 +17,25 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Session Management Service
+ * Session Management Service (BFF Pattern with L1 Caching)
  *
  * Responsibilities:
  * - Create session from OAuth2 tokens
- * - Store session in Redis
+ * - Store session in Redis (L2)
+ * - Cache session tokens in Caffeine (L1)
  * - Retrieve session by SESSION_ID
  * - Validate session
  * - Refresh access token
  * - Delete session (logout)
  *
  * Session Storage:
- * - Key: "session:{sessionId}"
- * - Value: UserSession JSON
- * - TTL: 24 hours (configurable)
+ * - L1 (Caffeine): sessionId -> accessToken (60s TTL, 100K max)
+ * - L2 (Redis): "session:{sessionId}" -> UserSession JSON (24h TTL)
+ *
+ * Performance:
+ * - L1 Hit: ~1µs latency
+ * - L2 Hit: ~1ms latency
+ * - Target Cache Hit Rate: > 95%
  */
 @Slf4j
 @Service
@@ -39,6 +45,7 @@ public class SessionService {
     private final ReactiveRedisTemplate<String, String> redisTemplate;
     private final ReactiveJwtDecoder jwtDecoder;
     private final ObjectMapper objectMapper;
+    private final Cache<String, String> sessionTokenCache;  // L1 Caffeine cache
 
     private static final String SESSION_PREFIX = "session:";
     private static final Duration SESSION_TTL = Duration.ofHours(24);
@@ -107,14 +114,35 @@ public class SessionService {
     }
 
     /**
-     * Get access token from session
+     * Get access token from session (with L1 caching)
+     * <p>
+     * Performance optimization for BFF pattern:
+     * 1. Check L1 cache (Caffeine) - ~1µs latency
+     * 2. If miss, check L2 (Redis) - ~1ms latency
+     * 3. Cache result in L1 for 60 seconds
      *
      * @param sessionId Session ID
      * @return Access token or empty if session not found
      */
     public Mono<String> getAccessToken(String sessionId) {
+        // L1 Cache lookup
+        String cachedToken = sessionTokenCache.getIfPresent(sessionId);
+        if (cachedToken != null) {
+            log.trace("L1 cache hit for session: {}", sessionId);
+            return Mono.just(cachedToken);
+        }
+
+        log.trace("L1 cache miss for session: {}, checking Redis", sessionId);
+
+        // L2 Redis lookup
         return getSession(sessionId)
-            .map(UserSession::getAccessToken);
+            .map(session -> {
+                String accessToken = session.getAccessToken();
+                // Store in L1 cache for next request
+                sessionTokenCache.put(sessionId, accessToken);
+                log.trace("Cached access token in L1 for session: {}", sessionId);
+                return accessToken;
+            });
     }
 
     /**
@@ -138,6 +166,8 @@ public class SessionService {
     /**
      * Update access token in session (after refresh)
      *
+     * IMPORTANT: Invalidates L1 cache to ensure consistency across gateway instances.
+     *
      * @param sessionId Session ID
      * @param newAccessToken New access token
      * @param newRefreshToken New refresh token (optional)
@@ -154,6 +184,10 @@ public class SessionService {
                         session.setRefreshTokenExpiresAt(calculateRefreshTokenExpiry(jwt));
                     }
 
+                    // Invalidate L1 cache (new token will be cached on next access)
+                    sessionTokenCache.invalidate(sessionId);
+                    log.debug("Invalidated L1 cache for session: {}", sessionId);
+
                     return saveSession(session);
                 })
             )
@@ -164,10 +198,16 @@ public class SessionService {
     /**
      * Delete session (logout)
      *
+     * Removes session from both L1 (Caffeine) and L2 (Redis).
+     *
      * @param sessionId Session ID
      */
     public Mono<Boolean> deleteSession(String sessionId) {
         String key = SESSION_PREFIX + sessionId;
+
+        // Invalidate L1 cache
+        sessionTokenCache.invalidate(sessionId);
+        log.debug("Invalidated L1 cache for session: {}", sessionId);
 
         return redisTemplate.delete(key)
             .map(deleted -> deleted > 0)

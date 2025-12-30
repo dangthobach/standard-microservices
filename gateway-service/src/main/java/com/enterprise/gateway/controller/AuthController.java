@@ -2,6 +2,7 @@ package com.enterprise.gateway.controller;
 
 import com.enterprise.gateway.model.UserSession;
 import com.enterprise.gateway.service.SessionService;
+import com.enterprise.gateway.service.TokenRefreshService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,7 @@ import java.util.Map;
 public class AuthController {
 
     private final SessionService sessionService;
+    private final TokenRefreshService tokenRefreshService;
 
     private static final String SESSION_COOKIE_NAME = "SESSION_ID";
     private static final Duration COOKIE_MAX_AGE = Duration.ofHours(24);
@@ -175,9 +177,86 @@ public class AuthController {
     }
 
     /**
-     * Refresh access token
+     * Get user profile (BFF Pattern - as per AUTHZ_WORKFLOW.md)
      *
-     * Uses refresh token to get new access token
+     * Returns user claims extracted from the session's JWT token.
+     * This endpoint is used by the Angular frontend to display user info.
+     *
+     * @param exchange Server web exchange to extract session ID
+     * @return User profile with claims
+     */
+    @GetMapping("/user")
+    public Mono<ResponseEntity<UserProfileResponse>> getUserProfile(ServerWebExchange exchange) {
+        return extractSessionId(exchange)
+            .flatMap(sessionService::getSession)
+            .flatMap(session -> sessionService.validateSession(session.getSessionId())
+                .map(jwt -> {
+                    UserProfileResponse profile = new UserProfileResponse(
+                        jwt.getSubject(),
+                        jwt.getClaimAsString("email"),
+                        jwt.getClaimAsString("name"),
+                        jwt.getClaimAsStringList("roles"),
+                        true
+                    );
+                    return ResponseEntity.ok(profile);
+                })
+                .onErrorResume(error -> {
+                    log.warn("Failed to validate session", error);
+                    return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new UserProfileResponse(null, null, null, null, false)));
+                })
+            )
+            .switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new UserProfileResponse(null, null, null, null, false))));
+    }
+
+    /**
+     * Get authentication status (BFF Pattern - as per AUTHZ_WORKFLOW.md)
+     *
+     * Heartbeat endpoint to check if the user's session is still valid.
+     * Returns session expiry information and CSRF token.
+     *
+     * Used by Angular frontend for:
+     * - Periodic session validation (every 5 minutes)
+     * - Obtaining CSRF token for mutating requests
+     *
+     * @param exchange Server web exchange to extract session ID
+     * @return Authentication status
+     */
+    @GetMapping("/status")
+    public Mono<ResponseEntity<AuthStatusResponse>> getAuthStatus(ServerWebExchange exchange) {
+        return extractSessionId(exchange)
+            .flatMap(sessionId -> sessionService.getSession(sessionId)
+                .map(session -> {
+                    // Calculate seconds until expiration
+                    long expiresIn = session.getAccessTokenExpiresAt() != null ?
+                        session.getAccessTokenExpiresAt().getEpochSecond() -
+                        java.time.Instant.now().getEpochSecond() : 0;
+
+                    // Generate CSRF token (simplified - in production use proper CSRF token repository)
+                    String csrfToken = java.util.UUID.randomUUID().toString();
+
+                    AuthStatusResponse status = new AuthStatusResponse(
+                        true,
+                        sessionId,
+                        expiresIn,
+                        csrfToken
+                    );
+
+                    return ResponseEntity.ok(status);
+                })
+            )
+            .switchIfEmpty(Mono.just(ResponseEntity.ok(
+                new AuthStatusResponse(false, null, 0, null)
+            )));
+    }
+
+    /**
+     * Refresh access token (BFF Pattern - as per AUTHZ_WORKFLOW.md)
+     *
+     * Manually triggers token refresh using the refresh token.
+     * Normally, token refresh happens automatically in JwtEnrichmentFilter,
+     * but this endpoint allows frontend to force a refresh.
      *
      * @param exchange Server web exchange to extract session ID
      * @return Success message
@@ -192,10 +271,16 @@ public class AuthController {
                             .body(new MessageResponse("Refresh token expired, please login again")));
                     }
 
-                    // TODO: Call Keycloak token endpoint to refresh
-                    // For now, return error
-                    return Mono.just(ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-                        .body(new MessageResponse("Token refresh not implemented yet")));
+                    // Trigger token refresh
+                    return tokenRefreshService.refreshAccessToken(sessionId, session.getRefreshToken())
+                        .then(Mono.just(ResponseEntity.ok(
+                            new MessageResponse("Access token refreshed successfully")
+                        )))
+                        .onErrorResume(error -> {
+                            log.error("Failed to refresh token for session: {}", sessionId, error);
+                            return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(new MessageResponse("Failed to refresh token: " + error.getMessage())));
+                        });
                 })
             )
             .switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -285,5 +370,22 @@ public class AuthController {
     @Data
     public static class MessageResponse {
         private final String message;
+    }
+
+    @Data
+    public static class UserProfileResponse {
+        private final String sub;
+        private final String email;
+        private final String name;
+        private final java.util.List<String> roles;
+        private final boolean authenticated;
+    }
+
+    @Data
+    public static class AuthStatusResponse {
+        private final boolean authenticated;
+        private final String sessionId;
+        private final long expiresIn;
+        private final String csrf;
     }
 }
