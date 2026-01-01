@@ -17,7 +17,15 @@
       "Bash(mvn clean package:*)",
       "Bash(mvn clean install:*)",
       "Bash(jar -tf:*)",
-      "Bash(mvn compiler:compile:*)"
+      "Bash(mvn compiler:compile:*)",
+      "Bash(redis-cli:*)",
+      "Bash(npx @angular/cli@latest new:*)",
+      "Bash(npx @angular/cli@17 new:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx ng:*)",
+      "Bash(npx tsc --version)"
     ]
   }
 }

@@ -271,3 +271,47 @@ ratelimit:
     capacity: 1000  # 1000 req/min for authenticated
   premium:
     capacity: 10000  # 10000 req/min for premium
+
+# CCU (Concurrent Users) Metrics Configuration
+ccu:
+  metrics:
+    enabled: true  # Enable/disable CCU tracking
+    schedule:
+      # Fixed delay between collection cycles (ms)
+      # Recommended: 30s for 10K-100K users, 60s for 100K-1M users
+      fixed-delay: 30000  # 30 seconds
+      # Initial delay before first collection (ms)
+      initial-delay: 10000  # 10 seconds (allow services to start)
+    scan:
+      # Redis SCAN batch size (higher = faster but more memory)
+      batch-size: 1000  # Count parameter for SCAN command
+    online:
+      # TTL for online:{userId} keys (in minutes)
+      # This determines how long a user is considered "online" after their last request
+      # Recommended: 2-3 minutes for accurate real-time CCU
+      # Trade-off: Lower = more accurate but users may flicker offline, Higher = less accurate
+      ttl-minutes: 2  # 2 minutes
+    tracking:
+      # Enable per-service CCU breakdown (requires storing service info in online keys)
+      # Warning: Adds overhead, disable for better performance
+      by-service: false
+      # Enable per-endpoint CCU breakdown (future enhancement)
+      by-endpoint: false
+
+# Dashboard Metrics Configuration
+dashboard:
+  metrics:
+    # Enable dashboard metrics collection
+    enabled: true
+    # Traffic history retention (hours)
+    traffic-history-hours: 24
+    # Slow endpoint threshold (milliseconds)
+    slow-endpoint-threshold: 500
+
+# Metrics Reporter Configuration (for downstream services)
+metrics:
+  reporter:
+    # Enable automatic metrics reporting to Redis
+    enabled: true
+    # Heartbeat interval (milliseconds) - how often to report health metrics
+    heartbeat-interval: 5000  # 5 seconds

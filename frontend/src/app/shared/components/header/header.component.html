@@ -1,0 +1,46 @@
+<mat-toolbar class="header" color="primary">
+  <div class="header-container">
+    <div class="header-left">
+      <button mat-icon-button (click)="onMenuToggle()" matTooltip="Toggle Menu">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <h1 class="app-title">CRM</h1>
+    </div>
+
+    <div class="header-right">
+      <!-- Theme Toggle -->
+      <button
+        mat-icon-button
+        (click)="onThemeToggle()"
+        [matTooltip]="themeService.isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+        <mat-icon>{{ themeService.isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      <!-- User Menu -->
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="User Menu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+
+      <mat-menu #userMenu="matMenu">
+        <div class="user-info">
+          <mat-icon>person</mat-icon>
+          <span>Admin User</span>
+        </div>
+        <mat-divider></mat-divider>
+        <button mat-menu-item>
+          <mat-icon>person</mat-icon>
+          <span>Profile</span>
+        </button>
+        <button mat-menu-item>
+          <mat-icon>settings</mat-icon>
+          <span>Settings</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+</mat-toolbar>

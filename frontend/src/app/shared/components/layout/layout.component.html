@@ -1,0 +1,26 @@
+<div class="layout-container">
+  <!-- Header -->
+  <app-header (menuToggle)="toggleSidebar()"></app-header>
+
+  <!-- Sidebar -->
+  <app-sidebar
+    [isCollapsed]="sidebarCollapsed()"
+    [class.mobile-open]="mobileSidebarOpen()"
+    (itemClick)="closeMobileSidebar()">
+  </app-sidebar>
+
+  <!-- Mobile Backdrop -->
+  @if (mobileSidebarOpen()) {
+    <div class="sidebar-backdrop" (click)="closeMobileSidebar()"></div>
+  }
+
+  <!-- Main Content -->
+  <main
+    class="main-content"
+    [class.sidebar-collapsed]="sidebarCollapsed()"
+    [class.sidebar-expanded]="!sidebarCollapsed()">
+    <div class="content-wrapper">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

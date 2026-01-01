@@ -48,7 +48,9 @@ public class SessionService {
     private final Cache<String, String> sessionTokenCache;  // L1 Caffeine cache
 
     private static final String SESSION_PREFIX = "session:";
+    private static final String ONLINE_PREFIX = "online:";
     private static final Duration SESSION_TTL = Duration.ofHours(24);
+    private static final Duration ONLINE_TTL = Duration.ofMinutes(5); // 5 minutes TTL for online status
 
     /**
      * Create session from access token
@@ -76,6 +78,7 @@ public class SessionService {
                     .build();
 
                 return saveSession(session)
+                    .then(incrementCcu(session.getUserId()))
                     .thenReturn(sessionId);
             })
             .doOnSuccess(sessionId -> log.info("Session created: {}", sessionId))
@@ -209,8 +212,22 @@ public class SessionService {
         sessionTokenCache.invalidate(sessionId);
         log.debug("Invalidated L1 cache for session: {}", sessionId);
 
-        return redisTemplate.delete(key)
-            .map(deleted -> deleted > 0)
+        // Get session first to retrieve userId for CCU tracking
+        return redisTemplate.opsForValue().get(key)
+            .flatMap(json -> {
+                try {
+                    UserSession session = objectMapper.readValue(json, UserSession.class);
+                    // Decrement CCU before deleting session
+                    return decrementCcu(session.getUserId())
+                        .then(redisTemplate.delete(key))
+                        .map(deleted -> deleted > 0);
+                } catch (JsonProcessingException e) {
+                    log.error("Failed to deserialize session for CCU tracking", e);
+                    // Still delete the session even if deserialization fails
+                    return redisTemplate.delete(key).map(deleted -> deleted > 0);
+                }
+            })
+            .switchIfEmpty(redisTemplate.delete(key).map(deleted -> deleted > 0))
             .doOnSuccess(deleted -> {
                 if (deleted) {
                     log.info("Session deleted: {}", sessionId);
@@ -249,6 +266,39 @@ public class SessionService {
         // If JWT has refresh_expires_in claim, use it
         // Otherwise default to 30 days from now
         return Instant.now().plus(Duration.ofDays(30));
+    }
+
+    /**
+     * Increment CCU counter when user logs in
+     * Sets online:{userId} key with TTL to track active users
+     *
+     * @param userId User ID
+     * @return Mono<Void>
+     */
+    private Mono<Void> incrementCcu(String userId) {
+        String key = ONLINE_PREFIX + userId;
+        return redisTemplate.opsForValue()
+            .set(key, "1", ONLINE_TTL)
+            .then()
+            .doOnSuccess(v -> log.debug("Incremented CCU for user: {}", userId))
+            .doOnError(error -> log.error("Failed to increment CCU for user: {}", userId, error))
+            .onErrorResume(error -> Mono.empty()); // Don't fail session creation if CCU tracking fails
+    }
+
+    /**
+     * Decrement CCU counter when user logs out
+     * Removes online:{userId} key
+     *
+     * @param userId User ID
+     * @return Mono<Void>
+     */
+    private Mono<Void> decrementCcu(String userId) {
+        String key = ONLINE_PREFIX + userId;
+        return redisTemplate.delete(key)
+            .then()
+            .doOnSuccess(v -> log.debug("Decremented CCU for user: {}", userId))
+            .doOnError(error -> log.error("Failed to decrement CCU for user: {}", userId, error))
+            .onErrorResume(error -> Mono.empty()); // Don't fail session deletion if CCU tracking fails
     }
 
     /**

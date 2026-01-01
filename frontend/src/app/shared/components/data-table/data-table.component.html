@@ -1,0 +1,91 @@
+<div class="table-container">
+  <div class="table-wrapper">
+    <table
+      mat-table
+      [dataSource]="data()"
+      matSort
+      (matSortChange)="onSortChange($event)"
+      class="data-table">
+
+      @for (column of columns(); track column.key) {
+        <ng-container [matColumnDef]="column.key">
+          <th mat-header-cell *matHeaderCellDef [mat-sort-header]="column.sortable ? column.key : ''">
+            {{ column.label }}
+          </th>
+          <td mat-cell *matCellDef="let row">
+            @switch (column.type) {
+              @case ('badge') {
+                <mat-chip [class]="getBadgeClass(row[column.key])" class="status-chip">
+                  <mat-icon>{{ row[column.key] ? 'check_circle' : 'cancel' }}</mat-icon>
+                  {{ getBadgeText(row[column.key]) }}
+                </mat-chip>
+              }
+              @case ('date') {
+                {{ formatDate(row[column.key]) }}
+              }
+              @default {
+                {{ row[column.key] }}
+              }
+            }
+          </td>
+        </ng-container>
+      }
+
+      <!-- Actions Column -->
+      @if (actions().length > 0) {
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="action-buttons">
+              @for (action of actions(); track action.label) {
+                <button
+                  mat-icon-button
+                  [color]="action.color || 'primary'"
+                  (click)="action.callback(row)"
+                  [matTooltip]="action.label">
+                  <mat-icon>{{ action.icon }}</mat-icon>
+                </button>
+              }
+            </div>
+          </td>
+        </ng-container>
+      }
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns();"></tr>
+
+      <!-- No Data Row -->
+      @if (data().length === 0 && !loading()) {
+        <tr class="mat-row no-data-row">
+          <td class="mat-cell" [attr.colspan]="displayedColumns().length">
+            <div class="no-data">
+              <mat-icon>inbox</mat-icon>
+              <p>No records found</p>
+            </div>
+          </td>
+        </tr>
+      }
+
+      <!-- Loading Row -->
+      @if (loading()) {
+        <tr class="mat-row loading-row">
+          <td class="mat-cell" [attr.colspan]="displayedColumns().length">
+            <div class="loading">
+              <mat-icon class="spin">refresh</mat-icon>
+              <p>Loading data...</p>
+            </div>
+          </td>
+        </tr>
+      }
+    </table>
+  </div>
+
+  <!-- Paginator -->
+  <mat-paginator
+    [length]="totalCount()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="pageSizeOptions()"
+    (page)="onPageChange($event)"
+    showFirstLastButtons>
+  </mat-paginator>
+</div>

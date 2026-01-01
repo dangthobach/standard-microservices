@@ -104,6 +104,20 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- Spring Data Redis (for metrics storage) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Micrometer Registry Prometheus (for metrics collection) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
 </project>

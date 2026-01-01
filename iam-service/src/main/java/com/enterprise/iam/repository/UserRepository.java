@@ -49,4 +49,20 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * @return true if user exists
      */
     boolean existsByEmail(String email);
+
+    /**
+     * Check if active (non-deleted) user exists by email.
+     *
+     * @param email Email address
+     * @return true if active user exists
+     */
+    boolean existsByEmailAndDeletedFalse(String email);
+
+    /**
+     * Check if active (non-deleted) user exists by Keycloak ID.
+     *
+     * @param keycloakId Keycloak user ID
+     * @return true if active user exists
+     */
+    boolean existsByKeycloakIdAndDeletedFalse(String keycloakId);
 }

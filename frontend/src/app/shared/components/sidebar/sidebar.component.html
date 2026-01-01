@@ -1,0 +1,23 @@
+<aside class="sidebar" [class.collapsed]="isCollapsed()">
+  <nav class="sidebar-nav">
+    <mat-nav-list>
+      @for (item of menuItems; track item.route) {
+        <a
+          mat-list-item
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [matTooltip]="isCollapsed() ? item.label : ''"
+          matTooltipPosition="right"
+          (click)="onItemClick()">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          @if (!isCollapsed()) {
+            <ng-container matListItemTitle>{{ item.label }}</ng-container>
+          }
+          @if (!isCollapsed() && item.badge) {
+            <span matListItemMeta class="badge">{{ item.badge }}</span>
+          }
+        </a>
+      }
+    </mat-nav-list>
+  </nav>
+</aside>

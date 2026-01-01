@@ -1,0 +1,343 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div>
+      <h1 class="dashboard-title">Microservices Monitoring Dashboard</h1>
+      <p class="dashboard-subtitle">Real-time system health and performance metrics</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="refreshMetrics()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Main Dashboard Grid -->
+  <div class="dashboard-grid">
+    <!-- ZONE A: Real-time Pulse -->
+    <section class="zone-a">
+      <h2 class="zone-title">
+        <mat-icon>pulse</mat-icon>
+        Real-time Pulse
+      </h2>
+      <div class="pulse-grid">
+        <!-- CCU -->
+        <mat-card class="pulse-card">
+          <div class="pulse-header">
+            <mat-icon class="pulse-icon ccu">people</mat-icon>
+            <div class="pulse-info">
+              <div class="pulse-label">Concurrent Users</div>
+              <div class="pulse-value">{{ realtimeMetrics().ccu | number }}</div>
+            </div>
+          </div>
+          <div class="pulse-subtitle">Active connections</div>
+        </mat-card>
+
+        <!-- RPS -->
+        <mat-card class="pulse-card">
+          <div class="pulse-header">
+            <mat-icon class="pulse-icon rps">flash_on</mat-icon>
+            <div class="pulse-info">
+              <div class="pulse-label">Requests/Sec</div>
+              <div class="pulse-value">{{ realtimeMetrics().rps | number }}</div>
+            </div>
+          </div>
+          <div class="pulse-subtitle">Current throughput</div>
+        </mat-card>
+
+        <!-- Error Rate -->
+        <mat-card class="pulse-card">
+          <div class="pulse-header">
+            <mat-icon class="pulse-icon error">error_outline</mat-icon>
+            <div class="pulse-info">
+              <div class="pulse-label">Error Rate</div>
+              <div class="pulse-value">{{ realtimeMetrics().errorRate | number:'1.2-2' }}%</div>
+            </div>
+          </div>
+          <div class="pulse-subtitle" [class.error-high]="realtimeMetrics().errorRate > 1">
+            {{ realtimeMetrics().errorRate > 1 ? 'Above threshold' : 'Within limits' }}
+          </div>
+        </mat-card>
+
+        <!-- Avg Latency -->
+        <mat-card class="pulse-card">
+          <div class="pulse-header">
+            <mat-icon class="pulse-icon latency">timer</mat-icon>
+            <div class="pulse-info">
+              <div class="pulse-label">Avg Latency</div>
+              <div class="pulse-value">{{ realtimeMetrics().avgLatency }}ms</div>
+            </div>
+          </div>
+          <div class="pulse-subtitle" [class.latency-high]="realtimeMetrics().avgLatency > 200">
+            {{ realtimeMetrics().avgLatency > 200 ? 'Needs attention' : 'Optimal' }}
+          </div>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- ZONE B: Service Ecosystem -->
+    <section class="zone-b">
+      <h2 class="zone-title">
+        <mat-icon>dashboard</mat-icon>
+        Service Ecosystem
+      </h2>
+      <div class="services-grid">
+        @for (service of services(); track service.name) {
+          <mat-card class="service-card" [class]="getStatusColor(service.status)">
+            <div class="service-header">
+              <div class="service-name">{{ service.name }}</div>
+              <mat-icon class="service-status-icon" [matTooltip]="service.status">
+                {{ getStatusIcon(service.status) }}
+              </mat-icon>
+            </div>
+
+            <div class="service-metrics">
+              <div class="metric-row">
+                <span class="metric-label">CPU</span>
+                <div class="metric-bar-container">
+                  <mat-progress-bar mode="determinate" [value]="service.cpu"
+                    [class.warn]="service.cpu > 70" [class.critical]="service.cpu > 90">
+                  </mat-progress-bar>
+                  <span class="metric-value">{{ service.cpu | number:'1.1-1' }}%</span>
+                </div>
+              </div>
+
+              <div class="metric-row">
+                <span class="metric-label">Memory</span>
+                <div class="metric-bar-container">
+                  <mat-progress-bar mode="determinate" [value]="service.memory"
+                    [class.warn]="service.memory > 70" [class.critical]="service.memory > 90">
+                  </mat-progress-bar>
+                  <span class="metric-value">{{ service.memory | number:'1.1-1' }}%</span>
+                </div>
+              </div>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div class="service-stats">
+              <div class="stat-item">
+                <mat-icon>access_time</mat-icon>
+                <span>{{ service.uptime }}</span>
+              </div>
+              <div class="stat-item">
+                <mat-icon>analytics</mat-icon>
+                <span>{{ service.requests | number }} req</span>
+              </div>
+              <div class="stat-item" [class.has-errors]="service.errors > 0">
+                <mat-icon>error_outline</mat-icon>
+                <span>{{ service.errors }} err</span>
+              </div>
+            </div>
+          </mat-card>
+        }
+      </div>
+    </section>
+
+    <!-- ZONE C: Traffic & Trends -->
+    <section class="zone-c">
+      <h2 class="zone-title">
+        <mat-icon>trending_up</mat-icon>
+        Traffic & Trends
+      </h2>
+
+      <!-- Traffic Chart -->
+      <mat-card class="chart-card">
+        <div class="chart-header">
+          <h3>Request Volume (Last 24 Hours)</h3>
+        </div>
+        <div class="chart-container">
+          <ngx-charts-line-chart
+            [view]="chartView"
+            [scheme]="chartColorScheme"
+            [results]="trafficChartData()"
+            [xAxis]="showXAxis"
+            [yAxis]="showYAxis"
+            [legend]="showLegend"
+            [showXAxisLabel]="showXAxisLabel"
+            [showYAxisLabel]="showYAxisLabel"
+            [xAxisLabel]="xAxisLabel"
+            [yAxisLabel]="yAxisLabel"
+            [autoScale]="autoScale"
+            [timeline]="timeline">
+          </ngx-charts-line-chart>
+        </div>
+      </mat-card>
+
+      <!-- Latency Heatmap -->
+      <mat-card class="latency-card">
+        <div class="chart-header">
+          <h3>Latency Distribution</h3>
+        </div>
+        <div class="latency-grid">
+          @for (metric of latencyMetrics(); track metric.service) {
+            <div class="latency-row">
+              <div class="latency-service">{{ metric.service }}</div>
+              <div class="latency-bars">
+                <div class="latency-bar-item">
+                  <span class="latency-label">P50</span>
+                  <div class="latency-bar p50" [style.width.%]="(metric.p50 / 10)">
+                    <span class="latency-value">{{ metric.p50 }}ms</span>
+                  </div>
+                </div>
+                <div class="latency-bar-item">
+                  <span class="latency-label">P95</span>
+                  <div class="latency-bar p95" [style.width.%]="(metric.p95 / 10)">
+                    <span class="latency-value">{{ metric.p95 }}ms</span>
+                  </div>
+                </div>
+                <div class="latency-bar-item">
+                  <span class="latency-label">P99</span>
+                  <div class="latency-bar p99" [style.width.%]="(metric.p99 / 10)">
+                    <span class="latency-value">{{ metric.p99 }}ms</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-card>
+    </section>
+
+    <!-- ZONE D: Infrastructure -->
+    <section class="zone-d">
+      <h2 class="zone-title">
+        <mat-icon>storage</mat-icon>
+        Infrastructure
+      </h2>
+
+      <!-- Database Health -->
+      <mat-card class="infra-card">
+        <div class="infra-header">
+          <mat-icon>database</mat-icon>
+          <h3>Database Health</h3>
+        </div>
+        <div class="database-grid">
+          @for (db of databaseMetrics(); track db.name) {
+            <div class="db-panel">
+              <div class="db-name">{{ db.name }}</div>
+              <div class="db-metrics">
+                <div class="db-metric">
+                  <span class="db-label">Connections</span>
+                  <span class="db-value">{{ db.connections }} / {{ db.maxConnections }}</span>
+                  <mat-progress-bar mode="determinate"
+                    [value]="(db.connections / db.maxConnections) * 100"
+                    [class.warn]="(db.connections / db.maxConnections) > 0.7">
+                  </mat-progress-bar>
+                </div>
+                <div class="db-metric">
+                  <span class="db-label">Active Queries</span>
+                  <span class="db-value">{{ db.activeQueries }}</span>
+                </div>
+                <div class="db-metric">
+                  <span class="db-label">Slow Queries</span>
+                  <span class="db-value" [class.warning]="db.slowQueries > 5">{{ db.slowQueries }}</span>
+                </div>
+                <div class="db-metric">
+                  <span class="db-label">Cache Hit Rate</span>
+                  <span class="db-value" [class.success]="db.cacheHitRate > 90">
+                    {{ db.cacheHitRate | number:'1.1-1' }}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-card>
+
+      <!-- Redis Metrics -->
+      @if (redisMetrics(); as redis) {
+        <mat-card class="infra-card">
+          <div class="infra-header">
+            <mat-icon>memory</mat-icon>
+            <h3>Redis Cache</h3>
+          </div>
+          <div class="redis-grid">
+            <div class="redis-metric">
+              <div class="redis-icon-wrapper">
+                <mat-icon>link</mat-icon>
+              </div>
+              <div class="redis-info">
+                <div class="redis-label">Connections</div>
+                <div class="redis-value">{{ redis.connections }}</div>
+              </div>
+            </div>
+
+            <div class="redis-metric">
+              <div class="redis-icon-wrapper">
+                <mat-icon>sd_storage</mat-icon>
+              </div>
+              <div class="redis-info">
+                <div class="redis-label">Memory</div>
+                <div class="redis-value">{{ redis.memoryUsed | number:'1.1-1' }}GB / {{ redis.memoryTotal | number:'1.1-1' }}GB</div>
+              </div>
+            </div>
+
+            <div class="redis-metric">
+              <div class="redis-icon-wrapper success">
+                <mat-icon>check_circle</mat-icon>
+              </div>
+              <div class="redis-info">
+                <div class="redis-label">Hit Rate</div>
+                <div class="redis-value success">{{ redis.hitRate | number:'1.1-1' }}%</div>
+              </div>
+            </div>
+
+            <div class="redis-metric">
+              <div class="redis-icon-wrapper">
+                <mat-icon>speed</mat-icon>
+              </div>
+              <div class="redis-info">
+                <div class="redis-label">Operations/Sec</div>
+                <div class="redis-value">{{ redis.opsPerSec | number }}</div>
+              </div>
+            </div>
+
+            <div class="redis-metric">
+              <div class="redis-icon-wrapper" [class.warning]="redis.evictions > 100">
+                <mat-icon>delete_sweep</mat-icon>
+              </div>
+              <div class="redis-info">
+                <div class="redis-label">Evictions</div>
+                <div class="redis-value" [class.warning]="redis.evictions > 100">{{ redis.evictions }}</div>
+              </div>
+            </div>
+          </div>
+        </mat-card>
+      }
+
+      <!-- Slow Endpoints -->
+      <mat-card class="infra-card">
+        <div class="infra-header">
+          <mat-icon>speed</mat-icon>
+          <h3>Slow Endpoints (Top 5)</h3>
+        </div>
+        <div class="endpoints-table">
+          <div class="endpoint-header">
+            <span class="col-method">Method</span>
+            <span class="col-path">Path</span>
+            <span class="col-latency">Avg</span>
+            <span class="col-p95">P95</span>
+            <span class="col-calls">Calls</span>
+          </div>
+          @for (endpoint of slowEndpoints(); track endpoint.path) {
+            <div class="endpoint-row">
+              <span class="col-method">
+                <mat-chip [class]="getMethodColor(endpoint.method)">
+                  {{ endpoint.method }}
+                </mat-chip>
+              </span>
+              <span class="col-path" [matTooltip]="endpoint.path">{{ endpoint.path }}</span>
+              <span class="col-latency" [class.slow]="endpoint.avgLatency > 500">
+                {{ endpoint.avgLatency }}ms
+              </span>
+              <span class="col-p95" [class.slow]="endpoint.p95Latency > 1000">
+                {{ endpoint.p95Latency }}ms
+              </span>
+              <span class="col-calls">{{ endpoint.calls | number }}</span>
+            </div>
+          }
+        </div>
+      </mat-card>
+    </section>
+  </div>
+</div>

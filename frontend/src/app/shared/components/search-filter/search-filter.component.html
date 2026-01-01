@@ -1,0 +1,70 @@
+<div class="search-filter-container">
+  <div class="search-section">
+    <h2 class="section-title">Search & Filter</h2>
+
+    <!-- 3-Column Grid Layout -->
+    <div class="filter-grid-3col">
+      <!-- Column 1: Search Input -->
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Search customers...</mat-label>
+        <input
+          matInput
+          [ngModel]="searchText()"
+          (ngModelChange)="searchText.set($event)"
+          (keyup.enter)="onSearch()"
+          placeholder="Search by username or email">
+        <mat-icon matPrefix>search</mat-icon>
+        @if (searchText()) {
+          <button
+            matSuffix
+            mat-icon-button
+            (click)="searchText.set(''); onSearch()"
+            type="button">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
+      <!-- Column 2: From Date -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>From Date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="pickerFrom"
+          [ngModel]="dateFrom()"
+          (ngModelChange)="dateFrom.set($event); onDateChange()"
+          placeholder="Start date">
+        <mat-datepicker-toggle matSuffix [for]="pickerFrom"></mat-datepicker-toggle>
+        <mat-datepicker #pickerFrom></mat-datepicker>
+      </mat-form-field>
+
+      <!-- Column 3: To Date -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>To Date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="pickerTo"
+          [ngModel]="dateTo()"
+          (ngModelChange)="dateTo.set($event); onDateChange()"
+          placeholder="End date"
+          [min]="dateFrom() || undefined">
+        <mat-datepicker-toggle matSuffix [for]="pickerTo"></mat-datepicker-toggle>
+        <mat-datepicker #pickerTo></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <!-- Clear Button -->
+    @if (hasActiveFilters()) {
+      <div class="clear-section">
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="clearFilters()"
+          class="clear-button">
+          <mat-icon>clear</mat-icon>
+          Clear Filters
+        </button>
+      </div>
+    }
+  </div>
+</div>

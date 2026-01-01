@@ -1,0 +1,780 @@
+/* Dashboard Container */
+.dashboard-container {
+  padding: 24px;
+  background: var(--bg-secondary);
+  min-height: calc(100vh - 64px);
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.dashboard-title {
+  font-size: 32px;
+  font-weight: 400;
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+}
+
+.dashboard-subtitle {
+  font-size: 16px;
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* Main Dashboard Grid - 4 Zones */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 24px;
+}
+
+/* Zone Titles */
+.zone-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+}
+
+.zone-title mat-icon {
+  color: var(--primary-color);
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+/* ========================================
+   ZONE A: Real-time Pulse
+   ======================================== */
+.zone-a {
+  grid-column: 1 / -1;
+}
+
+.pulse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.pulse-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pulse-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px var(--shadow);
+}
+
+.pulse-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.pulse-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  padding: 12px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulse-icon.ccu {
+  color: #1976d2;
+}
+
+.pulse-icon.rps {
+  color: #4caf50;
+}
+
+.pulse-icon.error {
+  color: #f44336;
+}
+
+.pulse-icon.latency {
+  color: #ff9800;
+}
+
+.pulse-info {
+  flex: 1;
+}
+
+.pulse-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.pulse-value {
+  font-size: 32px;
+  font-weight: 300;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.pulse-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding-left: 64px;
+}
+
+.pulse-subtitle.error-high {
+  color: #f44336;
+  font-weight: 500;
+}
+
+.pulse-subtitle.latency-high {
+  color: #ff9800;
+  font-weight: 500;
+}
+
+/* ========================================
+   ZONE B: Service Ecosystem
+   ======================================== */
+.zone-b {
+  grid-column: 1 / 2;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.service-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 4px solid var(--border-color);
+  transition: all 0.2s;
+}
+
+.service-card:hover {
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.service-card.status-healthy {
+  border-left-color: #4caf50;
+}
+
+.service-card.status-warning {
+  border-left-color: #ff9800;
+}
+
+.service-card.status-critical {
+  border-left-color: #f44336;
+}
+
+.service-card.status-down {
+  border-left-color: #9e9e9e;
+}
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.service-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.service-status-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.status-healthy .service-status-icon {
+  color: #4caf50;
+}
+
+.status-warning .service-status-icon {
+  color: #ff9800;
+}
+
+.status-critical .service-status-icon {
+  color: #f44336;
+}
+
+.status-down .service-status-icon {
+  color: #9e9e9e;
+}
+
+.service-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.metric-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.metric-bar-container mat-progress-bar {
+  flex: 1;
+}
+
+.metric-value {
+  font-size: 12px;
+  color: var(--text-primary);
+  min-width: 45px;
+  text-align: right;
+}
+
+.service-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 12px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.stat-item mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.stat-item.has-errors {
+  color: #f44336;
+}
+
+/* ========================================
+   ZONE C: Traffic & Trends
+   ======================================== */
+.zone-c {
+  grid-column: 2 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chart-card,
+.latency-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.chart-header {
+  margin-bottom: 16px;
+}
+
+.chart-header h3 {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.chart-container {
+  width: 100%;
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Latency Heatmap */
+.latency-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.latency-row {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.latency-service {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.latency-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.latency-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.latency-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 30px;
+}
+
+.latency-bar {
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+  min-width: 60px;
+  transition: width 0.3s;
+}
+
+.latency-bar.p50 {
+  background: linear-gradient(90deg, #4caf50, #66bb6a);
+}
+
+.latency-bar.p95 {
+  background: linear-gradient(90deg, #ff9800, #ffa726);
+}
+
+.latency-bar.p99 {
+  background: linear-gradient(90deg, #f44336, #ef5350);
+}
+
+.latency-value {
+  font-size: 11px;
+  color: white;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ========================================
+   ZONE D: Infrastructure
+   ======================================== */
+.zone-d {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.infra-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.infra-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.infra-header mat-icon {
+  color: var(--primary-color);
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.infra-header h3 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+/* Database Grid */
+.database-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.db-panel {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.db-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.db-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.db-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.db-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.db-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.db-value.warning {
+  color: #ff9800;
+}
+
+.db-value.success {
+  color: #4caf50;
+}
+
+/* Redis Grid */
+.redis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.redis-metric {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-tertiary);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.redis-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.redis-icon-wrapper.success {
+  color: #4caf50;
+}
+
+.redis-icon-wrapper.warning {
+  color: #ff9800;
+}
+
+.redis-icon-wrapper mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.redis-info {
+  flex: 1;
+}
+
+.redis-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.redis-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.redis-value.success {
+  color: #4caf50;
+}
+
+.redis-value.warning {
+  color: #ff9800;
+}
+
+/* Endpoints Table */
+.endpoints-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.endpoint-header,
+.endpoint-row {
+  display: grid;
+  grid-template-columns: 80px 2fr 80px 80px 100px;
+  gap: 12px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.endpoint-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg-tertiary);
+}
+
+.endpoint-row {
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  transition: background 0.2s;
+}
+
+.endpoint-row:hover {
+  background: var(--bg-secondary);
+}
+
+.col-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.col-latency,
+.col-p95 {
+  text-align: right;
+  font-weight: 500;
+}
+
+.col-latency.slow,
+.col-p95.slow {
+  color: #f44336;
+}
+
+.col-calls {
+  text-align: right;
+  color: var(--text-secondary);
+}
+
+/* Method Chips */
+.method-get {
+  background-color: rgba(76, 175, 80, 0.2) !important;
+  color: #4caf50 !important;
+}
+
+.method-post {
+  background-color: rgba(33, 150, 243, 0.2) !important;
+  color: #2196f3 !important;
+}
+
+.method-put {
+  background-color: rgba(255, 152, 0, 0.2) !important;
+  color: #ff9800 !important;
+}
+
+.method-delete {
+  background-color: rgba(244, 67, 54, 0.2) !important;
+  color: #f44336 !important;
+}
+
+/* Progress Bar Colors */
+::ng-deep mat-progress-bar .mdc-linear-progress__bar-inner {
+  border-color: var(--primary-color) !important;
+}
+
+::ng-deep mat-progress-bar.warn .mdc-linear-progress__bar-inner {
+  border-color: #ff9800 !important;
+}
+
+::ng-deep mat-progress-bar.critical .mdc-linear-progress__bar-inner {
+  border-color: #f44336 !important;
+}
+
+/* ========================================
+   NGX-Charts Dark Mode
+   ======================================== */
+::ng-deep .dark-theme .ngx-charts {
+  text {
+    fill: var(--text-secondary) !important;
+  }
+
+  .gridline-path {
+    stroke: var(--border-color) !important;
+  }
+
+  .refline-path {
+    stroke: var(--border-color) !important;
+  }
+
+  .reference-area {
+    fill: var(--bg-tertiary) !important;
+  }
+
+  .legend-title-text {
+    fill: var(--text-primary) !important;
+  }
+
+  .legend-label {
+    fill: var(--text-secondary) !important;
+  }
+
+  .tick text {
+    fill: var(--text-secondary) !important;
+  }
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .zone-a,
+  .zone-b,
+  .zone-c,
+  .zone-d {
+    grid-column: 1 / -1;
+  }
+
+  .pulse-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .zone-d {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 16px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .dashboard-title {
+    font-size: 24px;
+  }
+
+  .pulse-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .latency-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .latency-service {
+    margin-bottom: 4px;
+  }
+
+  .chart-view {
+    width: 100% !important;
+  }
+
+  .endpoint-header,
+  .endpoint-row {
+    grid-template-columns: 60px 1fr 70px;
+    font-size: 11px;
+  }
+
+  .col-p95,
+  .col-calls {
+    display: none;
+  }
+
+  .database-grid,
+  .redis-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .pulse-value {
+    font-size: 24px;
+  }
+
+  .zone-title {
+    font-size: 18px;
+  }
+
+  .chart-container {
+    height: 250px;
+  }
+}

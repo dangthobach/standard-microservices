@@ -50,6 +50,7 @@ import java.util.List;
  */
 @Configuration
 @EnableWebFluxSecurity
+@org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
 public class SecurityConfiguration {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")

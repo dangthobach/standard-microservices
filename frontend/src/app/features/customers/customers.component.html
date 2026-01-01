@@ -1,0 +1,63 @@
+<div class="customers-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">Customer Records</h1>
+    <button mat-raised-button color="primary">
+      <mat-icon>add</mat-icon>
+      Add Customer
+    </button>
+  </div>
+
+  <!-- Search & Filter -->
+  <app-search-filter (filterChange)="onFilterChange($event)"></app-search-filter>
+
+  <!-- Data Table -->
+  <app-data-table
+    [data]="customers()"
+    [columns]="columns"
+    [actions]="actions"
+    [loading]="loading()"
+    [totalCount]="totalCount()"
+    [pageSize]="paginationParams().size"
+    [pageSizeOptions]="[5, 10, 25, 50]"
+    (pageChange)="onPageChange($event)"
+    (sortChange)="onSortChange($event)">
+  </app-data-table>
+
+  <!-- Status History Section -->
+  <div class="status-history-section">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Status History</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="history-table">
+          <table class="simple-table">
+            <thead>
+              <tr>
+                <th>Date/Time</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Oct 27, 2023 11:45 AM</td>
+                <td>System</td>
+                <td>Update</td>
+                <td>Updated user john.doe status to Enabled</td>
+              </tr>
+              <tr>
+                <td>Oct 27, 2023 11:45 AM</td>
+                <td>System</td>
+                <td>Update</td>
+                <td>Updated user john.doe status to Enabled</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -16,10 +16,10 @@ import { authGuard } from './core/guards/auth.guard';
  * All routes use lazy loading for optimal performance
  */
 export const routes: Routes = [
-  // Default route - redirect to dashboard
+  // Default route - redirect to customers (auth disabled for demo)
   {
     path: '',
-    redirectTo: '/dashboard',
+    redirectTo: '/customers',
     pathMatch: 'full'
   },
 
@@ -38,12 +38,12 @@ export const routes: Routes = [
     title: 'Authenticating...'
   },
 
-  // Protected routes (require authentication)
+  // Protected routes (auth temporarily disabled for demo)
   {
     path: 'dashboard',
     loadComponent: () => import('./features/dashboard/dashboard.component')
       .then(m => m.DashboardComponent),
-    canActivate: [authGuard],
+    // canActivate: [authGuard], // Disabled for demo
     title: 'Dashboard - Enterprise Microservices'
   },
 
@@ -51,7 +51,7 @@ export const routes: Routes = [
     path: 'users',
     loadChildren: () => import('./features/users/users.routes')
       .then(m => m.USERS_ROUTES),
-    canActivate: [authGuard],
+    // canActivate: [authGuard], // Disabled for demo
     title: 'Users - Enterprise Microservices'
   },
 
@@ -59,15 +59,23 @@ export const routes: Routes = [
     path: 'organizations',
     loadChildren: () => import('./features/organizations/organizations.routes')
       .then(m => m.ORGANIZATIONS_ROUTES),
-    canActivate: [authGuard],
+    // canActivate: [authGuard], // Disabled for demo
     title: 'Organizations - Enterprise Microservices'
+  },
+
+  {
+    path: 'customers',
+    loadComponent: () => import('./features/customers/customers.component')
+      .then(m => m.CustomersComponent),
+    // canActivate: [authGuard], // Disabled for demo
+    title: 'Customers - Enterprise Microservices'
   },
 
   {
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.component')
       .then(m => m.SettingsComponent),
-    canActivate: [authGuard],
+    // canActivate: [authGuard], // Disabled for demo
     title: 'Settings - Enterprise Microservices'
   },
 
