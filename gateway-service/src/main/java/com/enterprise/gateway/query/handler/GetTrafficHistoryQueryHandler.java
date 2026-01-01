@@ -31,6 +31,7 @@ public class GetTrafficHistoryQueryHandler implements QueryHandler<GetTrafficHis
             // Get last 24 hours of data in 5-minute intervals
             Instant now = Instant.now();
             int intervals = 288; // 24 hours * 12 (5-minute intervals per hour)
+
             List<String> keys = new ArrayList<>();
             List<Instant> timestamps = new ArrayList<>();
 

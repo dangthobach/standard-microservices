@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * Handler for getting real-time metrics
@@ -23,22 +23,38 @@ public class GetRealtimeMetricsQueryHandler implements QueryHandler<GetRealtimeM
     @Override
     public RealtimeMetricsDto handle(GetRealtimeMetricsQuery query) {
         try {
-            // Get CCU from online users
-            Set<String> onlineKeys = redisTemplate.keys("online:*");
-            Long ccu = onlineKeys != null ? (long) onlineKeys.size() : 0L;
+            // Get CCU from online users using SCAN (safer than KEYS in production)
+            final long[] ccuCount = {0};
+            redisTemplate.execute(connection -> {
+                try (var cursor = connection.scan(org.springframework.data.redis.core.ScanOptions.scanOptions()
+                        .match("online:*")
+                        .count(1000)
+                        .build())) {
+                    while (cursor.hasNext()) {
+                        cursor.next();
+                        ccuCount[0]++;
+                    }
+                }
+                return null;
+            }, true);
+            Long ccu = ccuCount[0];
 
-            // Get RPS from counter
-            String rpsStr = redisTemplate.opsForValue().get("dashboard:rps");
+            // Fetch all other metrics in one round-trip (Pipeline)
+            List<String> keys = List.of(
+                "dashboard:rps",
+                "dashboard:latency:avg",
+                "dashboard:error:count",
+                "dashboard:request:count"
+            );
+            List<String> values = redisTemplate.opsForValue().multiGet(keys);
+
+            String rpsStr = values != null && values.size() > 0 ? values.get(0) : null;
+            String latencyStr = values != null && values.size() > 1 ? values.get(1) : null;
+            String errorCountStr = values != null && values.size() > 2 ? values.get(2) : null;
+            String requestCountStr = values != null && values.size() > 3 ? values.get(3) : null;
+
             Long rps = rpsStr != null ? Long.parseLong(rpsStr) : 0L;
-
-            // Get average latency
-            String latencyStr = redisTemplate.opsForValue().get("dashboard:latency:avg");
             Double avgLatency = latencyStr != null ? Double.parseDouble(latencyStr) : 0.0;
-
-            // Calculate error rate
-            String errorCountStr = redisTemplate.opsForValue().get("dashboard:error:count");
-            String requestCountStr = redisTemplate.opsForValue().get("dashboard:request:count");
-
             Long errorCount = errorCountStr != null ? Long.parseLong(errorCountStr) : 0L;
             Long requestCount = requestCountStr != null ? Long.parseLong(requestCountStr) : 1L;
 

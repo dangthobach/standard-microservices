@@ -16,7 +16,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,13 +47,15 @@ public class MetricsGlobalFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
 
         return chain.filter(exchange)
-            .doOnSuccess(aVoid -> recordMetrics(exchange, startTime, false))
-            .doOnError(error -> recordMetrics(exchange, startTime, true))
-            .then(Mono.fromRunnable(() -> recordMetrics(exchange, startTime, isErrorResponse(exchange.getResponse()))));
+                .doOnSuccess(aVoid -> recordMetrics(exchange, startTime, false))
+                .doOnError(error -> recordMetrics(exchange, startTime, true))
+                .then(Mono.fromRunnable(
+                        () -> recordMetrics(exchange, startTime, isErrorResponse(exchange.getResponse()))));
     }
 
     /**
      * Record metrics asynchronously to avoid blocking the request
+     * Uses Redis Pipelining to batch counter increments (reduce from 7 calls to 2)
      */
     private void recordMetrics(ServerWebExchange exchange, long startTime, boolean isError) {
         Mono.fromRunnable(() -> {
@@ -64,36 +65,73 @@ public class MetricsGlobalFilter implements GlobalFilter, Ordered {
                 String method = request.getMethod().name();
                 String path = request.getPath().value();
 
-                // Increment RPS counter (with 1-second expiry for sliding window)
-                redisTemplate.opsForValue().increment(DASHBOARD_RPS_KEY);
-                redisTemplate.expire(DASHBOARD_RPS_KEY, Duration.ofSeconds(2));
-
-                // Increment total request count
-                redisTemplate.opsForValue().increment(DASHBOARD_REQUEST_COUNT_KEY);
+                // ✅ OPTIMIZED: Use Redis Pipeline to batch all counter increments
+                // This reduces from 4-7 separate Redis calls to 1 pipelined batch
+                recordCountersWithPipeline(latency, isError);
 
                 // Update average latency (Exponential Moving Average)
+                // This is kept separate as it requires read-modify-write
                 updateExponentialMovingAverage(DASHBOARD_LATENCY_KEY, (double) latency, 0.2);
 
-                // Track errors
-                if (isError) {
-                    redisTemplate.opsForValue().increment(DASHBOARD_ERROR_COUNT_KEY);
-                }
-
-                // Record slow endpoints (>500ms)
+                // Record slow endpoints (>500ms) - less frequent, kept separate
                 if (latency > 500) {
                     recordSlowEndpoint(method, path, latency);
                 }
-
-                // Record traffic history (async, every 5 minutes via scheduler is better)
-                // This is just for real-time updates
-                recordTrafficHistory(isError);
 
             } catch (Exception e) {
                 log.error("Failed to record metrics: {}", e.getMessage());
             }
         })
-        .subscribeOn(Schedulers.boundedElastic())
-        .subscribe();
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe();
+    }
+
+    /**
+     * Record all counter increments in a single Redis pipeline
+     * Reduces network round-trips from 4-7 to 1
+     */
+    private void recordCountersWithPipeline(long latency, boolean isError) {
+        try {
+            // Create timestamp bucket for traffic history (5-minute intervals)
+            long currentMinute = System.currentTimeMillis() / 300000; // 5-minute buckets
+            String timestamp = String.valueOf(currentMinute * 300000);
+            String requestKey = DASHBOARD_TRAFFIC_HISTORY_KEY + ":" + timestamp + ":requests";
+            String errorKey = DASHBOARD_TRAFFIC_HISTORY_KEY + ":" + timestamp + ":errors";
+
+            // ✅ Execute all counter increments in single pipeline
+            redisTemplate.executePipelined((org.springframework.data.redis.core.RedisCallback<Object>) connection -> {
+                byte[] rpsKeyBytes = DASHBOARD_RPS_KEY.getBytes();
+                byte[] requestCountKeyBytes = DASHBOARD_REQUEST_COUNT_KEY.getBytes();
+                byte[] requestKeyBytes = requestKey.getBytes();
+                byte[] errorCountKeyBytes = DASHBOARD_ERROR_COUNT_KEY.getBytes();
+                byte[] errorKeyBytes = errorKey.getBytes();
+
+                // Increment RPS counter
+                connection.incr(rpsKeyBytes);
+                connection.expire(rpsKeyBytes, 2); // 2-second TTL for sliding window
+
+                // Increment total request count
+                connection.incr(requestCountKeyBytes);
+
+                // Increment traffic history request count
+                connection.incr(requestKeyBytes);
+                connection.expire(requestKeyBytes, 86400); // 24-hour TTL
+
+                // Track errors if applicable
+                if (isError) {
+                    connection.incr(errorCountKeyBytes);
+                    connection.incr(errorKeyBytes);
+                    connection.expire(errorKeyBytes, 86400); // 24-hour TTL
+                }
+
+                return null;
+            });
+
+            log.debug("Recorded metrics with pipeline: latency={}ms, isError={}", latency, isError);
+
+        } catch (Exception e) {
+            log.error("Failed to record counters with pipeline: {}", e.getMessage());
+        }
     }
 
     /**
@@ -151,31 +189,6 @@ public class MetricsGlobalFilter implements GlobalFilter, Ordered {
 
         } catch (Exception e) {
             log.error("Failed to record slow endpoint: {}", e.getMessage());
-        }
-    }
-
-    /**
-     * Record traffic history for chart
-     */
-    private void recordTrafficHistory(boolean isError) {
-        try {
-            // Create timestamp bucket (5-minute intervals)
-            long currentMinute = Instant.now().getEpochSecond() / 300; // 5-minute buckets
-            String timestamp = Instant.ofEpochSecond(currentMinute * 300).toString();
-
-            String requestKey = DASHBOARD_TRAFFIC_HISTORY_KEY + ":" + timestamp + ":requests";
-            String errorKey = DASHBOARD_TRAFFIC_HISTORY_KEY + ":" + timestamp + ":errors";
-
-            redisTemplate.opsForValue().increment(requestKey);
-            redisTemplate.expire(requestKey, Duration.ofHours(24));
-
-            if (isError) {
-                redisTemplate.opsForValue().increment(errorKey);
-                redisTemplate.expire(errorKey, Duration.ofHours(24));
-            }
-
-        } catch (Exception e) {
-            log.error("Failed to record traffic history: {}", e.getMessage());
         }
     }
 

@@ -30,23 +30,21 @@ public class GetServiceHealthQueryHandler implements QueryHandler<GetServiceHeal
 
         try {
             // 1. Scan for keys (safer than KEYS command)
-            // Note: In a real high-scale scenario, we might want to maintain a "set" of
-            // active services
-            // instead of scanning, but SCAN is acceptable for < 1000 services.
             List<String> keys = new ArrayList<>();
-            redisTemplate.execute(connection -> {
-                try (var cursor = connection.scan(org.springframework.data.redis.core.ScanOptions.scanOptions()
-                        .match("dashboard:service:*:health")
-                        .count(100)
-                        .build())) {
+            redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Void>) connection -> {
+                try (org.springframework.data.redis.core.Cursor<byte[]> cursor = connection
+                        .scan(org.springframework.data.redis.core.ScanOptions.scanOptions()
+                                .match("dashboard:service:*:health")
+                                .count(100)
+                                .build())) {
                     while (cursor.hasNext()) {
                         keys.add(new String(cursor.next()));
                     }
                 }
                 return null;
-            }, true);
+            });
 
-            // 2. MultiGet values (Pipeline)
+            // 2. Fetch all values in one round-trip (MultiGet)
             if (!keys.isEmpty()) {
                 List<String> values = redisTemplate.opsForValue().multiGet(keys);
 

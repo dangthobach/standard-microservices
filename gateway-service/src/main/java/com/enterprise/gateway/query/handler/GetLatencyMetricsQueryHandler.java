@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Handler for getting latency metrics by service
@@ -27,46 +26,57 @@ public class GetLatencyMetricsQueryHandler implements QueryHandler<GetLatencyMet
         List<LatencyDataDto> latencyData = new ArrayList<>();
 
         try {
-            Set<String> keys = redisTemplate.keys("dashboard:service:*:latency");
-
-            if (keys != null) {
-                for (String key : keys) {
-                    try {
-                        // Extract service name from key
-                        // Key format: dashboard:service:service-name:latency
-                        String serviceName = extractServiceName(key);
-
-                        String avgLatencyStr = redisTemplate.opsForValue().get(key);
-                        Long avgLatency = avgLatencyStr != null ? (long) Double.parseDouble(avgLatencyStr) : 0L;
-
-                        // For now, use approximations for P95 and P99
-                        // In production, you'd use a proper percentile tracking library
-                        Long p95 = (long) (avgLatency * 1.5);
-                        Long p99 = (long) (avgLatency * 2.0);
-
-                        latencyData.add(LatencyDataDto.builder()
-                            .service(serviceName)
-                            .p50(avgLatency)
-                            .p95(p95)
-                            .p99(p99)
-                            .build());
-
-                    } catch (Exception e) {
-                        log.error("Failed to parse latency data from key {}: {}", key, e.getMessage());
+            // 1. SCAN for service latency keys
+            List<String> keys = new ArrayList<>();
+            redisTemplate.execute(connection -> {
+                try (var cursor = connection.scan(org.springframework.data.redis.core.ScanOptions.scanOptions()
+                        .match("dashboard:service:*:latency")
+                        .count(100)
+                        .build())) {
+                    while (cursor.hasNext()) {
+                        keys.add(new String(cursor.next()));
                     }
                 }
-            }
+                return null;
+            }, true);
 
-            // Add Gateway latency from global metrics
-            String gatewayLatencyStr = redisTemplate.opsForValue().get("dashboard:latency:avg");
-            if (gatewayLatencyStr != null) {
-                Long gatewayLatency = (long) Double.parseDouble(gatewayLatencyStr);
-                latencyData.add(LatencyDataDto.builder()
-                    .service("Gateway")
-                    .p50(gatewayLatency)
-                    .p95((long) (gatewayLatency * 1.5))
-                    .p99((long) (gatewayLatency * 2.0))
-                    .build());
+            // 2. Add gateway latency key
+            keys.add("dashboard:latency:avg");
+
+            // 3. Fetch all values in one round-trip (Pipeline)
+            if (!keys.isEmpty()) {
+                List<String> values = redisTemplate.opsForValue().multiGet(keys);
+
+                if (values != null) {
+                    for (int i = 0; i < keys.size(); i++) {
+                        try {
+                            String key = keys.get(i);
+                            String avgLatencyStr = values.get(i);
+
+                            if (avgLatencyStr != null) {
+                                Long avgLatency = (long) Double.parseDouble(avgLatencyStr);
+
+                                // For now, use approximations for P95 and P99
+                                // In production, you'd use a proper percentile tracking library
+                                Long p95 = (long) (avgLatency * 1.5);
+                                Long p99 = (long) (avgLatency * 2.0);
+
+                                String serviceName = key.equals("dashboard:latency:avg")
+                                    ? "Gateway"
+                                    : extractServiceName(key);
+
+                                latencyData.add(LatencyDataDto.builder()
+                                    .service(serviceName)
+                                    .p50(avgLatency)
+                                    .p95(p95)
+                                    .p99(p99)
+                                    .build());
+                            }
+                        } catch (Exception e) {
+                            log.error("Failed to parse latency data from key {}: {}", keys.get(i), e.getMessage());
+                        }
+                    }
+                }
             }
 
         } catch (Exception e) {
