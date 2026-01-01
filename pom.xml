@@ -34,6 +34,9 @@
         <spring-boot.version>3.4.1</spring-boot.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
 
+        <!-- Service Discovery -->
+        <spring-cloud-consul.version>4.2.0</spring-cloud-consul.version>
+
         <!-- Database -->
         <postgresql.version>42.7.4</postgresql.version>
         <hikaricp.version>6.2.1</hikaricp.version>
@@ -85,6 +88,19 @@
                 <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <!-- Spring Cloud Consul (Service Discovery & Config) -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-consul-discovery</artifactId>
+                <version>${spring-cloud-consul.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-consul-config</artifactId>
+                <version>${spring-cloud-consul.version}</version>
             </dependency>
 
             <!-- PostgreSQL -->

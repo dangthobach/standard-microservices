@@ -3,6 +3,27 @@ version: '3.8'
 services:
   # ==================== INFRASTRUCTURE LAYER ====================
 
+  # Consul Service Discovery
+  consul:
+    image: hashicorp/consul:1.20
+    container_name: consul-server
+    command: agent -server -ui -bootstrap-expect=1 -client=0.0.0.0
+    ports:
+      - "8500:8500"  # HTTP API and Web UI
+      - "8600:8600/udp"  # DNS
+    environment:
+      CONSUL_BIND_INTERFACE: eth0
+      CONSUL_CLIENT_INTERFACE: eth0
+    volumes:
+      - consul-data:/consul/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # PostgreSQL Databases
   postgres-iam:
     image: postgres:16-alpine
@@ -223,6 +244,8 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
       KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/enterprise
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/enterprise/protocol/openid-connect/certs
       REDIS_HOST: redis
@@ -230,9 +253,14 @@ services:
       REDIS_PASSWORD: redis_password
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
     depends_on:
-      - redis
-      - keycloak
-      - zipkin
+      consul:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
     networks:
       - microservices-network
     healthcheck:
@@ -251,6 +279,8 @@ services:
       - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
       DB_HOST: postgres-iam
       DB_PORT: 5432
       DB_NAME: iam_db
@@ -263,6 +293,8 @@ services:
       REDIS_PASSWORD: redis_password
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
     depends_on:
+      consul:
+        condition: service_healthy
       postgres-iam:
         condition: service_healthy
       redis:
@@ -287,6 +319,8 @@ services:
       - "8082:8082"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
       DB_HOST: postgres-business
       DB_PORT: 5432
       DB_NAME: business_db
@@ -298,6 +332,8 @@ services:
       REDIS_PASSWORD: redis_password
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
     depends_on:
+      consul:
+        condition: service_healthy
       postgres-business:
         condition: service_healthy
       kafka:
@@ -317,6 +353,7 @@ networks:
     driver: bridge
 
 volumes:
+  consul-data:
   postgres-iam-data:
   postgres-business-data:
   postgres-process-data:

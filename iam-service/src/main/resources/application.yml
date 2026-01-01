@@ -5,6 +5,28 @@ spring:
   application:
     name: iam-service
 
+  cloud:
+    # Consul Service Discovery
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
+      discovery:
+        enabled: true
+        register: true
+        instance-id: ${spring.application.name}:${random.value}
+        service-name: ${spring.application.name}
+        prefer-ip-address: true
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+        health-check-timeout: 5s
+        health-check-critical-timeout: 30s
+        tags:
+          - iam
+          - virtual-threads
+          - authentication
+      config:
+        enabled: false  # Disable config for now, only use discovery
+
   # DataSource Configuration
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:iam_db}

@@ -6,6 +6,27 @@ spring:
     name: gateway-service
 
   cloud:
+    # Consul Service Discovery
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
+      discovery:
+        enabled: true
+        register: true
+        instance-id: ${spring.application.name}:${random.value}
+        service-name: ${spring.application.name}
+        prefer-ip-address: true
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+        health-check-timeout: 5s
+        health-check-critical-timeout: 30s
+        tags:
+          - gateway
+          - reactive
+          - webflux
+      config:
+        enabled: false  # Disable config for now, only use discovery
+
     gateway:
       # Route configurations
       routes:

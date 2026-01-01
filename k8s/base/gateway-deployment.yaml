@@ -55,6 +55,10 @@ spec:
               value: "k8s"
             - name: JAVA_OPTS
               value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+            - name: CONSUL_HOST
+              value: "consul-server"
+            - name: CONSUL_PORT
+              value: "8500"
             - name: KEYCLOAK_ISSUER_URI
               valueFrom:
                 configMapKeyRef:
