@@ -7,7 +7,7 @@ import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Keycloak Service with Resilience4j Patterns
@@ -29,7 +29,7 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class KeycloakService {
 
-    private final RestTemplate restTemplate;
+    private final WebClient webClient;
 
     /**
      * Get user from Keycloak with full resilience protection
@@ -50,7 +50,11 @@ public class KeycloakService {
         String url = "http://keycloak:8080/admin/realms/enterprise/users/" + userId;
 
         try {
-            return restTemplate.getForObject(url, String.class);
+            return webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
         } catch (Exception e) {
             log.error("Failed to fetch user from Keycloak: {}", e.getMessage());
             throw e;
@@ -89,8 +93,12 @@ public class KeycloakService {
         String url = "http://keycloak:8080/realms/enterprise/protocol/openid-connect/userinfo";
 
         try {
-            var response = restTemplate.getForEntity(url, String.class);
-            return response.getStatusCode().is2xxSuccessful();
+            return webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .map(response -> response.getStatusCode().is2xxSuccessful())
+                    .block();
         } catch (Exception e) {
             log.error("Token validation failed: {}", e.getMessage());
             throw e;
@@ -124,7 +132,11 @@ public class KeycloakService {
 
         try {
             String url = "http://keycloak:8080/admin/realms/enterprise/users";
-            restTemplate.getForObject(url, String.class);
+            webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
 
             log.info("Successfully synced users from Keycloak");
         } catch (Exception e) {

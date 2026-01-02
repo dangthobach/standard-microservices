@@ -1,4 +1,4 @@
-package com.enterprise.common.feign.error;
+package com.enterprise.gateway.feign.error;
 
 import lombok.Getter;
 

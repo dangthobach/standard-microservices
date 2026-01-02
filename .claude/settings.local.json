@@ -25,7 +25,27 @@
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
       "Bash(npx ng:*)",
-      "Bash(npx tsc --version)"
+      "Bash(npx tsc --version)",
+      "Bash(docker-compose up:*)",
+      "Bash(for dir in */)",
+      "Bash(do if [[ \"$dir\" == *-service/ ]])",
+      "Bash(then echo -n \"$dir: \")",
+      "Bash(if [ -f \"$dirDockerfile\" ])",
+      "Bash(then echo \"✓ Has Dockerfile\")",
+      "Bash(else echo \"✗ Missing Dockerfile\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(docker-compose build:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker start:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker ps:*)",
+      "Bash(curl:*)",
+      "Bash(docker exec:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(docker-compose down:*)"
     ]
   }
 }

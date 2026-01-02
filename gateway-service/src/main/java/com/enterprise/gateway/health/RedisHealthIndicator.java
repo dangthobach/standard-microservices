@@ -21,6 +21,7 @@ import java.time.Duration;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@org.springframework.boot.autoconfigure.condition.ConditionalOnBean(ReactiveRedisTemplate.class)
 public class RedisHealthIndicator implements ReactiveHealthIndicator {
 
     private final ReactiveRedisTemplate<String, Object> redisTemplate;

@@ -1,4 +1,4 @@
-package com.enterprise.common.feign.auth;
+package com.enterprise.gateway.feign.auth;
 
 import feign.RequestTemplate;
 import feign.auth.BasicAuthRequestInterceptor;

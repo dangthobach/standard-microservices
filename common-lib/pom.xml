@@ -18,10 +18,18 @@
     <description>Shared utilities, DTOs, and configurations for all microservices</description>
 
     <dependencies>
-        <!-- Spring Boot Starter -->
+        <!-- Spring Boot Starter Web (for servlet-based services) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Spring Boot Starter WebFlux (for reactive WebClient) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- Spring Boot Starter Validation -->

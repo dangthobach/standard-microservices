@@ -1,12 +1,21 @@
 # Multi-stage build for IAM Service with Virtual Threads
-FROM eclipse-temurin:21-jdk-alpine AS builder
-WORKDIR /app
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
+WORKDIR /workspace
 
+# Copy parent POM
 COPY pom.xml .
-COPY src ./src
 
-# Build
-RUN ./mvnw clean package -DskipTests
+# Copy all service POMs and common-lib for multi-module resolution
+COPY common-lib ./common-lib
+COPY gateway-service/pom.xml ./gateway-service/pom.xml
+COPY iam-service/pom.xml ./iam-service/pom.xml
+COPY business-service/pom.xml ./business-service/pom.xml
+
+# Copy iam-service source
+COPY iam-service/src ./iam-service/src
+
+# Build iam-service and its dependencies
+RUN mvn clean package -DskipTests -pl iam-service -am
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
@@ -14,7 +23,7 @@ WORKDIR /app
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /workspace/iam-service/target/*.jar app.jar
 
 EXPOSE 8081
 

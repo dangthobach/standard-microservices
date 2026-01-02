@@ -1,4 +1,4 @@
-package com.enterprise.common.feign.error;
+package com.enterprise.gateway.feign.error;
 
 /**
  * Exception for HTTP 429 Too Many Requests errors from Feign clients.

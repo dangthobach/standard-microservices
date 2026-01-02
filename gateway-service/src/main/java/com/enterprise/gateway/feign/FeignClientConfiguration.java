@@ -1,6 +1,6 @@
-package com.enterprise.common.feign;
+package com.enterprise.gateway.feign;
 
-import com.enterprise.common.feign.error.GlobalFeignErrorDecoder;
+import com.enterprise.gateway.feign.error.GlobalFeignErrorDecoder;
 import feign.Logger;
 import feign.Request;
 import feign.Retryer;
@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
  * @since 1.0.0
  */
 @Configuration
+@org.springframework.boot.autoconfigure.condition.ConditionalOnClass(name = "feign.codec.ErrorDecoder")
 public class FeignClientConfiguration {
 
     @Value("${feign.client.config.default.connect-timeout:5000}")

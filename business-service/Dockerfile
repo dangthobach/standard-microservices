@@ -1,4 +1,4 @@
-# Multi-stage build for Gateway Service
+# Multi-stage build for Business Service with Virtual Threads
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
 WORKDIR /workspace
 
@@ -11,30 +11,30 @@ COPY gateway-service/pom.xml ./gateway-service/pom.xml
 COPY iam-service/pom.xml ./iam-service/pom.xml
 COPY business-service/pom.xml ./business-service/pom.xml
 
-# Copy gateway-service source
-COPY gateway-service/src ./gateway-service/src
+# Copy business-service source
+COPY business-service/src ./business-service/src
 
-# Build gateway-service and its dependencies
-RUN mvn clean package -DskipTests -pl gateway-service -am
+# Build business-service and its dependencies
+RUN mvn clean package -DskipTests -pl business-service -am
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Add non-root user
+# Add non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
-# Copy JAR from builder
-COPY --from=builder /workspace/gateway-service/target/*.jar app.jar
+# Copy JAR from builder stage
+COPY --from=builder /workspace/business-service/target/*.jar app.jar
 
-# Expose port
-EXPOSE 8080
+# Expose business service port
+EXPOSE 8082
 
-# Health check
+# Health check for container orchestration
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD wget -q --spider http://localhost:8080/actuator/health || exit 1
+  CMD wget -q --spider http://localhost:8082/actuator/health || exit 1
 
-# Run with optimized JVM settings for containers
+# Enable Virtual Threads (Project Loom) and optimized JVM settings
 ENTRYPOINT ["java", \
   "-XX:+UseContainerSupport", \
   "-XX:MaxRAMPercentage=75.0", \

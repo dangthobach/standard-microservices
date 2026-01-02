@@ -24,60 +24,23 @@ services:
       timeout: 5s
       retries: 5
 
-  # PostgreSQL Databases
-  postgres-iam:
+  # PostgreSQL - Single instance with multiple schemas
+  postgres:
     image: postgres:16-alpine
-    container_name: postgres-iam
+    container_name: postgres
     environment:
-      POSTGRES_DB: iam_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: enterprise_db
     ports:
       - "5432:5432"
     volumes:
-      - postgres-iam-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-schemas.sql:/docker-entrypoint-initdb.d/init-schemas.sql
     networks:
       - microservices-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  postgres-business:
-    image: postgres:16-alpine
-    container_name: postgres-business
-    environment:
-      POSTGRES_DB: business_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres-business-data:/var/lib/postgresql/data
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  postgres-process:
-    image: postgres:16-alpine
-    container_name: postgres-process
-    environment:
-      POSTGRES_DB: process_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5434:5432"
-    volumes:
-      - postgres-process-data:/var/lib/postgresql/data
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d enterprise_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -120,7 +83,8 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka-broker
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -138,9 +102,10 @@ services:
       - microservices-network
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
-      interval: 10s
+      interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 60s
 
   # ==================== SECURITY & IDP ====================
 
@@ -153,7 +118,7 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres-iam:5432/iam_db
+      KC_DB_URL: jdbc:postgresql://postgres:5432/enterprise_db?currentSchema=iam
       KC_DB_USERNAME: postgres
       KC_DB_PASSWORD: postgres
       KC_HEALTH_ENABLED: "true"
@@ -161,15 +126,16 @@ services:
     ports:
       - "8180:8080"
     depends_on:
-      postgres-iam:
+      postgres:
         condition: service_healthy
     networks:
       - microservices-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/9000' || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 180s
 
   # ==================== OBSERVABILITY STACK ====================
 
@@ -237,8 +203,8 @@ services:
   # API Gateway
   gateway-service:
     build:
-      context: ./gateway-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: gateway-service/Dockerfile
     container_name: gateway-service
     ports:
       - "8080:8080"
@@ -272,8 +238,8 @@ services:
   # IAM Service
   iam-service:
     build:
-      context: ./iam-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: iam-service/Dockerfile
     container_name: iam-service
     ports:
       - "8081:8081"
@@ -281,9 +247,9 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       CONSUL_HOST: consul
       CONSUL_PORT: 8500
-      DB_HOST: postgres-iam
+      DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: iam_db
+      DB_NAME: enterprise_db?currentSchema=iam
       DB_USER: postgres
       DB_PASSWORD: postgres
       KEYCLOAK_SERVER_URL: http://keycloak:8080
@@ -295,7 +261,7 @@ services:
     depends_on:
       consul:
         condition: service_healthy
-      postgres-iam:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -312,8 +278,8 @@ services:
   # Business Service
   business-service:
     build:
-      context: ./business-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: business-service/Dockerfile
     container_name: business-service
     ports:
       - "8082:8082"
@@ -321,9 +287,9 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       CONSUL_HOST: consul
       CONSUL_PORT: 8500
-      DB_HOST: postgres-business
+      DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: business_db
+      DB_NAME: enterprise_db?currentSchema=business
       DB_USER: postgres
       DB_PASSWORD: postgres
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -334,7 +300,7 @@ services:
     depends_on:
       consul:
         condition: service_healthy
-      postgres-business:
+      postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
@@ -354,9 +320,7 @@ networks:
 
 volumes:
   consul-data:
-  postgres-iam-data:
-  postgres-business-data:
-  postgres-process-data:
+  postgres-data:
   redis-data:
   prometheus-data:
   grafana-data:

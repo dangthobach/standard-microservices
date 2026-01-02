@@ -1,4 +1,4 @@
-package com.enterprise.common.feign.error;
+package com.enterprise.gateway.feign.error;
 
 /**
  * Exception for HTTP 403 Forbidden errors from Feign clients.

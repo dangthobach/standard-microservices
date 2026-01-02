@@ -1,4 +1,4 @@
-package com.enterprise.common.feign.error;
+package com.enterprise.gateway.feign.error;
 
 import com.enterprise.common.exception.BusinessException;
 import com.fasterxml.jackson.databind.JsonNode;
