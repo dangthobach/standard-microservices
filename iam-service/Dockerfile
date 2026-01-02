@@ -2,20 +2,22 @@
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
 WORKDIR /workspace
 
-# Copy parent POM
+# Step 1: Copy only POM files first (for dependency caching)
 COPY pom.xml .
-
-# Copy all service POMs and common-lib for multi-module resolution
-COPY common-lib ./common-lib
+COPY common-lib/pom.xml ./common-lib/pom.xml
 COPY gateway-service/pom.xml ./gateway-service/pom.xml
 COPY iam-service/pom.xml ./iam-service/pom.xml
 COPY business-service/pom.xml ./business-service/pom.xml
 
-# Copy iam-service source
+# Step 2: Download dependencies (this layer is CACHED until POMs change)
+RUN mvn dependency:go-offline -pl iam-service -am
+
+# Step 3: Copy source code (only this executes on code changes)
+COPY common-lib/src ./common-lib/src
 COPY iam-service/src ./iam-service/src
 
-# Build iam-service and its dependencies
-RUN mvn clean package -DskipTests -pl iam-service -am
+# Step 4: Build with offline mode (dependencies already cached)
+RUN mvn clean package -DskipTests -o -pl iam-service -am
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

@@ -3,6 +3,8 @@ package com.enterprise.gateway;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -14,7 +16,15 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * - Routes to downstream microservices
  * - Collects CCU (Concurrent Users) metrics via scheduled tasks
  */
-@SpringBootApplication(scanBasePackages = {"com.enterprise.gateway", "com.enterprise.common"})
+@SpringBootApplication
+@ComponentScan(
+    basePackages = {"com.enterprise.gateway", "com.enterprise.common"},
+    // ⚠️ CRITICAL: Exclude Feign package - Gateway is Reactive and incompatible with blocking Feign
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.REGEX,
+        pattern = "com\\.enterprise\\.common\\.feign\\..*"
+    )
+)
 @EnableCaching
 @EnableScheduling
 public class GatewayApplication {

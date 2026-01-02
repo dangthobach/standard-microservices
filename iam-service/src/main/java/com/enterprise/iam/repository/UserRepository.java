@@ -1,6 +1,7 @@
 package com.enterprise.iam.repository;
 
 import com.enterprise.iam.entity.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,6 +12,7 @@ import java.util.UUID;
  * User Repository
  * <p>
  * JPA repository for User entity operations.
+ * Uses @EntityGraph to prevent N+1 query problems when fetching user roles.
  *
  * @author Enterprise Team
  * @since 1.0.0
@@ -19,19 +21,27 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     /**
-     * Find user by email.
+     * Find user by email with roles eagerly fetched.
+     * <p>
+     * Uses @EntityGraph to fetch roles in a single query, preventing N+1 problem.
+     * Critical for high-load scenarios (1M CCU).
      *
      * @param email Email address
-     * @return Optional User
+     * @return Optional User with roles
      */
+    @EntityGraph(attributePaths = {"roles"})
     Optional<User> findByEmail(String email);
 
     /**
-     * Find user by Keycloak ID.
+     * Find user by Keycloak ID with roles eagerly fetched.
+     * <p>
+     * Uses @EntityGraph to fetch roles in a single query, preventing N+1 problem.
+     * Critical for authentication flow under high load.
      *
      * @param keycloakId Keycloak user ID
-     * @return Optional User
+     * @return Optional User with roles
      */
+    @EntityGraph(attributePaths = {"roles"})
     Optional<User> findByKeycloakId(String keycloakId);
 
     /**

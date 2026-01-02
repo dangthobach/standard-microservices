@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: enterprise-system
+
+resources:
+  # Infrastructure components
+  - postgres-statefulset.yaml
+  - redis-statefulset.yaml
+  - consul-statefulset.yaml
+
+  # Application services
+  - gateway-deployment.yaml
+  - iam-deployment.yaml
+  - business-deployment.yaml
+  - frontend-deployment.yaml
+
+  # Configuration
+  - configmap.yaml
+  - secrets.yaml
+
+  # Networking
+  - ingress.yaml
+
+  # Autoscaling
+  - hpa.yaml
+
+commonLabels:
+  project: enterprise-microservices
+  managed-by: kustomize
+
+images:
+  - name: enterprise/gateway-service
+    newTag: latest
+  - name: enterprise/iam-service
+    newTag: latest
+  - name: enterprise/business-service
+    newTag: latest
+  - name: enterprise/frontend
+    newTag: latest

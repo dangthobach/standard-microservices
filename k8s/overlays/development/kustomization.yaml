@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: enterprise-dev
+
+bases:
+  - ../../base
+
+namePrefix: dev-
+
+commonLabels:
+  environment: development
+
+# Development-specific replica counts (minimal)
+replicas:
+  - name: gateway-service
+    count: 1
+  - name: iam-service
+    count: 1
+  - name: business-service
+    count: 1
+  - name: frontend
+    count: 1
+
+# Development-specific configurations
+configMapGenerator:
+  - name: app-config-dev
+    behavior: merge
+    literals:
+      - ENVIRONMENT=development
+      - TRACING_SAMPLE_RATE=1.0  # 100% tracing for dev
+      - FEIGN_LOGGER_LEVEL=FULL  # Full logging for dev
+      - SPRING_PROFILES_ACTIVE=dev
+
+images:
+  - name: enterprise/gateway-service
+    newTag: dev-latest
+  - name: enterprise/iam-service
+    newTag: dev-latest
+  - name: enterprise/business-service
+    newTag: dev-latest
+  - name: enterprise/frontend
+    newTag: dev-latest

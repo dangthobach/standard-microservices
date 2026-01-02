@@ -118,7 +118,7 @@ management:
         http.server.requests: true
   tracing:
     sampling:
-      probability: 1.0
+      probability: ${TRACING_SAMPLE_RATE:0.01}  # 1% sampling for production (1M CCU), 100% for dev
   zipkin:
     tracing:
       endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
@@ -139,6 +139,6 @@ feign:
       default:
         connectTimeout: 5000
         readTimeout: 5000
-        loggerLevel: basic
+        logger-level: ${FEIGN_LOGGER_LEVEL:BASIC}  # NONE for production, BASIC for staging, FULL for dev
   circuitbreaker:
     enabled: true

@@ -1,13 +1,14 @@
 package com.enterprise.iam.service;
 
+import com.enterprise.iam.client.KeycloakClient;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Keycloak Service with Resilience4j Patterns
@@ -29,7 +30,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 @RequiredArgsConstructor
 public class KeycloakService {
 
-    private final WebClient webClient;
+    private final KeycloakClient keycloakClient;
+
+    @Value("${app.keycloak.realm:enterprise}")
+    private String realm;
 
     /**
      * Get user from Keycloak with full resilience protection
@@ -47,14 +51,8 @@ public class KeycloakService {
     public String getUserFromKeycloak(String userId) {
         log.debug("Fetching user {} from Keycloak", userId);
 
-        String url = "http://keycloak:8080/admin/realms/enterprise/users/" + userId;
-
         try {
-            return webClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+            return keycloakClient.getUser(realm, userId);
         } catch (Exception e) {
             log.error("Failed to fetch user from Keycloak: {}", e.getMessage());
             throw e;
@@ -90,15 +88,9 @@ public class KeycloakService {
     public boolean validateToken(String token) {
         log.debug("Validating token with Keycloak");
 
-        String url = "http://keycloak:8080/realms/enterprise/protocol/openid-connect/userinfo";
-
         try {
-            return webClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .map(response -> response.getStatusCode().is2xxSuccessful())
-                    .block();
+            String userInfo = keycloakClient.getUserInfo(realm);
+            return userInfo != null && !userInfo.isEmpty();
         } catch (Exception e) {
             log.error("Token validation failed: {}", e.getMessage());
             throw e;
@@ -131,14 +123,8 @@ public class KeycloakService {
         // and doesn't block other operations
 
         try {
-            String url = "http://keycloak:8080/admin/realms/enterprise/users";
-            webClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-
-            log.info("Successfully synced users from Keycloak");
+            String users = keycloakClient.getUsers(realm);
+            log.info("Successfully synced users from Keycloak: {} users", users);
         } catch (Exception e) {
             log.error("User sync failed: {}", e.getMessage());
             throw e;

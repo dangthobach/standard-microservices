@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: enterprise-production
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Project definition
+  project: default
+
+  # Source repository
+  source:
+    repoURL: https://github.com/your-org/standard-microservices.git
+    targetRevision: main
+    path: k8s/overlays/production
+
+  # Destination cluster
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: enterprise-prod
+
+  # Sync policy
+  syncPolicy:
+    automated:
+      prune: true      # Auto-delete resources that are no longer in Git
+      selfHeal: true   # Auto-sync when cluster state deviates from Git
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Health assessment
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas  # Ignore replica count differences (managed by HPA)
+
+  # Notification configuration
+  revisionHistoryLimit: 10

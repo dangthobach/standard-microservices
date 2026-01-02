@@ -106,7 +106,8 @@ spring:
             client-name: Keycloak
         provider:
           keycloak:
-            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}
+            # ⚠️ REMOVED issuer-uri to prevent startup blocking on Keycloak availability
+            # Spring will not auto-discover OIDC configuration at startup
             authorization-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}/protocol/openid-connect/auth
             token-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}/protocol/openid-connect/token
             user-info-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}/protocol/openid-connect/userinfo
@@ -151,7 +152,7 @@ management:
         http.server.requests: true
   tracing:
     sampling:
-      probability: 1.0
+      probability: ${TRACING_SAMPLE_RATE:0.01}  # 1% sampling for production (1M CCU), 100% for dev
   zipkin:
     tracing:
       endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}

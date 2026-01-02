@@ -45,6 +45,11 @@
                     <groupId>org.apache.tomcat</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
+                <!-- ❌ Exclude OpenFeign (blocking) - Gateway uses WebClient (reactive) -->
+                <exclusion>
+                    <groupId>org.springframework.cloud</groupId>
+                    <artifactId>spring-cloud-starter-openfeign</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 

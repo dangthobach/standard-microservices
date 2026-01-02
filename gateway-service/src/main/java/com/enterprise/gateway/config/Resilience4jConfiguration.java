@@ -134,7 +134,7 @@ public class Resilience4jConfiguration {
     public RetryRegistry retryRegistry() {
         RetryConfig config = RetryConfig.custom()
                 .maxAttempts(3)
-                .waitDuration(Duration.ofMillis(100))
+                // Use intervalFunction for exponential backoff (replaces waitDuration)
                 .intervalFunction(io.github.resilience4j.core.IntervalFunction
                         .ofExponentialBackoff(100, 2.0))
 
