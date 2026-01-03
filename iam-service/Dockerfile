@@ -1,4 +1,4 @@
-# Multi-stage build for IAM Service with Virtual Threads
+# Multi-stage build for IAM Service
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
 WORKDIR /workspace
 
@@ -10,7 +10,14 @@ COPY iam-service/pom.xml ./iam-service/pom.xml
 COPY business-service/pom.xml ./business-service/pom.xml
 
 # Step 2: Download dependencies (this layer is CACHED until POMs change)
-RUN mvn dependency:go-offline -pl iam-service -am
+# Add retry logic for unstable networks
+RUN for i in 1 2 3; do \
+        mvn dependency:go-offline -pl iam-service -am \
+            -Dmaven.wagon.http.retryHandler.count=3 \
+            -Dmaven.wagon.http.connectTimeout=10000 \
+            && break || \
+        (echo "Attempt $i failed, waiting before retry..." && sleep 5); \
+    done
 
 # Step 3: Copy source code (only this executes on code changes)
 COPY common-lib/src ./common-lib/src
@@ -22,13 +29,17 @@ RUN mvn clean package -DskipTests -o -pl iam-service -am
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
+# Add non-root user
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
+# Copy JAR from builder
 COPY --from=builder /workspace/iam-service/target/*.jar app.jar
 
+# Expose port
 EXPOSE 8081
 
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD wget -q --spider http://localhost:8081/actuator/health || exit 1
 

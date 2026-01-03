@@ -145,6 +145,13 @@
                 <version>${mapstruct.version}</version>
             </dependency>
 
+            <!-- MapStruct Processor (needed for annotation processing) -->
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+
             <!-- Commons Lang3 -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
