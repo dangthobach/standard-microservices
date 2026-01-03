@@ -16,10 +16,10 @@ import { authGuard } from './core/guards/auth.guard';
  * All routes use lazy loading for optimal performance
  */
 export const routes: Routes = [
-  // Default route - redirect to customers (auth disabled for demo)
+  // Default route - redirect to dashboard (requires auth)
   {
     path: '',
-    redirectTo: '/customers',
+    redirectTo: '/dashboard',
     pathMatch: 'full'
   },
 
@@ -38,12 +38,12 @@ export const routes: Routes = [
     title: 'Authenticating...'
   },
 
-  // Protected routes (auth temporarily disabled for demo)
+  // Protected routes (require authentication)
   {
     path: 'dashboard',
     loadComponent: () => import('./features/dashboard/dashboard.component')
       .then(m => m.DashboardComponent),
-    // canActivate: [authGuard], // Disabled for demo
+    canActivate: [authGuard],
     title: 'Dashboard - Enterprise Microservices'
   },
 
@@ -51,7 +51,7 @@ export const routes: Routes = [
     path: 'users',
     loadChildren: () => import('./features/users/users.routes')
       .then(m => m.USERS_ROUTES),
-    // canActivate: [authGuard], // Disabled for demo
+    canActivate: [authGuard],
     title: 'Users - Enterprise Microservices'
   },
 
@@ -59,7 +59,7 @@ export const routes: Routes = [
     path: 'organizations',
     loadChildren: () => import('./features/organizations/organizations.routes')
       .then(m => m.ORGANIZATIONS_ROUTES),
-    // canActivate: [authGuard], // Disabled for demo
+    canActivate: [authGuard],
     title: 'Organizations - Enterprise Microservices'
   },
 
@@ -67,7 +67,7 @@ export const routes: Routes = [
     path: 'customers',
     loadComponent: () => import('./features/customers/customers.component')
       .then(m => m.CustomersComponent),
-    // canActivate: [authGuard], // Disabled for demo
+    canActivate: [authGuard],
     title: 'Customers - Enterprise Microservices'
   },
 
@@ -75,7 +75,7 @@ export const routes: Routes = [
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.component')
       .then(m => m.SettingsComponent),
-    // canActivate: [authGuard], // Disabled for demo
+    canActivate: [authGuard],
     title: 'Settings - Enterprise Microservices'
   },
 

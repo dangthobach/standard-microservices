@@ -81,10 +81,13 @@
       "serviceAccountsEnabled": false,
       "redirectUris": [
         "http://localhost:4200/*",
-        "http://localhost:4200/auth/callback"
+        "http://localhost:4200/auth/callback",
+        "http://localhost/*",
+        "http://localhost/auth/callback"
       ],
       "webOrigins": [
-        "http://localhost:4200"
+        "http://localhost:4200",
+        "http://localhost"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
@@ -106,11 +109,16 @@
       "redirectUris": [
         "http://localhost:8080/*",
         "http://localhost:8080/login/oauth2/code/keycloak",
-        "http://localhost:8080/auth/login/success"
+        "http://localhost:8080/auth/login/success",
+        "http://gateway-service:8080/*",
+        "http://gateway-service:8080/login/oauth2/code/keycloak",
+        "http://gateway-service:8080/auth/login/success"
       ],
       "webOrigins": [
         "http://localhost:8080",
-        "http://localhost:4200"
+        "http://localhost:4200",
+        "http://localhost",
+        "http://gateway-service:8080"
       ],
       "attributes": {
         "post.logout.redirect.uris": "http://localhost:8080"
