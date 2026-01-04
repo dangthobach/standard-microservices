@@ -38,6 +38,7 @@ import java.time.Instant;
 @Setter
 public abstract class StatefulEntity<ID extends Serializable, S extends Enum<S>> 
         extends SoftDeletableEntity<ID> {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Current status of the entity

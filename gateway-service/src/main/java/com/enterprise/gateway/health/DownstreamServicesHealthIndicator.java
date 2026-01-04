@@ -81,10 +81,12 @@ public class DownstreamServicesHealthIndicator implements ReactiveHealthIndicato
         return Mono.zip(
                 healthChecks.values(),
                 results -> {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object>[] typedResults = (Map<String, Object>[]) results;
                     Map<String, Map<String, Object>> combined = new HashMap<>();
                     int i = 0;
                     for (String service : SERVICES) {
-                        combined.put(service, (Map<String, Object>) results[i++]);
+                        combined.put(service, typedResults[i++]);
                     }
                     return combined;
                 }

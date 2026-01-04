@@ -235,3 +235,4 @@ Sau khi khởi động thành công, các services có thể truy cập tại:
 3. **Đợi đủ thời gian** cho Keycloak (2-3 phút) và IAM Service (20-30 giây cho migrations)
 4. **Sử dụng `docker-compose ps`** để theo dõi trạng thái real-time
 
+

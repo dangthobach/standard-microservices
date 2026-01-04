@@ -37,6 +37,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class UserRequest extends StatefulEntity<UUID, UserRequestStatus> {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Email address for the new user

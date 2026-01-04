@@ -305,6 +305,8 @@ public class SessionService {
      * Exception for expired session
      */
     public static class SessionExpiredException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+        
         public SessionExpiredException(String message) {
             super(message);
         }

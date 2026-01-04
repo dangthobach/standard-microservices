@@ -51,6 +51,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User extends SoftDeletableEntity<UUID> {
+    private static final long serialVersionUID = 1L;
 
     @Column(nullable = false, unique = true)
     private String keycloakId;

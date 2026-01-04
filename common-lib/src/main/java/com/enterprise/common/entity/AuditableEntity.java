@@ -49,6 +49,7 @@ import java.time.Instant;
 @Getter
 @Setter
 public abstract class AuditableEntity<ID extends Serializable> extends BaseEntity<ID> {
+    private static final long serialVersionUID = 1L;
 
     /**
      * User who created this entity

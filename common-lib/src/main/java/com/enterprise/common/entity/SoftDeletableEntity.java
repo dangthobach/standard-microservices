@@ -39,6 +39,7 @@ import java.time.Instant;
 @Getter
 @Setter
 public abstract class SoftDeletableEntity<ID extends Serializable> extends AuditableEntity<ID> {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Flag indicating if entity is deleted

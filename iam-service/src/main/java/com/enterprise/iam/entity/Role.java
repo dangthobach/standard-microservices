@@ -33,6 +33,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role extends SoftDeletableEntity<UUID> {
+    private static final long serialVersionUID = 1L;
 
     @Column(nullable = false, unique = true, length = 50)
     private String name;

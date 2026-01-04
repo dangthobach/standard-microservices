@@ -36,6 +36,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Permission extends SoftDeletableEntity<UUID> {
+    private static final long serialVersionUID = 1L;
 
     @Column(nullable = false, unique = true, length = 100)
     private String code;

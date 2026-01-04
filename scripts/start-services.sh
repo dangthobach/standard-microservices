@@ -92,3 +92,4 @@ echo ""
 echo "To view logs: docker-compose logs -f [service-name]"
 echo "To stop all:  docker-compose down"
 
+

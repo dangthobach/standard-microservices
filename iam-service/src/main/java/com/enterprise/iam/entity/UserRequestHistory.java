@@ -35,6 +35,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class UserRequestHistory extends AuditableEntity<UUID> {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Reference to the UserRequest
