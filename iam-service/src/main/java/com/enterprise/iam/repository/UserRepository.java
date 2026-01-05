@@ -29,7 +29,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * @param email Email address
      * @return Optional User with roles
      */
-    @EntityGraph(attributePaths = {"roles"})
+    @EntityGraph(attributePaths = { "roles" })
     Optional<User> findByEmail(String email);
 
     /**
@@ -41,7 +41,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * @param keycloakId Keycloak user ID
      * @return Optional User with roles
      */
-    @EntityGraph(attributePaths = {"roles"})
+    @EntityGraph(attributePaths = { "roles" })
     Optional<User> findByKeycloakId(String keycloakId);
 
     /**
@@ -75,4 +75,16 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * @return true if active user exists
      */
     boolean existsByKeycloakIdAndDeletedFalse(String keycloakId);
+
+    /**
+     * Find all permission codes for a user.
+     * Joins User -> Role -> Permission to get distinct permission codes.
+     * <p>
+     * Used by Gateway to cache User Permissions.
+     *
+     * @param userId User ID
+     * @return List of permission codes (e.g. "ORDER:CREATE")
+     */
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p.code FROM User u JOIN u.roles r JOIN r.permissions p WHERE u.id = :userId AND u.deleted = false AND r.deleted = false AND p.deleted = false")
+    java.util.List<String> findPermissionCodesByUserId(UUID userId);
 }

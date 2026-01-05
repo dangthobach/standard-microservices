@@ -90,6 +90,12 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+        
+        <!-- Caffeine Cache (L1 Cache) -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

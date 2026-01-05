@@ -1,0 +1,35 @@
+# Task: Centralized AuthZ & Performance Optimization
+
+## Status
+- [x] **Analyze Architecture**
+    - [x] Review Gateway & IAM codebase
+    - [x] Identify decentralized AuthZ issues
+- [x] **Design Centralized AuthZ**
+    - [x] Create API Workflow for Business Service (`API_WORKFLOW_BUSINESS.md`)
+    - [x] Create Implementation Plan (`implementation_plan_authz.md`)
+    - [x] Update Plan for Dynamic DB-Driven Policy
+- [x] **Implement IAM Service (AuthZ Source)**
+    - [x] Create `EndpointProtection` Entity
+    - [x] Create `EndpointProtectionRepository`
+    - [x] Implement `InternalAuthZController`
+    - [x] Update `UserRepository` for optimized permission fetching
+    - [x] Create Database Migrations (V4, V5)
+- [x] **Implement Gateway Service (Enforcement)**
+    - [x] Create `AuthZService` (L1/L2 Caching)
+    - [x] Create `PolicyManager` (Dynamic Rule Sync)
+    - [x] Create `CentralizedAuthZFilter`
+- [x] **Implement Business Service Optimization**
+    - [x] Create `Product` Entity & Repository
+    - [x] Implement `ProductService` with `@Cacheable` (L2 Redis)
+    - [x] Configure `CacheConfig` (Caffeine L1 support)
+- [x] **Verification**
+    - [x] Run `mvn clean install`
+    - [ ] Verify Startup (Optional / User Manual)
+- [x] **Frontend Integration (Product Page)**
+    - [x] Create Backend `ProductController`
+    - [x] Create Frontend Model & Service
+    - [x] Create `ProductListComponent`
+    - [x] Configure Routing (`/products`)
+- [ ] **Phase 2: Production Readiness**
+    - [ ] Database Migration Setup (Flyway)
+    - [ ] Async Processing (Kafka)
