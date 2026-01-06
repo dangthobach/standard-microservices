@@ -215,6 +215,7 @@ services:
       CONSUL_PORT: 8500
       KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/enterprise
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/enterprise/protocol/openid-connect/certs
+      KEYCLOAK_CLIENT_SECRET: gateway-client-secret-change-me-in-production
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: redis_password

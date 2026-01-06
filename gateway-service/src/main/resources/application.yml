@@ -36,7 +36,7 @@ spring:
           predicates:
             - Path=/api/iam/**
           filters:
-            - StripPrefix=2
+            - RewritePath=/api/iam/(?<segment>.*), /api/${segment}
 
         # Business Service Routes
         - id: business-service
@@ -44,7 +44,7 @@ spring:
           predicates:
             - Path=/api/business/**
           filters:
-            - StripPrefix=2
+            - RewritePath=/api/business/(?<segment>.*), /api/${segment}
 
         # Process Management Service Routes
         - id: process-service
@@ -52,7 +52,7 @@ spring:
           predicates:
             - Path=/api/process/**
           filters:
-            - StripPrefix=2
+            - RewritePath=/api/process/(?<segment>.*), /api/${segment}
 
         # Integration Service Routes
         - id: integration-service
@@ -60,7 +60,7 @@ spring:
           predicates:
             - Path=/api/integration/**
           filters:
-            - StripPrefix=2
+            - RewritePath=/api/integration/(?<segment>.*), /api/${segment}
 
       # Global CORS configuration
       globalcors:
@@ -106,12 +106,16 @@ spring:
             client-name: Keycloak
         provider:
           keycloak:
-            # ⚠️ REMOVED issuer-uri to prevent startup blocking on Keycloak availability
-            # Spring will not auto-discover OIDC configuration at startup
-            authorization-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}/protocol/openid-connect/auth
-            token-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}/protocol/openid-connect/token
-            user-info-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/enterprise}/protocol/openid-connect/userinfo
-            jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/enterprise/protocol/openid-connect/certs}
+            # ⚠️ CRITICAL: Use localhost:8180 for browser-facing URLs (authorization, token, userinfo)
+            # Browser cannot resolve Docker internal hostname 'keycloak:8080'
+            # Authorization URI - Used by browser redirect
+            authorization-uri: http://localhost:8180/realms/enterprise/protocol/openid-connect/auth
+            # Token URI - Used by gateway server (can use internal hostname in Docker)
+            token-uri: ${KEYCLOAK_TOKEN_URI:http://keycloak:8080/realms/enterprise/protocol/openid-connect/token}
+            # UserInfo URI - Used by gateway server  
+            user-info-uri: ${KEYCLOAK_USERINFO_URI:http://keycloak:8080/realms/enterprise/protocol/openid-connect/userinfo}
+            # JWK Set URI - Used by gateway server for JWT validation
+            jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/enterprise/protocol/openid-connect/certs}
             user-name-attribute: preferred_username
 
       # OAuth2 Resource Server (for JWT validation)
@@ -350,3 +354,16 @@ metrics:
     enabled: true
     # Heartbeat interval (milliseconds) - how often to report health metrics
     heartbeat-interval: 5000  # 5 seconds
+
+# Gateway Health Check Configuration
+gateway:
+  health:
+    # Downstream service health check URLs
+    # These are direct HTTP endpoints (bypass service discovery)
+    # In Docker: Use service names (e.g., http://iam-service:8081)
+    # In K8s: Override via ConfigMap to use FQDN (e.g., http://iam-service.default.svc.cluster.local:8081)
+    downstream-services:
+      iam-service: ${GATEWAY_HEALTH_IAM_SERVICE:http://iam-service:8081/actuator/health}
+      business-service: ${GATEWAY_HEALTH_BUSINESS_SERVICE:http://business-service:8082/actuator/health}
+      process-service: ${GATEWAY_HEALTH_PROCESS_SERVICE:http://process-service:8083/actuator/health}
+      integration-service: ${GATEWAY_HEALTH_INTEGRATION_SERVICE:http://integration-service:8084/actuator/health}

@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/iam/requests")
+@RequestMapping("/api/requests")
 @RequiredArgsConstructor
 @Tag(name = "User Request Management", description = "Maker/Checker workflow for user creation requests")
 public class UserRequestController {

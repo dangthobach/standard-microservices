@@ -18,7 +18,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
@@ -56,8 +55,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Object>> handleBusinessException(
-            BusinessException ex,
-            WebRequest request
+            BusinessException ex
     ) {
         log.warn("Business exception: {} - {}", ex.getErrorCode(), ex.getMessage());
 
@@ -88,8 +86,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationException(
-            MethodArgumentNotValidException ex,
-            WebRequest request
+            MethodArgumentNotValidException ex
     ) {
         log.warn("Validation exception: {}", ex.getMessage());
 
@@ -126,8 +123,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleConstraintViolationException(
-            ConstraintViolationException ex,
-            WebRequest request
+            ConstraintViolationException ex
     ) {
         log.warn("Constraint violation exception: {}", ex.getMessage());
 
@@ -164,8 +160,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class})
     public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(
-            Exception ex,
-            WebRequest request
+            Exception ex
     ) {
         log.warn("Authentication exception: {}", ex.getMessage());
 
@@ -187,8 +182,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(
-            AccessDeniedException ex,
-            WebRequest request
+            AccessDeniedException ex
     ) {
         log.warn("Access denied: {}", ex.getMessage());
 
@@ -210,8 +204,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(
-            IllegalArgumentException ex,
-            WebRequest request
+            IllegalArgumentException ex
     ) {
         log.warn("Illegal argument: {}", ex.getMessage());
 
@@ -233,8 +226,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiResponse<Object>> handleTypeMismatch(
-            MethodArgumentTypeMismatchException ex,
-            WebRequest request
+            MethodArgumentTypeMismatchException ex
     ) {
         String typeName = ex.getRequiredType() != null ?
                 ex.getRequiredType().getSimpleName() : "unknown";
@@ -262,8 +254,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGlobalException(
-            Exception ex,
-            WebRequest request
+            Exception ex
     ) {
         log.error("Unexpected exception", ex);
 

@@ -182,6 +182,9 @@
         "http://localhost:8080/*",
         "http://localhost:8080/login/oauth2/code/keycloak",
         "http://localhost:8080/auth/login/success",
+        "http://localhost/*",
+        "http://localhost/login/oauth2/code/keycloak",
+        "http://localhost/auth/login/success",
         "http://gateway-service:8080/*",
         "http://gateway-service:8080/login/oauth2/code/keycloak",
         "http://gateway-service:8080/auth/login/success"

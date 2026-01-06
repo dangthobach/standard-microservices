@@ -4,6 +4,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.stereotype.Component;
@@ -17,14 +19,18 @@ import java.util.Map;
 
 /**
  * Advanced Health Check for Downstream Services
- *
+ * <p>
  * Checks:
  * 1. Service availability (HTTP health endpoint)
  * 2. Circuit breaker state
  * 3. Response time
  * 4. Failure rate
- *
- * Aggregates health of all downstream services
+ * <p>
+ * Aggregates health of all downstream services.
+ * <p>
+ * IMPORTANT: Uses standard (non-load-balanced) WebClient.Builder to make
+ * direct HTTP calls to configured service URLs. This bypasses service discovery
+ * and prevents "No servers available for service: IP" errors.
  */
 @Slf4j
 @Component
@@ -32,18 +38,26 @@ import java.util.Map;
 public class DownstreamServicesHealthIndicator implements ReactiveHealthIndicator {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
-    private final WebClient.Builder webClientBuilder;
+    
+    /**
+     * Use standard WebClient.Builder (not @LoadBalanced) for direct HTTP calls.
+     * This prevents LoadBalancer from trying to resolve IP addresses as service names.
+     */
+    @Qualifier("standardWebClientBuilder")
+    private final WebClient.Builder standardWebClientBuilder;
+
+    // Health check URLs are now configured via application.yml
+    @Value("${gateway.health.downstream-services.iam-service}")
+    private String iamServiceHealthUrl;
+
+    @Value("${gateway.health.downstream-services.business-service}")
+    private String businessServiceHealthUrl;
 
     // Only check services that actually run in the current deployment
     private static final String[] SERVICES = {
             "iam-service",
             "business-service"
     };
-
-    private static final Map<String, String> SERVICE_URLS = Map.of(
-            "iam-service", "http://iam-service:8081/actuator/health",
-            "business-service", "http://business-service:8082/actuator/health"
-    );
 
     @Override
     public Mono<Health> health() {
@@ -84,14 +98,27 @@ public class DownstreamServicesHealthIndicator implements ReactiveHealthIndicato
 
     /**
      * Check health of a single service
+     * <p>
+     * Uses standard WebClient (not load-balanced) to make direct HTTP calls
+     * to the configured service URL. This bypasses service discovery and prevents
+     * LoadBalancer from trying to resolve IP addresses as service names.
      */
     private Mono<Map<String, Object>> checkServiceHealth(String serviceName) {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(serviceName);
-        String url = SERVICE_URLS.get(serviceName);
+        String url = getServiceHealthUrl(serviceName);
+
+        if (url == null || url.isBlank()) {
+            log.warn("No health check URL configured for service: {}", serviceName);
+            Map<String, Object> health = new HashMap<>();
+            health.put("status", "UNKNOWN");
+            health.put("error", "No health check URL configured");
+            return Mono.just(health);
+        }
 
         long startTime = System.currentTimeMillis();
 
-        return webClientBuilder.build()
+        // Use standard WebClient (not load-balanced) for direct HTTP calls
+        return standardWebClientBuilder.build()
                 .get()
                 .uri(url)
                 .retrieve()
@@ -121,5 +148,16 @@ public class DownstreamServicesHealthIndicator implements ReactiveHealthIndicato
 
                     return Mono.just(health);
                 });
+    }
+
+    /**
+     * Get health check URL for a service from configuration
+     */
+    private String getServiceHealthUrl(String serviceName) {
+        return switch (serviceName) {
+            case "iam-service" -> iamServiceHealthUrl;
+            case "business-service" -> businessServiceHealthUrl;
+            default -> null;
+        };
     }
 }

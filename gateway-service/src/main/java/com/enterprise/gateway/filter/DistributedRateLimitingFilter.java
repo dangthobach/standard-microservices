@@ -8,10 +8,13 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
+import io.lettuce.core.TimeoutOptions;
+import io.lettuce.core.ClientOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -25,6 +28,7 @@ import reactor.core.publisher.Mono;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.time.Duration;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 /**
@@ -53,8 +57,10 @@ import java.util.function.Supplier;
 @Component
 public class DistributedRateLimitingFilter implements GlobalFilter, Ordered {
 
-    private ProxyManager<String> proxyManager;
-    private StatefulRedisConnection<String, byte[]> redisConnection;
+    private volatile ProxyManager<String> proxyManager;
+    private volatile StatefulRedisConnection<String, byte[]> redisConnection;
+    private volatile RedisClient redisClient;
+    private final ReentrantLock connectionLock = new ReentrantLock();
 
     /**
      * Local Caffeine cache as fallback when Redis is down
@@ -73,6 +79,9 @@ public class DistributedRateLimitingFilter implements GlobalFilter, Ordered {
     @Value("${spring.data.redis.port:6379}")
     private int redisPort;
 
+    @Value("${spring.data.redis.password:}")
+    private String redisPassword;
+
     @Value("${ratelimit.anonymous.capacity:100}")
     private long anonymousCapacity;
 
@@ -82,36 +91,119 @@ public class DistributedRateLimitingFilter implements GlobalFilter, Ordered {
     @Value("${ratelimit.premium.capacity:10000}")
     private long premiumCapacity;
 
-    private boolean redisAvailable = true;
+    private volatile boolean redisAvailable = false;
+    private volatile long lastConnectionAttempt = 0;
+    private static final long CONNECTION_RETRY_INTERVAL_MS = 30_000; // Retry every 30 seconds
 
     @PostConstruct
     public void init() {
+        // Lazy initialization - don't block startup if Redis is not ready
+        // Connection will be attempted on first use with retry logic
+        log.info("Distributed Rate Limiting Filter initialized. Redis connection will be established on first use.");
+    }
+
+    /**
+     * Initialize Redis connection with retry logic
+     * This is called lazily on first use to avoid blocking application startup
+     */
+    private void ensureRedisConnection() {
+        // Skip if already connected
+        if (redisAvailable && proxyManager != null && redisConnection != null && redisConnection.isOpen()) {
+            return;
+        }
+
+        // Rate limit connection attempts (don't spam logs)
+        long now = System.currentTimeMillis();
+        if (now - lastConnectionAttempt < CONNECTION_RETRY_INTERVAL_MS) {
+            return;
+        }
+
+        connectionLock.lock();
         try {
-            // Initialize Redis connection for Bucket4j
-            RedisClient redisClient = RedisClient.create("redis://" + redisHost + ":" + redisPort);
+            // Double-check after acquiring lock
+            if (redisAvailable && proxyManager != null && redisConnection != null && redisConnection.isOpen()) {
+                return;
+            }
+
+            lastConnectionAttempt = now;
+
+            // Build Redis URI with password if provided
+            RedisURI.Builder uriBuilder = RedisURI.builder()
+                    .withHost(redisHost)
+                    .withPort(redisPort)
+                    .withTimeout(Duration.ofSeconds(5));
+
+            if (redisPassword != null && !redisPassword.isBlank()) {
+                uriBuilder.withPassword(redisPassword.toCharArray());
+            }
+
+            RedisURI redisUri = uriBuilder.build();
+
+            // Create Redis client with timeout options
+            redisClient = RedisClient.create(redisUri);
+            redisClient.setOptions(ClientOptions.builder()
+                    .timeoutOptions(TimeoutOptions.builder()
+                            .fixedTimeout(Duration.ofSeconds(5))
+                            .build())
+                    .build());
+
+            // Attempt connection with timeout
             redisConnection = redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
+
+            // Verify connection by sending a PING
+            try {
+                redisConnection.sync().ping();
+            } catch (Exception e) {
+                log.warn("Redis connection established but PING failed: {}", e.getMessage());
+                closeConnection();
+                throw e;
+            }
 
             // Create Bucket4j ProxyManager with Redis backend
             proxyManager = LettuceBasedProxyManager.builderFor(redisConnection)
                     .build();
 
-            log.info("✅ Distributed Rate Limiting initialized with Redis backend: {}:{}",
+            log.info("✅ Distributed Rate Limiting connected to Redis backend: {}:{}",
                     redisHost, redisPort);
             redisAvailable = true;
 
         } catch (Exception e) {
-            log.error("❌ Failed to connect to Redis for rate limiting. Falling back to local cache: {}",
+            log.warn("❌ Failed to connect to Redis for rate limiting (will retry on next request). Falling back to local cache: {}",
                     e.getMessage());
+            closeConnection();
             redisAvailable = false;
+        } finally {
+            connectionLock.unlock();
+        }
+    }
+
+    /**
+     * Safely close Redis connection
+     */
+    private void closeConnection() {
+        try {
+            if (redisConnection != null && redisConnection.isOpen()) {
+                redisConnection.close();
+            }
+        } catch (Exception e) {
+            log.debug("Error closing Redis connection: {}", e.getMessage());
+        }
+        redisConnection = null;
+        proxyManager = null;
+        if (redisClient != null) {
+            try {
+                redisClient.shutdown();
+            } catch (Exception e) {
+                log.debug("Error shutting down Redis client: {}", e.getMessage());
+            }
+            redisClient = null;
         }
     }
 
     @PreDestroy
     public void cleanup() {
-        if (redisConnection != null && redisConnection.isOpen()) {
-            redisConnection.close();
-            log.info("Redis connection closed for rate limiting");
-        }
+        closeConnection();
+        log.info("Redis connection closed for rate limiting");
 
         // Log cache statistics
         var stats = localCache.stats();
@@ -152,21 +244,34 @@ public class DistributedRateLimitingFilter implements GlobalFilter, Ordered {
      * Get or create bucket for user
      *
      * Strategy:
-     * 1. Try Redis (distributed across all pods)
+     * 1. Try Redis (distributed across all pods) - lazy connection with retry
      * 2. Fallback to local Caffeine cache if Redis down
      * 3. Caffeine cache auto-evicts after 5 min (LRU)
      */
     private Bucket resolveBucket(String identifier, String userTier) {
+        // Attempt to connect to Redis if not already connected
+        if (!redisAvailable || proxyManager == null) {
+            ensureRedisConnection();
+        }
+
+        // Try Redis if available
         if (redisAvailable && proxyManager != null) {
             try {
-                // Use distributed Redis bucket
-                return proxyManager.builder()
-                        .build(identifier, getBucketConfiguration(userTier));
-
+                // Verify connection is still open
+                if (redisConnection != null && redisConnection.isOpen()) {
+                    // Use distributed Redis bucket
+                    return proxyManager.builder()
+                            .build(identifier, getBucketConfiguration(userTier));
+                } else {
+                    // Connection lost, mark as unavailable
+                    redisAvailable = false;
+                }
             } catch (Exception e) {
-                log.warn("Redis unavailable, falling back to local cache for user: {}. Error: {}",
+                log.debug("Redis unavailable for user: {}, falling back to local cache. Error: {}",
                         identifier, e.getMessage());
+                // Mark as unavailable and close connection
                 redisAvailable = false;
+                closeConnection();
             }
         }
 
@@ -221,9 +326,11 @@ public class DistributedRateLimitingFilter implements GlobalFilter, Ordered {
         }
 
         // Fallback to IP address
-        String ip = exchange.getRequest().getRemoteAddress() != null
-                ? exchange.getRequest().getRemoteAddress().getAddress().getHostAddress()
-                : "unknown";
+        String ip = "unknown";
+        var remoteAddress = exchange.getRequest().getRemoteAddress();
+        if (remoteAddress != null && remoteAddress.getAddress() != null) {
+            ip = remoteAddress.getAddress().getHostAddress();
+        }
 
         return "ip:" + ip;
     }

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 import { ThemeService } from './shared/services/theme.service';
 import { LayoutComponent } from './shared/components/layout/layout.component';
@@ -20,12 +20,16 @@ import { Observable } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
+    RouterOutlet,
     LayoutComponent
   ],
   template: `
     <div class="app-container">
-      <!-- Layout always shown (auth disabled for demo) -->
-      <app-layout></app-layout>
+      @if (isAuthenticated$ | async) {
+        <app-layout></app-layout>
+      } @else {
+        <router-outlet></router-outlet>
+      }
     </div>
   `,
   styles: [`

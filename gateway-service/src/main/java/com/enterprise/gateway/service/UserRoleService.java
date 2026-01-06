@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,9 @@ import java.util.concurrent.TimeUnit;
  * - JWT tokens in this architecture do NOT contain role claims
  * - Roles are managed dynamically in IAM database
  * - Decouples authorization from identity provider (Keycloak)
+ * <p>
+ * Uses LoadBalanced WebClient for service discovery and load balancing
+ * across multiple IAM service instances.
  *
  * @author Enterprise Team
  * @since 1.0.0
@@ -47,12 +51,21 @@ public class UserRoleService {
     private static final Duration L1_TTL_SECONDS = Duration.ofSeconds(60);
     private static final int L1_MAX_SIZE = 100_000;
 
+    /**
+     * Constructor with LoadBalanced WebClient.Builder for service discovery.
+     *
+     * @param redisTemplate Redis template for L2 cache
+     * @param loadBalancedWebClientBuilder LoadBalanced WebClient builder
+     * @param iamServiceName Service name (default: "iam-service")
+     */
     public UserRoleService(
             ReactiveRedisTemplate<String, String> redisTemplate,
-            WebClient.Builder webClientBuilder,
-            @Value("${iam.service.url:http://iam-service:8081}") String iamServiceUrl) {
+            @LoadBalanced WebClient.Builder loadBalancedWebClientBuilder,
+            @Value("${iam.service.name:iam-service}") String iamServiceName) {
         this.redisTemplate = redisTemplate;
-        this.webClient = webClientBuilder.baseUrl(iamServiceUrl).build();
+        // Use lb:// scheme for LoadBalancer to resolve service name from Consul
+        String serviceUrl = "lb://" + iamServiceName;
+        this.webClient = loadBalancedWebClientBuilder.baseUrl(serviceUrl).build();
 
         // L1 Cache: Caffeine with 60s TTL and 100K max entries
         this.roleCache = Caffeine.newBuilder()
@@ -61,6 +74,7 @@ public class UserRoleService {
                 .recordStats()
                 .build();
 
+        log.info("✅ UserRoleService initialized with LoadBalanced WebClient for service: {}", serviceUrl);
         log.info("UserRoleService initialized with L1 cache ({}s TTL, {} max) and L2 cache ({}h TTL)",
                 L1_TTL_SECONDS.toSeconds(), L1_MAX_SIZE, REDIS_TTL.toHours());
     }

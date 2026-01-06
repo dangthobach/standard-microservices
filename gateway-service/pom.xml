@@ -65,6 +65,12 @@
             <artifactId>spring-cloud-starter-consul-discovery</artifactId>
         </dependency>
 
+        <!-- Spring Cloud LoadBalancer (for WebClient service discovery) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+
         <!-- Spring Boot Starter WebFlux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

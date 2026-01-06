@@ -3,6 +3,8 @@ package com.enterprise.gateway.service;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,6 +20,9 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Handles Permission Caching for Centralized AuthZ.
  * Strategy: L1 (Caffeine) -> L2 (Redis) -> IAM Service (Source)
+ * <p>
+ * Uses LoadBalanced WebClient for service discovery and load balancing
+ * across multiple IAM service instances.
  */
 @Slf4j
 @Service
@@ -30,10 +35,22 @@ public class AuthZService {
     private static final String PERMISSION_KEY_PREFIX = "authz:perms:";
     private static final Duration REDIS_TTL = Duration.ofHours(1);
 
-    public AuthZService(ReactiveRedisTemplate<String, String> redisTemplate,
-            WebClient.Builder webClientBuilder) {
+    /**
+     * Constructor with LoadBalanced WebClient.Builder for service discovery.
+     *
+     * @param redisTemplate Redis template for L2 cache
+     * @param loadBalancedWebClientBuilder LoadBalanced WebClient builder
+     * @param iamServiceName Service name (default: "iam-service")
+     */
+    public AuthZService(
+            ReactiveRedisTemplate<String, String> redisTemplate,
+            @LoadBalanced WebClient.Builder loadBalancedWebClientBuilder,
+            @Value("${iam.service.name:iam-service}") String iamServiceName) {
         this.redisTemplate = redisTemplate;
-        this.webClient = webClientBuilder.baseUrl("http://iam-service:8081").build();
+        // Use lb:// scheme for LoadBalancer to resolve service name from Consul
+        String serviceUrl = "lb://" + iamServiceName;
+        this.webClient = loadBalancedWebClientBuilder.baseUrl(serviceUrl).build();
+        log.info("✅ AuthZService configured with LoadBalanced WebClient for service: {}", serviceUrl);
 
         // L1 Cache: 60 seconds TTL, Max 100K users
         this.permissionCache = Caffeine.newBuilder()

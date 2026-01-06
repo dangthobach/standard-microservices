@@ -1,9 +1,9 @@
 package com.enterprise.gateway.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -31,12 +31,27 @@ import reactor.core.publisher.Mono;
  * @author Enterprise Team
  * @since 1.0.0
  */
+/**
+ * Token Refresh Service
+ * <p>
+ * Handles automatic token refresh with Keycloak using refresh tokens.
+ * This is a critical component of the BFF pattern for maintaining user sessions
+ * without requiring re-authentication.
+ * <p>
+ * Uses standard (non-load-balanced) WebClient.Builder for direct HTTP calls
+ * to Keycloak token endpoint (full URL, not service discovery).
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TokenRefreshService {
 
-    private final WebClient.Builder webClientBuilder;
+    /**
+     * Use standard WebClient.Builder (not @LoadBalanced) for direct HTTP calls to Keycloak.
+     * Keycloak token endpoint is accessed via full URL, not service discovery.
+     */
+    @Qualifier("standardWebClientBuilder")
+    private final WebClient.Builder standardWebClientBuilder;
     private final SessionService sessionService;
 
     @Value("${spring.security.oauth2.client.provider.keycloak.token-uri}")
@@ -60,7 +75,7 @@ public class TokenRefreshService {
     public Mono<Void> refreshAccessToken(String sessionId, String refreshToken) {
         log.info("Refreshing access token for session: {}", sessionId);
 
-        return webClientBuilder.build()
+        return standardWebClientBuilder.build()
                 .post()
                 .uri(tokenUri)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -109,7 +124,7 @@ public class TokenRefreshService {
     /**
      * Token Response from Keycloak.
      */
-    @Data
+    @lombok.Data
     public static class TokenResponse {
 
         @JsonProperty("access_token")

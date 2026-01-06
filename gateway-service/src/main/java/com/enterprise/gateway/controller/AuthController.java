@@ -5,6 +5,7 @@ import com.enterprise.gateway.service.TokenRefreshService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -333,19 +334,21 @@ public class AuthController {
 
     // DTOs
 
-    @Data
+    @lombok.Data
     public static class CreateSessionRequest {
         private String accessToken;
         private String refreshToken;
     }
 
     @Data
+    @AllArgsConstructor
     public static class SessionResponse {
         private final String sessionId;
         private final String message;
     }
 
     @Data
+    @AllArgsConstructor
     public static class LoginSuccessResponse {
         private final String sessionId;
         private final String userId;
@@ -355,6 +358,7 @@ public class AuthController {
     }
 
     @Data
+    @AllArgsConstructor
     public static class UserInfoResponse {
         private final String userId;
         private final String username;
@@ -363,11 +367,13 @@ public class AuthController {
     }
 
     @Data
+    @AllArgsConstructor
     public static class MessageResponse {
         private final String message;
     }
 
     @Data
+    @AllArgsConstructor
     public static class UserProfileResponse {
         private final String sub;
         private final String email;
@@ -377,6 +383,7 @@ public class AuthController {
     }
 
     @Data
+    @AllArgsConstructor
     public static class AuthStatusResponse {
         private final boolean authenticated;
         private final String sessionId;

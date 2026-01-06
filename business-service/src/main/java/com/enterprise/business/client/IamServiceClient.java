@@ -14,14 +14,19 @@ import org.springframework.web.bind.annotation.PathVariable;
  * Configuration:
  * - Uses FeignClientConfiguration for standard timeouts and error handling
  * - Uses JwtForwardingInterceptor to propagate JWT from incoming request
- * - Service discovery via Spring Cloud (or static URL)
+ * - Service discovery via Consul (LoadBalancer resolves service name)
+ * <p>
+ * Service Discovery:
+ * - Service name "iam-service" is resolved via Consul
+ * - LoadBalancer automatically distributes requests across multiple instances
+ * - No hardcoded URL needed - fully dynamic service discovery
  *
  * @author Enterprise Team
  * @since 1.0.0
  */
 @FeignClient(
-    name = "iam-service",
-    url = "${app.services.iam.url:http://localhost:8081}",
+    name = "iam-service",  // Service name resolved via Consul
+    // url attribute removed - using service discovery instead
     configuration = IamServiceFeignConfiguration.class
 )
 public interface IamServiceClient {
