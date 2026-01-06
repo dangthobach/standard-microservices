@@ -52,7 +52,7 @@ public class DashboardController {
      */
     @GetMapping("/realtime")
     @Operation(summary = "Get real-time metrics", description = "Returns current CCU, RPS, error rate, and average latency")
-    @PreAuthorize("@dashboardSecurity.hasAccess(authentication)")
+    @PreAuthorize("@dashboardSecurity.hasAccessSync(authentication)")
     public Mono<ResponseEntity<ApiResponse<RealtimeMetricsDto>>> getRealtimeMetrics() {
         log.debug("Getting real-time metrics");
         return Mono.fromCallable(() -> queryBus.dispatch(new GetRealtimeMetricsQuery()))
@@ -70,7 +70,7 @@ public class DashboardController {
      */
     @GetMapping("/services")
     @Operation(summary = "Get service health", description = "Returns health status of all microservices")
-    @PreAuthorize("@dashboardSecurity.hasAccess(authentication)")
+    @PreAuthorize("@dashboardSecurity.hasAccessSync(authentication)")
     public Mono<ResponseEntity<ApiResponse<List<ServiceHealthDto>>>> getServiceHealth() {
         log.debug("Getting service health");
         return Mono.fromCallable(() -> queryBus.dispatch(new GetServiceHealthQuery()))
@@ -88,7 +88,7 @@ public class DashboardController {
      */
     @GetMapping("/traffic")
     @Operation(summary = "Get traffic history", description = "Returns traffic data for the last 24 hours in 5-minute intervals")
-    @PreAuthorize("@dashboardSecurity.hasAccess(authentication)")
+    @PreAuthorize("@dashboardSecurity.hasAccessSync(authentication)")
     public Mono<ResponseEntity<ApiResponse<List<TrafficDataDto>>>> getTrafficHistory() {
         log.debug("Getting traffic history");
         return Mono.fromCallable(() -> queryBus.dispatch(new GetTrafficHistoryQuery()))
@@ -106,7 +106,7 @@ public class DashboardController {
      */
     @GetMapping("/database")
     @Operation(summary = "Get database metrics", description = "Returns database connection pool and query statistics from all microservices")
-    @PreAuthorize("@dashboardSecurity.hasAccess(authentication)")
+    @PreAuthorize("@dashboardSecurity.hasAccessSync(authentication)")
     public Mono<ResponseEntity<ApiResponse<List<DatabaseMetricsDto>>>> getDatabaseMetrics() {
         log.debug("Getting database metrics");
         return Mono.fromCallable(() -> queryBus.dispatch(new GetDatabaseMetricsQuery()))
@@ -124,7 +124,7 @@ public class DashboardController {
      */
     @GetMapping("/latency")
     @Operation(summary = "Get latency heatmap", description = "Returns P50, P95, P99 latency by service")
-    @PreAuthorize("@dashboardSecurity.hasAccess(authentication)")
+    @PreAuthorize("@dashboardSecurity.hasAccessSync(authentication)")
     public Mono<ResponseEntity<ApiResponse<List<LatencyDataDto>>>> getLatencyMetrics() {
         log.debug("Getting latency metrics");
         return Mono.fromCallable(() -> queryBus.dispatch(new GetLatencyMetricsQuery()))
@@ -142,7 +142,7 @@ public class DashboardController {
      */
     @GetMapping("/redis")
     @Operation(summary = "Get Redis metrics", description = "Returns Redis memory usage, connections, and performance metrics")
-    @PreAuthorize("@dashboardSecurity.hasAccess(authentication)")
+    @PreAuthorize("@dashboardSecurity.hasAccessSync(authentication)")
     public Mono<ResponseEntity<ApiResponse<RedisMetricsDto>>> getRedisMetrics() {
         log.debug("Getting Redis metrics");
         return Mono.fromCallable(() -> queryBus.dispatch(new GetRedisMetricsQuery()))
@@ -160,7 +160,7 @@ public class DashboardController {
      */
     @GetMapping("/slow-endpoints")
     @Operation(summary = "Get slow endpoints", description = "Returns list of slow API endpoints with performance metrics")
-    @PreAuthorize("@dashboardSecurity.hasAccess(authentication)")
+    @PreAuthorize("@dashboardSecurity.hasAccessSync(authentication)")
     public Mono<ResponseEntity<ApiResponse<List<SlowEndpointDto>>>> getSlowEndpoints() {
         log.debug("Getting slow endpoints");
         return Mono.fromCallable(() -> queryBus.dispatch(new GetSlowEndpointsQuery()))

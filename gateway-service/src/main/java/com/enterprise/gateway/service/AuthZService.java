@@ -33,7 +33,7 @@ public class AuthZService {
     public AuthZService(ReactiveRedisTemplate<String, String> redisTemplate,
             WebClient.Builder webClientBuilder) {
         this.redisTemplate = redisTemplate;
-        this.webClient = webClientBuilder.baseUrl("lb://iam-service").build();
+        this.webClient = webClientBuilder.baseUrl("http://iam-service:8081").build();
 
         // L1 Cache: 60 seconds TTL, Max 100K users
         this.permissionCache = Caffeine.newBuilder()

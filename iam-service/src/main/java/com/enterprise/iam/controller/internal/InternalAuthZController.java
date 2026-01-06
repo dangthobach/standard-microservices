@@ -53,4 +53,25 @@ public class InternalAuthZController {
         return ResponseEntity.ok(
                 userRepository.findPermissionCodesByUserId(userId));
     }
+
+    /**
+     * Get Role Names for a User by Keycloak ID.
+     * Gateway calls this on cache miss for dashboard/role-based access check.
+     * <p>
+     * This endpoint is used because JWT tokens in this architecture
+     * do NOT contain role claims - roles are managed in IAM database.
+     *
+     * @param keycloakId Keycloak user ID (sub claim from JWT)
+     * @return List of role names (e.g., ["ADMIN", "MANAGER"])
+     */
+    @GetMapping("/roles/keycloak/{keycloakId}")
+    @Operation(summary = "Get user roles by Keycloak ID", 
+               description = "Returns list of role names for a user based on their Keycloak ID")
+    public ResponseEntity<List<String>> getUserRolesByKeycloakId(
+            @PathVariable String keycloakId) {
+        log.debug("Gateway requested Roles for Keycloak ID: {}", keycloakId);
+        List<String> roles = userRepository.findRoleNamesByKeycloakId(keycloakId);
+        log.debug("Found roles: {} for Keycloak ID: {}", roles, keycloakId);
+        return ResponseEntity.ok(roles);
+    }
 }

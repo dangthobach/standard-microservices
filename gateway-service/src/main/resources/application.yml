@@ -339,6 +339,7 @@ dashboard:
     allowed-roles:
       - ADMIN           # Default: Admin users have full dashboard access
       - DEVELOPER       # Example: Developers can view metrics for debugging
+      - MICROSERVICES_ADMIN  # Microservices client admin role
       # - SUPPORT       # Example: Support team can view system health
       # - DEVOPS        # Example: DevOps team for monitoring
 

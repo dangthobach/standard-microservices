@@ -29,7 +29,19 @@
         "name": "MANAGER",
         "description": "Manager role"
       }
-    ]
+    ],
+    "client": {
+      "microservices": [
+        {
+          "name": "MICROSERVICES_ADMIN",
+          "description": "Administrator role for microservices client"
+        },
+        {
+          "name": "MICROSERVICES_USER",
+          "description": "Standard user role for microservices client"
+        }
+      ]
+    }
   },
   "users": [
     {
@@ -46,7 +58,9 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["USER"],
+      "realmRoles": [
+        "USER"
+      ],
       "clientRoles": {}
     },
     {
@@ -63,8 +77,38 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["ADMIN", "USER"],
-      "clientRoles": {}
+      "realmRoles": [
+        "ADMIN",
+        "USER"
+      ],
+      "clientRoles": {
+        "microservices": [
+          "MICROSERVICES_ADMIN"
+        ]
+      }
+    },
+    {
+      "username": "microservices-admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Microservices",
+      "lastName": "Admin",
+      "email": "microservices-admin@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "microservices-admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "USER"
+      ],
+      "clientRoles": {
+        "microservices": [
+          "MICROSERVICES_ADMIN"
+        ]
+      }
     }
   ],
   "clients": [
@@ -114,7 +158,13 @@
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
-      }
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "roles",
+        "profile",
+        "email"
+      ]
     },
     {
       "clientId": "gateway-service",
