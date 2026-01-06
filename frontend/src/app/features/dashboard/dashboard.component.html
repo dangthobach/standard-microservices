@@ -85,9 +85,16 @@
           <mat-card class="service-card" [class]="getStatusColor(service.status)">
             <div class="service-header">
               <div class="service-name">{{ service.name }}</div>
-              <mat-icon class="service-status-icon" [matTooltip]="service.status">
-                {{ getStatusIcon(service.status) }}
-              </mat-icon>
+              <div class="service-header-badges">
+                @if (service.virtualThreadsEnabled) {
+                  <mat-chip class="badge-vt" matTooltip="Virtual Threads Enabled">
+                    VT
+                  </mat-chip>
+                }
+                <mat-icon class="service-status-icon" [matTooltip]="service.status">
+                  {{ getStatusIcon(service.status) }}
+                </mat-icon>
+              </div>
             </div>
 
             <div class="service-metrics">
@@ -122,6 +129,10 @@
               <div class="stat-item">
                 <mat-icon>analytics</mat-icon>
                 <span>{{ service.requests | number }} req</span>
+              </div>
+              <div class="stat-item">
+                <mat-icon>account_tree</mat-icon>
+                <span>{{ service.threads | number }} threads</span>
               </div>
               <div class="stat-item" [class.has-errors]="service.errors > 0">
                 <mat-icon>error_outline</mat-icon>
@@ -244,12 +255,58 @@
         </div>
       </mat-card>
 
-      <!-- Redis Metrics -->
+      <!-- L1 Cache (Caffeine) Metrics -->
+      @if (l1CacheMetrics().length > 0) {
+        <mat-card class="infra-card">
+          <div class="infra-header">
+            <mat-icon>bolt</mat-icon>
+            <h3>L1 Cache (Caffeine)</h3>
+          </div>
+          <div class="l1-cache-grid">
+            @for (cache of l1CacheMetrics(); track cache.cacheName) {
+              <div class="l1-cache-panel">
+                <div class="l1-cache-name">{{ cache.cacheName }}</div>
+                <div class="l1-cache-metrics">
+                  <div class="l1-cache-metric">
+                    <div class="l1-cache-label">Hit Rate</div>
+                    <div class="l1-cache-value" [class.success]="cache.hitRate > 90">
+                      {{ cache.hitRate | number:'1.1-1' }}%
+                    </div>
+                    <mat-progress-bar mode="determinate" [value]="cache.hitRate"
+                      [class.success]="cache.hitRate > 90">
+                    </mat-progress-bar>
+                  </div>
+                  <div class="l1-cache-metric-row">
+                    <div class="l1-cache-metric-item">
+                      <span class="l1-cache-item-label">Size</span>
+                      <span class="l1-cache-item-value">{{ cache.size | number }}</span>
+                    </div>
+                    <div class="l1-cache-metric-item">
+                      <span class="l1-cache-item-label">Hits</span>
+                      <span class="l1-cache-item-value">{{ cache.hitCount | number }}</span>
+                    </div>
+                    <div class="l1-cache-metric-item">
+                      <span class="l1-cache-item-label">Misses</span>
+                      <span class="l1-cache-item-value">{{ cache.missCount | number }}</span>
+                    </div>
+                    <div class="l1-cache-metric-item">
+                      <span class="l1-cache-item-label">Evictions</span>
+                      <span class="l1-cache-item-value">{{ cache.evictions | number }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </mat-card>
+      }
+
+      <!-- Redis Metrics (L2 Cache) -->
       @if (redisMetrics(); as redis) {
         <mat-card class="infra-card">
           <div class="infra-header">
             <mat-icon>memory</mat-icon>
-            <h3>Redis Cache</h3>
+            <h3>L2 Cache (Redis)</h3>
           </div>
           <div class="redis-grid">
             <div class="redis-metric">
@@ -277,10 +334,34 @@
                 <mat-icon>check_circle</mat-icon>
               </div>
               <div class="redis-info">
-                <div class="redis-label">Hit Rate</div>
+                <div class="redis-label">Hit Rate (L2)</div>
                 <div class="redis-value success">{{ redis.hitRate | number:'1.1-1' }}%</div>
               </div>
             </div>
+            
+            <!-- L1 vs L2 Hit Rate Comparison -->
+            @if (l1CacheMetrics().length > 0) {
+              <div class="cache-comparison">
+                <div class="comparison-header">L1 vs L2 Hit Rate</div>
+                <div class="comparison-bars">
+                  @for (cache of l1CacheMetrics(); track cache.cacheName) {
+                    <div class="comparison-item">
+                      <div class="comparison-label">{{ cache.cacheName }}</div>
+                      <div class="comparison-bar-container">
+                        <div class="comparison-bar l1-bar" [style.width.%]="cache.hitRate"
+                          [matTooltip]="'L1: ' + (cache.hitRate | number:'1.1-1') + '%'">
+                          <span class="comparison-value">{{ cache.hitRate | number:'1.0-0' }}%</span>
+                        </div>
+                        <div class="comparison-bar l2-bar" [style.width.%]="redis.hitRate"
+                          [matTooltip]="'L2: ' + (redis.hitRate | number:'1.1-1') + '%'">
+                          <span class="comparison-value">{{ redis.hitRate | number:'1.0-0' }}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
 
             <div class="redis-metric">
               <div class="redis-icon-wrapper">

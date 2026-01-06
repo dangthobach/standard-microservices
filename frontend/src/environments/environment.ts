@@ -3,8 +3,8 @@ export const environment = {
   apiUrl: '/api',
   keycloak: {
     issuer: 'http://localhost:8180/realms/enterprise',
-    clientId: 'enterprise-frontend',
-    redirectUri: window.location.origin,
+    clientId: 'microservices',
+    redirectUri: window.location.origin + '/',
     scope: 'openid profile email',
     responseType: 'code',
     usePkce: true,

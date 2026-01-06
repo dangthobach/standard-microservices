@@ -5,6 +5,11 @@ spring:
   application:
     name: iam-service
 
+  # Virtual Threads Configuration (Java 21+ / Spring Boot 3.2+)
+  threads:
+    virtual:
+      enabled: true
+
   cloud:
     # Consul Service Discovery
     consul:

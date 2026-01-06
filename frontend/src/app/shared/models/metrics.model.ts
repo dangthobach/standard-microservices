@@ -13,6 +13,8 @@ export interface ServiceHealth {
   uptime: string;
   requests: number;
   errors: number;
+  threads: number; // Active threads count
+  virtualThreadsEnabled: boolean; // Virtual threads enabled flag
 }
 
 export interface TrafficData {
@@ -44,6 +46,17 @@ export interface RedisMetrics {
   hitRate: number;
   evictions: number;
   opsPerSec: number;
+}
+
+export interface L1CacheMetrics {
+  cacheName: string;
+  hitRate: number; // Hit rate as percentage (0-100)
+  hitCount: number; // Total cache hits
+  missCount: number; // Total cache misses
+  size: number; // Current number of entries
+  evictions: number; // Total evictions
+  loadCount: number; // Total loads
+  loadTime: number; // Total load time in nanoseconds
 }
 
 export interface SlowEndpoint {

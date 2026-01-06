@@ -47,6 +47,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Redis metrics
   redisMetrics = this.metricsService.getRedisMetrics();
 
+  // L1 Cache metrics
+  l1CacheMetrics = this.metricsService.getL1CacheMetrics();
+
   // Slow endpoints
   slowEndpoints = this.metricsService.getSlowEndpoints();
 
@@ -160,7 +163,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   refreshMetrics(): void {
-    // Metrics service auto-updates, just update chart
+    // Refresh all metrics from API
+    this.metricsService.refreshAll();
+    // Update chart data
     this.trafficChartData.set(this.metricsService.getTrafficChartData());
   }
 }

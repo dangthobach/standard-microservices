@@ -1,7 +1,6 @@
 package com.enterprise.business.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
-import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
@@ -46,15 +45,29 @@ public class CacheConfig {
 
     /**
      * Local Cache Manager (Caffeine L1)
-     * Use explicitly via @Cacheable(cacheManager = "caffeineCacheManager")
+     * <p>
+     * Optimized for high-concurrency scenarios:
+     * - Products cache: 5 minutes TTL, 10k entries max
+     * - Ultra-low latency for hot data (read-heavy workloads)
+     * - Use explicitly via @Cacheable(cacheManager = "caffeineCacheManager")
+     * <p>
+     * Performance targets:
+     * - L1 hit latency: ~1µs (vs Redis ~1ms = 1000x faster)
+     * - Cache hit rate target: > 90% for frequently accessed products
+     * - Reduces Redis load by ~90% for hot data
      */
     @Bean
     public CaffeineCacheManager caffeineCacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager("products");
+        
+        // Optimized Caffeine spec for products cache
         cacheManager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterWrite(60, TimeUnit.SECONDS)
-                .maximumSize(10_000)
-                .recordStats());
+                .maximumSize(10_000)                    // Max 10k product entries
+                .expireAfterWrite(5, TimeUnit.MINUTES)  // TTL: 5 minutes (products don't change often)
+                .expireAfterAccess(3, TimeUnit.MINUTES) // Evict if not accessed for 3 minutes
+                .recordStats()                          // Enable metrics for monitoring
+        );
+        
         return cacheManager;
     }
 }

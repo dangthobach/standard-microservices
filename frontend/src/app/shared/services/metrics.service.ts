@@ -6,9 +6,11 @@ import {
   LatencyData,
   DatabaseMetrics,
   RedisMetrics,
+  L1CacheMetrics,
   SlowEndpoint,
   TimeSeriesData
 } from '../models/metrics.model';
+import { MetricsApiService } from './metrics-api.service';
 
 @Injectable({
   providedIn: 'root'
@@ -26,10 +28,14 @@ export class MetricsService {
   private latencyMetrics = signal<LatencyData[]>([]);
   private databaseMetrics = signal<DatabaseMetrics[]>([]);
   private redisMetrics = signal<RedisMetrics | null>(null);
+  private l1CacheMetrics = signal<L1CacheMetrics[]>([]);
   private slowEndpoints = signal<SlowEndpoint[]>([]);
 
-  constructor() {
-    this.initializeMockData();
+  private updateInterval: any;
+  private isInitialized = false;
+
+  constructor(private apiService: MetricsApiService) {
+    this.loadDataFromApi();
     this.startRealtimeUpdates();
   }
 
@@ -57,6 +63,10 @@ export class MetricsService {
     return this.redisMetrics.asReadonly();
   }
 
+  getL1CacheMetrics() {
+    return this.l1CacheMetrics.asReadonly();
+  }
+
   getSlowEndpoints() {
     return this.slowEndpoints.asReadonly();
   }
@@ -81,198 +91,159 @@ export class MetricsService {
     ];
   }
 
-  private initializeMockData(): void {
-    // Initialize realtime metrics
-    this.realtimeMetrics.set({
-      ccu: 1247,
-      rps: 3542,
-      errorRate: 0.12,
-      avgLatency: 145
+  /**
+   * Load all metrics data from backend API
+   * Falls back to mock data if API calls fail
+   */
+  private loadDataFromApi(): void {
+    // Load real-time metrics
+    this.apiService.getRealtimeMetrics().subscribe({
+      next: (metrics) => this.realtimeMetrics.set(metrics),
+      error: (error) => {
+        console.error('Failed to load real-time metrics, using defaults', error);
+        this.realtimeMetrics.set({ ccu: 0, rps: 0, errorRate: 0, avgLatency: 0 });
+      }
     });
 
-    // Initialize services
-    this.services.set([
-      {
-        name: 'Gateway Service',
-        status: 'healthy',
-        cpu: 45.2,
-        memory: 62.8,
-        uptime: '15d 7h 23m',
-        requests: 125432,
-        errors: 12
-      },
-      {
-        name: 'IAM Service',
-        status: 'healthy',
-        cpu: 32.1,
-        memory: 48.3,
-        uptime: '15d 7h 23m',
-        requests: 45231,
-        errors: 3
-      },
-      {
-        name: 'Business Service',
-        status: 'warning',
-        cpu: 78.5,
-        memory: 81.2,
-        uptime: '7d 12h 45m',
-        requests: 89765,
-        errors: 152
-      },
-      {
-        name: 'Notification Service',
-        status: 'healthy',
-        cpu: 28.3,
-        memory: 35.7,
-        uptime: '22d 3h 12m',
-        requests: 34521,
-        errors: 5
-      },
-      {
-        name: 'Payment Service',
-        status: 'healthy',
-        cpu: 52.7,
-        memory: 67.4,
-        uptime: '10d 18h 34m',
-        requests: 23456,
-        errors: 8
-      },
-      {
-        name: 'Analytics Service',
-        status: 'critical',
-        cpu: 92.1,
-        memory: 94.5,
-        uptime: '2d 5h 23m',
-        requests: 156789,
-        errors: 1234
+    // Load service health
+    this.apiService.getServiceHealth().subscribe({
+      next: (services) => this.services.set(services),
+      error: (error) => {
+        console.error('Failed to load service health, using defaults', error);
+        this.services.set([]);
       }
-    ]);
-
-    // Initialize traffic history (last 24 hours)
-    const history: TrafficData[] = [];
-    const now = new Date();
-    for (let i = 23; i >= 0; i--) {
-      const timestamp = new Date(now.getTime() - i * 3600000);
-      history.push({
-        timestamp,
-        requests: Math.floor(3000 + Math.random() * 2000 + Math.sin(i / 4) * 1000),
-        errors: Math.floor(5 + Math.random() * 20)
-      });
-    }
-    this.trafficHistory.set(history);
-
-    // Initialize latency metrics
-    this.latencyMetrics.set([
-      { service: 'Gateway', p50: 45, p95: 145, p99: 285 },
-      { service: 'IAM', p50: 32, p95: 98, p99: 178 },
-      { service: 'Business', p50: 78, p95: 245, p99: 456 },
-      { service: 'Notification', p50: 23, p95: 67, p99: 124 },
-      { service: 'Payment', p50: 56, p95: 167, p99: 312 },
-      { service: 'Analytics', p50: 124, p95: 456, p99: 789 }
-    ]);
-
-    // Initialize database metrics
-    this.databaseMetrics.set([
-      {
-        name: 'Primary DB',
-        connections: 87,
-        maxConnections: 100,
-        activeQueries: 12,
-        slowQueries: 3,
-        cacheHitRate: 94.5
-      },
-      {
-        name: 'Replica DB',
-        connections: 45,
-        maxConnections: 100,
-        activeQueries: 8,
-        slowQueries: 1,
-        cacheHitRate: 96.2
-      }
-    ]);
-
-    // Initialize Redis metrics
-    this.redisMetrics.set({
-      connections: 234,
-      memoryUsed: 1.8,
-      memoryTotal: 4.0,
-      hitRate: 98.7,
-      evictions: 123,
-      opsPerSec: 15234
     });
 
-    // Initialize slow endpoints
-    this.slowEndpoints.set([
+    // Load traffic history
+    this.apiService.getTrafficHistory(24).subscribe({
+      next: (traffic) => this.trafficHistory.set(traffic),
+      error: (error) => {
+        console.error('Failed to load traffic history, using defaults', error);
+        this.trafficHistory.set([]);
+      }
+    });
+
+    // Load latency metrics
+    this.apiService.getLatencyMetrics().subscribe({
+      next: (latency) => this.latencyMetrics.set(latency),
+      error: (error) => {
+        console.error('Failed to load latency metrics, using defaults', error);
+        this.latencyMetrics.set([]);
+      }
+    });
+
+    // Load database metrics
+    this.apiService.getDatabaseMetrics().subscribe({
+      next: (db) => this.databaseMetrics.set(db),
+      error: (error) => {
+        console.error('Failed to load database metrics, using defaults', error);
+        this.databaseMetrics.set([]);
+      }
+    });
+
+    // Load Redis metrics
+    this.apiService.getRedisMetrics().subscribe({
+      next: (redis) => this.redisMetrics.set(redis),
+      error: (error) => {
+        console.error('Failed to load Redis metrics, using defaults', error);
+        this.redisMetrics.set(null);
+      }
+    });
+
+    // Load slow endpoints
+    this.apiService.getSlowEndpoints(5).subscribe({
+      next: (endpoints) => this.slowEndpoints.set(endpoints),
+      error: (error) => {
+        console.error('Failed to load slow endpoints, using defaults', error);
+        this.slowEndpoints.set([]);
+      }
+    });
+
+    // L1 Cache metrics - No backend endpoint yet, use mock data
+    // TODO: Add backend endpoint for L1 cache metrics
+    this.initializeL1CacheMetrics();
+    
+    this.isInitialized = true;
+  }
+
+  /**
+   * Initialize L1 Cache metrics (mock data until backend endpoint is available)
+   */
+  private initializeL1CacheMetrics(): void {
+    this.l1CacheMetrics.set([
       {
-        method: 'POST',
-        path: '/api/analytics/report',
-        avgLatency: 1245,
-        p95Latency: 2345,
-        calls: 1234
+        cacheName: 'products',
+        hitRate: 92.5,
+        hitCount: 125432,
+        missCount: 10234,
+        size: 8456,
+        evictions: 1234,
+        loadCount: 10234,
+        loadTime: 234567890
       },
       {
-        method: 'GET',
-        path: '/api/business/dashboard',
-        avgLatency: 876,
-        p95Latency: 1567,
-        calls: 5678
-      },
-      {
-        method: 'POST',
-        path: '/api/payment/process',
-        avgLatency: 654,
-        p95Latency: 1234,
-        calls: 3456
-      },
-      {
-        method: 'GET',
-        path: '/api/users/search',
-        avgLatency: 543,
-        p95Latency: 987,
-        calls: 8901
-      },
-      {
-        method: 'PUT',
-        path: '/api/business/update',
-        avgLatency: 432,
-        p95Latency: 876,
-        calls: 2345
+        cacheName: 'users',
+        hitRate: 88.3,
+        hitCount: 98765,
+        missCount: 12987,
+        size: 5678,
+        evictions: 890,
+        loadCount: 12987,
+        loadTime: 345678901
       }
     ]);
   }
 
+  /**
+   * Start real-time updates by polling backend API every 5 seconds
+   */
   private startRealtimeUpdates(): void {
-    // Simulate real-time updates every 3 seconds
-    setInterval(() => {
-      const current = this.realtimeMetrics();
-      this.realtimeMetrics.set({
-        ccu: Math.floor(current.ccu + (Math.random() - 0.5) * 100),
-        rps: Math.floor(current.rps + (Math.random() - 0.5) * 200),
-        errorRate: Math.max(0, Math.min(5, current.errorRate + (Math.random() - 0.5) * 0.5)),
-        avgLatency: Math.floor(current.avgLatency + (Math.random() - 0.5) * 20)
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
+
+    // Poll backend API every 5 seconds for real-time updates
+    this.updateInterval = setInterval(() => {
+      if (!this.isInitialized) {
+        return; // Wait for initial load
+      }
+
+      // Update real-time metrics
+      this.apiService.getRealtimeMetrics().subscribe({
+        next: (metrics) => this.realtimeMetrics.set(metrics),
+        error: (error) => console.warn('Failed to update real-time metrics', error)
       });
 
-      // Update service metrics
-      const services = this.services();
-      this.services.set(services.map(s => ({
-        ...s,
-        cpu: Math.max(0, Math.min(100, s.cpu + (Math.random() - 0.5) * 5)),
-        memory: Math.max(0, Math.min(100, s.memory + (Math.random() - 0.5) * 3)),
-        requests: s.requests + Math.floor(Math.random() * 100),
-        errors: s.errors + Math.floor(Math.random() * 2)
+      // Update service health
+      this.apiService.getServiceHealth().subscribe({
+        next: (services) => this.services.set(services),
+        error: (error) => console.warn('Failed to update service health', error)
+      });
+
+      // Update traffic history (every 30 seconds to reduce load)
+      if (Date.now() % 30000 < 5000) {
+        this.apiService.getTrafficHistory(24).subscribe({
+          next: (traffic) => this.trafficHistory.set(traffic),
+          error: (error) => console.warn('Failed to update traffic history', error)
+        });
+      }
+
+      // Update L1 cache metrics (mock data with variance until backend endpoint is available)
+      const l1Cache = this.l1CacheMetrics();
+      this.l1CacheMetrics.set(l1Cache.map(cache => ({
+        ...cache,
+        hitRate: Math.max(80, Math.min(99, cache.hitRate + (Math.random() - 0.5) * 2)),
+        hitCount: cache.hitCount + Math.floor(Math.random() * 100),
+        missCount: cache.missCount + Math.floor(Math.random() * 10),
+        size: Math.max(0, Math.min(10000, cache.size + Math.floor((Math.random() - 0.5) * 50)))
       })));
+    }, 5000); // Update every 5 seconds
+  }
 
-      // Add new traffic data point
-      const history = this.trafficHistory();
-      const newPoint: TrafficData = {
-        timestamp: new Date(),
-        requests: Math.floor(3000 + Math.random() * 2000),
-        errors: Math.floor(5 + Math.random() * 20)
-      };
-
-      // Keep only last 24 data points
-      const updated = [...history.slice(1), newPoint];
-      this.trafficHistory.set(updated);
-    }, 3000);
+  /**
+   * Manually refresh all metrics from API
+   */
+  refreshAll(): void {
+    this.loadDataFromApi();
   }
 }

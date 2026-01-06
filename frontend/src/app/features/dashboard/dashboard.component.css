@@ -199,6 +199,12 @@
   margin-bottom: 16px;
 }
 
+.service-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .service-name {
   font-size: 16px;
   font-weight: 500;
@@ -288,6 +294,16 @@
 
 .stat-item.has-errors {
   color: #f44336;
+}
+
+/* Virtual Threads Badge */
+.badge-vt {
+  background-color: rgba(76, 175, 80, 0.2) !important;
+  color: #4caf50 !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  height: 20px !important;
+  padding: 0 6px !important;
 }
 
 /* ========================================
@@ -552,6 +568,149 @@
   color: #ff9800;
 }
 
+/* L1 Cache (Caffeine) Metrics */
+.l1-cache-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.l1-cache-panel {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 3px solid #4caf50;
+}
+
+.l1-cache-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.l1-cache-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.l1-cache-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.l1-cache-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.l1-cache-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.l1-cache-value.success {
+  color: #4caf50;
+}
+
+.l1-cache-metric-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.l1-cache-metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.l1-cache-item-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.l1-cache-item-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Cache Comparison (L1 vs L2) */
+.cache-comparison {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.comparison-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.comparison-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comparison-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comparison-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.comparison-bar-container {
+  display: flex;
+  gap: 4px;
+  height: 32px;
+  position: relative;
+}
+
+.comparison-bar {
+  height: 100%;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.3s;
+  min-width: 40px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+}
+
+.l1-bar {
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
+}
+
+.l2-bar {
+  background: linear-gradient(135deg, #2196f3, #42a5f5);
+}
+
+.comparison-value {
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
 /* Endpoints Table */
 .endpoints-table {
   display: flex;
@@ -645,6 +804,10 @@
 
 ::ng-deep mat-progress-bar.critical .mdc-linear-progress__bar-inner {
   border-color: #f44336 !important;
+}
+
+::ng-deep mat-progress-bar.success .mdc-linear-progress__bar-inner {
+  border-color: #4caf50 !important;
 }
 
 /* ========================================

@@ -1,6 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { inject, Injector } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { OAuthStorage } from 'angular-oauth2-oidc';
 import { catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 
@@ -21,23 +22,26 @@ import { Router } from '@angular/router';
  * ```
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
   const router = inject(Router);
+  const injector = inject(Injector);
+
+  // Use OAuthStorage to get token without injecting OAuthService/AuthService
+  const authStorage = inject(OAuthStorage);
 
   // Skip auth header for certain requests
   if (shouldSkipAuth(req.url)) {
     return next(req);
   }
 
-  // Get tokens
-  const accessToken = authService.getAccessToken();
-  const sessionId = authService.getSessionId();
+  // Get tokens directly from storage
+  const accessToken = authStorage.getItem('access_token');
+  const sessionId = localStorage.getItem('SESSION_ID');
 
   // Clone request and add auth headers
   let authReq = req;
 
   if (accessToken || sessionId) {
-    const headers: {[key: string]: string} = {};
+    const headers: { [key: string]: string } = {};
 
     // Add Bearer token
     if (accessToken) {
@@ -61,6 +65,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       // Handle 401 Unauthorized
       if (error.status === 401) {
         console.warn('Unauthorized request, redirecting to login');
+
+        // Lazy load AuthService to avoid circular dependency
+        const authService = injector.get(AuthService);
 
         // Store current URL for redirect after login
         const currentUrl = router.url;

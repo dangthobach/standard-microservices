@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -92,10 +92,15 @@ import { AuthService } from '../../../core/services/auth.service';
     }
   `]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loading = false;
 
   constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    // Tự động redirect sang Keycloak khi vào /login
+    this.login();
+  }
 
   login(): void {
     this.loading = true;

@@ -95,6 +95,28 @@
       }
     },
     {
+      "clientId": "microservices",
+      "name": "Microservices Frontend",
+      "description": "Public client for Microservices Frontend with PKCE",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "rootUrl": "http://localhost:4200",
+      "baseUrl": "http://localhost:4200",
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost/*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
       "clientId": "gateway-service",
       "name": "Gateway Service (Backend)",
       "description": "Confidential client for Gateway OAuth2 server-side flow",

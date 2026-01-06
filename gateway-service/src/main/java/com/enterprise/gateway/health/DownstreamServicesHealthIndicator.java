@@ -8,6 +8,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
@@ -33,18 +34,15 @@ public class DownstreamServicesHealthIndicator implements ReactiveHealthIndicato
     private final CircuitBreakerRegistry circuitBreakerRegistry;
     private final WebClient.Builder webClientBuilder;
 
+    // Only check services that actually run in the current deployment
     private static final String[] SERVICES = {
             "iam-service",
-            "business-service",
-            "process-service",
-            "integration-service"
+            "business-service"
     };
 
     private static final Map<String, String> SERVICE_URLS = Map.of(
             "iam-service", "http://iam-service:8081/actuator/health",
-            "business-service", "http://business-service:8082/actuator/health",
-            "process-service", "http://process-service:8083/actuator/health",
-            "integration-service", "http://integration-service:8084/actuator/health"
+            "business-service", "http://business-service:8082/actuator/health"
     );
 
     @Override
@@ -68,29 +66,20 @@ public class DownstreamServicesHealthIndicator implements ReactiveHealthIndicato
     }
 
     /**
-     * Check health of all downstream services in parallel
+     * Check health of all downstream services in parallel (non-blocking).
+     *
+     * Uses reactive WebClient + Flux to fan out requests and aggregate results.
+     * - No blocking calls (no .block())
+     * - Each service is checked independently
+     * - Errors per service are handled in {@link #checkServiceHealth(String)}
      */
     private Mono<Map<String, Map<String, Object>>> checkAllServices() {
-        Map<String, Mono<Map<String, Object>>> healthChecks = new HashMap<>();
-
-        for (String service : SERVICES) {
-            healthChecks.put(service, checkServiceHealth(service));
-        }
-
-        // Execute all health checks in parallel
-        return Mono.zip(
-                healthChecks.values(),
-                results -> {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object>[] typedResults = (Map<String, Object>[]) results;
-                    Map<String, Map<String, Object>> combined = new HashMap<>();
-                    int i = 0;
-                    for (String service : SERVICES) {
-                        combined.put(service, typedResults[i++]);
-                    }
-                    return combined;
-                }
-        );
+        return Flux.fromArray(SERVICES)
+                .flatMap(service ->
+                        checkServiceHealth(service)
+                                .map(health -> Map.entry(service, health))
+                )
+                .collectMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 
     /**

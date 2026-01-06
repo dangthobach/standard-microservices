@@ -9,25 +9,27 @@ COPY gateway-service/pom.xml ./gateway-service/pom.xml
 COPY iam-service/pom.xml ./iam-service/pom.xml
 COPY business-service/pom.xml ./business-service/pom.xml
 
-# Step 2: Download dependencies (this layer is CACHED until POMs change)
-# Add retry logic for unstable networks
-RUN for i in 1 2 3; do \
-        mvn dependency:go-offline -pl iam-service -am \
-            -Dmaven.wagon.http.retryHandler.count=3 \
-            -Dmaven.wagon.http.connectTimeout=10000 \
-            && break || \
-        (echo "Attempt $i failed, waiting before retry..." && sleep 5); \
-    done
+# Step 2: Download dependencies (skipped for speed optimization)
+# RUN for i in 1 2 3; do \
+#         mvn dependency:go-offline -pl iam-service -am \
+#             -Dmaven.wagon.http.retryHandler.count=3 \
+#             -Dmaven.wagon.http.connectTimeout=10000 \
+#             && break || \
+#         (echo "Attempt $i failed, waiting before retry..." && sleep 5); \
+#     done
 
 # Step 3: Copy source code (only this executes on code changes)
 COPY common-lib/src ./common-lib/src
 COPY iam-service/src ./iam-service/src
 
-# Step 4: Build with offline mode (dependencies already cached)
-RUN mvn clean package -DskipTests -o -pl iam-service -am
+# Step 4: Build (standard package, not offline)
+RUN mvn clean package -DskipTests -pl iam-service -am
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
+
+# Install wget for health checks
+RUN apk add --no-cache wget
 
 # Add non-root user
 RUN addgroup -S spring && adduser -S spring -G spring
