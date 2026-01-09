@@ -147,3 +147,10 @@ feign:
         logger-level: ${FEIGN_LOGGER_LEVEL:BASIC}  # NONE for production, BASIC for staging, FULL for dev
   circuitbreaker:
     enabled: true
+
+# MinIO (SeaweedFS S3) Configuration
+minio:
+  url: ${MINIO_URL:http://localhost:8333}
+  access-key: ${MINIO_ACCESS_KEY:any} # SeaweedFS default allows any key unless configured
+  secret-key: ${MINIO_SECRET_KEY:any}
+  bucket: ${MINIO_BUCKET:product-files}
