@@ -4,6 +4,16 @@ import { Observable } from 'rxjs';
 import { Product, Page } from '../models/product.model';
 import { environment } from '../../../environments/environment';
 
+export interface ProductAttachment {
+    id: string;
+    productId: string;
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+    storageKey: string;
+    uploadDate: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -33,5 +43,26 @@ export class ProductService {
 
     deleteProduct(id: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    }
+
+    // --- File Management ---
+
+    uploadFile(productId: string, file: File): Observable<ProductAttachment> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post<ProductAttachment>(`${this.apiUrl}/${productId}/files`, formData);
+    }
+
+    getFiles(productId: string): Observable<ProductAttachment[]> {
+        return this.http.get<ProductAttachment[]>(`${this.apiUrl}/${productId}/files`);
+    }
+
+    getViewUrl(productId: string, fileId: string): string {
+        // Returns the Direct URL to the API, which will redirect to Nginx -> SeaweedFS
+        return `${this.apiUrl}/${productId}/files/${fileId}/view`;
+    }
+
+    getDownloadUrl(productId: string, fileId: string): string {
+        return `${this.apiUrl}/${productId}/files/${fileId}/download`;
     }
 }

@@ -54,6 +54,13 @@ scrape_configs:
           service: 'business'
           tier: 'core'
 
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+        labels:
+          service: 'frontend'
+          tier: 'edge'
+
   # Process Management Service
   - job_name: 'process-service'
     metrics_path: '/actuator/prometheus'

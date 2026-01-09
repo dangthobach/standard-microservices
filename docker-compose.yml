@@ -172,7 +172,19 @@ services:
       timeout: 5s
       retries: 5
 
-  # Prometheus Metrics
+  # Nginx Prometheus Exporter
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.1.0
+    container_name: nginx-exporter
+    command: -nginx.scrape-uri http://frontend:80/stub_status
+    ports:
+      - "9113:9113"
+    networks:
+      - microservices-network
+    depends_on:
+      - frontend
+
+  # Prometheus (Monitoring)
   prometheus:
     image: prom/prometheus:v2.54.1
     container_name: prometheus

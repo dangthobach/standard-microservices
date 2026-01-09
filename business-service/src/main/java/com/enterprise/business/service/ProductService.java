@@ -30,6 +30,8 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final com.enterprise.business.repository.ProductAttachmentRepository attachmentRepository;
     private final FileStorageService fileStorageService;
+    private final UserRoleClientService userRoleClientService;
+    private final PurchaseVerificationService purchaseVerificationService;
 
     @org.springframework.beans.factory.annotation.Value("${minio.bucket}")
     private String productFilesBucket;
@@ -143,7 +145,7 @@ public class ProductService {
         return attachmentRepository.findByProductId(productId);
     }
 
-    public String getFileRedirectPath(UUID productId, UUID fileId, boolean isDownload) {
+    public String getFileRedirectPath(UUID productId, UUID fileId, boolean isDownload, String userId, Integer width, Integer height) {
         com.enterprise.business.entity.ProductAttachment attachment =
             attachmentRepository
                 .findById(fileId)
@@ -155,22 +157,47 @@ public class ProductService {
             throw new SecurityException("File does not belong to this product");
         }
 
-        // TODO: Implement Real Permissions Check
-        // e.g. if (isDownload && !userHasPremium) throw new AccessDeniedException()
-        if (isDownload) {
-            log.info("Processing DOWNLOAD request for file: {}", attachment.getFileName());
+        // 1. Fetch User Roles (Cached)
+        java.util.List<String> roles = userRoleClientService.getUserRoles(userId);
+        
+        boolean isAdmin = roles.contains("ROLE_ADMIN") || roles.contains("ROLE_MANAGER");
+
+        // 2. Permission Logic
+        if (isAdmin) {
+            log.info("Admin access granted for user: {}", userId);
         } else {
-            log.info("Processing VIEW request for file: {}", attachment.getFileName());
+            if (isDownload) {
+                // Download: Must have purchased OR be Admin
+                boolean hasPurchased = purchaseVerificationService.hasPurchased(userId, productId);
+                if (!hasPurchased) {
+                    throw new org.springframework.security.access.AccessDeniedException("User has not purchased this product.");
+                }
+            } else {
+                // View: Allow if purchased OR (maybe allow preview for all?)
+                // For now, strict: View also requires purchase or maybe a lighter check
+                boolean hasPurchased = purchaseVerificationService.hasPurchased(userId, productId);
+                 if (!hasPurchased) {
+                    // throw new org.springframework.security.access.AccessDeniedException("User cannot view this file.");
+                    // Allow view for demo purposes if strict check is too blocking, or enforce it.
+                    // User request said: "User bought product can view file"
+                    throw new org.springframework.security.access.AccessDeniedException("User has not purchased this product.");
+                }
+            }
         }
 
-        // Return path for Nginx X-Accel-Redirect
-        // Format: /internal-files/{bucket}/{key}
-        return (
-            "/internal-files/" +
-            productFilesBucket +
-            "/" +
-            attachment.getStorageKey()
-        );
+        // 3. Construct Redirect Path
+        // Format: /internal-files/{bucket}/{key}?width={w}&height={h}&mode=fit
+        StringBuilder path = new StringBuilder("/internal-files/" + productFilesBucket + "/" + attachment.getStorageKey());
+        
+        // Append Resize Params if present and it's an image
+        if (!isDownload && attachment.getFileType().startsWith("image/") && (width != null || height != null)) {
+            path.append("?");
+            if (width != null) path.append("width=").append(width).append("&");
+            if (height != null) path.append("height=").append(height).append("&");
+            path.append("mode=fit");
+        }
+
+        return path.toString();
     }
     
     public com.enterprise.business.entity.ProductAttachment getFileMetadata(UUID fileId) {
