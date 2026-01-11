@@ -1,0 +1,99 @@
+<div class="detail-container">
+    <!-- Header -->
+    <div class="header">
+        <button class="back-btn" (click)="goBack()">
+            ← Back to Products
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading product...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-state">
+        <p>{{ error }}</p>
+        <button class="btn btn-primary" (click)="goBack()">Go Back</button>
+    </div>
+
+    <!-- Product Content -->
+    <div *ngIf="product && !loading" class="content">
+        <!-- Product Info Card -->
+        <div class="product-card">
+            <div class="product-header">
+                <div>
+                    <h1>{{ product.name }}</h1>
+                    <span class="sku">SKU: {{ product.sku }}</span>
+                </div>
+                <div class="status-badge" [class.active]="product.active" [class.inactive]="!product.active">
+                    {{ product.active ? 'Active' : 'Inactive' }}
+                </div>
+            </div>
+
+            <div class="product-details">
+                <div class="detail-row">
+                    <span class="label">Category</span>
+                    <span class="value">{{ product.category || 'Uncategorized' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Price</span>
+                    <span class="value price">{{ product.price | currency }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Stock</span>
+                    <span class="value" [class.low-stock]="product.stockQuantity < 10">
+                        {{ product.stockQuantity }} units
+                    </span>
+                </div>
+                <div class="detail-row" *ngIf="product.description">
+                    <span class="label">Description</span>
+                    <span class="value description">{{ product.description }}</span>
+                </div>
+            </div>
+
+            <div class="product-actions">
+                <button class="btn btn-secondary" (click)="onEdit()">
+                    ✏️ Edit
+                </button>
+                <button class="btn btn-danger" (click)="onDelete()" [disabled]="deletingProduct">
+                    {{ deletingProduct ? 'Deleting...' : '🗑️ Delete' }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Files Section -->
+        <div class="files-card">
+            <div class="files-header">
+                <h2>📁 Product Files</h2>
+                <label class="upload-btn">
+                    <input type="file" (change)="onFileUpload($event)" [disabled]="uploadingFile" hidden>
+                    {{ uploadingFile ? 'Uploading...' : '⬆️ Upload File' }}
+                </label>
+            </div>
+
+            <div *ngIf="files.length === 0" class="no-files">
+                <p>No files uploaded yet</p>
+            </div>
+
+            <div *ngIf="files.length > 0" class="files-list">
+                <div *ngFor="let file of files" class="file-item">
+                    <div class="file-info">
+                        <span class="file-name">{{ file.fileName }}</span>
+                        <span class="file-meta">{{ formatFileSize(file.fileSize) }} • {{ file.fileType }}</span>
+                    </div>
+                    <div class="file-actions">
+                        <a [href]="getViewUrl(file.id)" target="_blank" class="action-link">👁️ View</a>
+                        <a [href]="getDownloadUrl(file.id)" class="action-link">⬇️ Download</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<app-product-form *ngIf="showEditForm && product" [product]="product" [isEditMode]="true"
+    (formSubmit)="onEditSubmit($event)" (formCancel)="onEditCancel()">
+</app-product-form>

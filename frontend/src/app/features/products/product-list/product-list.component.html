@@ -1,34 +1,95 @@
 <div class="product-container">
-  <h2>Product List</h2>
-  
-  <div *ngIf="products$ | async as page; else loading">
+  <!-- Header -->
+  <div class="header">
+    <h1>Products</h1>
+    <button class="btn btn-primary" (click)="onCreateClick()">
+      + Create Product
+    </button>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-banner">
+    <span>{{ error }}</span>
+    <button class="retry-btn" (click)="loadProducts()">Retry</button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading products...</p>
+  </div>
+
+  <!-- Product Table -->
+  <div *ngIf="!loading && products.length > 0" class="table-container">
     <table class="product-table">
       <thead>
         <tr>
           <th>SKU</th>
           <th>Name</th>
+          <th>Category</th>
           <th>Price</th>
           <th>Stock</th>
           <th>Status</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let product of page.content">
-          <td>{{ product.sku }}</td>
+        <tr *ngFor="let product of products" (click)="onViewProduct(product)" class="product-row">
+          <td class="sku">{{ product.sku }}</td>
           <td>{{ product.name }}</td>
-          <td>{{ product.price | currency }}</td>
-          <td>{{ product.stockQuantity }}</td>
+          <td>{{ product.category || '-' }}</td>
+          <td class="price">{{ product.price | currency }}</td>
+          <td [class.low-stock]="product.stockQuantity < 10">
+            {{ product.stockQuantity }}
+          </td>
           <td>
-            <span [class.active]="product.active" [class.inactive]="!product.active">
+            <span class="status" [class.active]="product.active" [class.inactive]="!product.active">
               {{ product.active ? 'Active' : 'Inactive' }}
             </span>
+          </td>
+          <td class="actions">
+            <button class="action-btn view" (click)="onViewProduct(product); $event.stopPropagation()">
+              👁️
+            </button>
+            <button class="action-btn delete" (click)="onDeleteProduct(product, $event)">
+              🗑️
+            </button>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="page-btn" [disabled]="currentPage === 0" (click)="onPageChange(currentPage - 1)">
+        ← Prev
+      </button>
+
+      <button *ngFor="let page of getPageNumbers()" class="page-btn" [class.active]="page === currentPage"
+        (click)="onPageChange(page)">
+        {{ page + 1 }}
+      </button>
+
+      <button class="page-btn" [disabled]="currentPage >= totalPages - 1" (click)="onPageChange(currentPage + 1)">
+        Next →
+      </button>
+
+      <span class="page-info">
+        Page {{ currentPage + 1 }} of {{ totalPages }} ({{ totalElements }} items)
+      </span>
+    </div>
   </div>
 
-  <ng-template #loading>
-    <div class="loading">Loading products...</div>
-  </ng-template>
+  <!-- Empty State -->
+  <div *ngIf="!loading && products.length === 0 && !error" class="empty-state">
+    <div class="empty-icon">📦</div>
+    <h3>No Products Yet</h3>
+    <p>Create your first product to get started</p>
+    <button class="btn btn-primary" (click)="onCreateClick()">+ Create Product</button>
+  </div>
 </div>
+
+<!-- Create Modal -->
+<app-product-form *ngIf="showCreateForm" [isEditMode]="false" (formSubmit)="onCreateSubmit($event)"
+  (formCancel)="onCreateCancel()">
+</app-product-form>

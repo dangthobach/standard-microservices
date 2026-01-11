@@ -65,10 +65,9 @@ public class InternalAuthZController {
      * @return List of role names (e.g., ["ADMIN", "MANAGER"])
      */
     @GetMapping("/roles/keycloak/{keycloakId}")
-    @Operation(summary = "Get user roles by Keycloak ID", 
-               description = "Returns list of role names for a user based on their Keycloak ID")
+    @Operation(summary = "Get user roles by Keycloak ID", description = "Returns list of role names for a user based on their Keycloak ID")
     public ResponseEntity<List<String>> getUserRolesByKeycloakId(
-            @PathVariable String keycloakId) {
+            @PathVariable("keycloakId") String keycloakId) {
         log.debug("Gateway requested Roles for Keycloak ID: {}", keycloakId);
         List<String> roles = userRepository.findRoleNamesByKeycloakId(keycloakId);
         log.debug("Found roles: {} for Keycloak ID: {}", roles, keycloakId);

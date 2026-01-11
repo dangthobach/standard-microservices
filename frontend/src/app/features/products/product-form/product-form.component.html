@@ -1,0 +1,78 @@
+<div class="form-overlay">
+    <div class="form-container">
+        <div class="form-header">
+            <h2>{{ isEditMode ? 'Edit Product' : 'Create New Product' }}</h2>
+            <button class="close-btn" (click)="onCancel()">×</button>
+        </div>
+
+        <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Product Name *</label>
+                    <input type="text" id="name" formControlName="name" [class.error]="name?.invalid && name?.touched">
+                    <span class="error-text" *ngIf="name?.invalid && name?.touched">
+                        <span *ngIf="name?.errors?.['required']">Name is required</span>
+                        <span *ngIf="name?.errors?.['minlength']">Minimum 3 characters</span>
+                    </span>
+                </div>
+
+                <div class="form-group">
+                    <label for="sku">SKU *</label>
+                    <input type="text" id="sku" formControlName="sku" [readonly]="isEditMode"
+                        [class.error]="sku?.invalid && sku?.touched" placeholder="e.g. PROD-001">
+                    <span class="error-text" *ngIf="sku?.invalid && sku?.touched">
+                        <span *ngIf="sku?.errors?.['required']">SKU is required</span>
+                        <span *ngIf="sku?.errors?.['pattern']">Use uppercase letters, numbers, and dashes only</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" formControlName="description" rows="3"
+                    placeholder="Enter product description..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <input type="text" id="category" formControlName="category">
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Price *</label>
+                    <input type="number" id="price" formControlName="price" step="0.01"
+                        [class.error]="price?.invalid && price?.touched">
+                    <span class="error-text" *ngIf="price?.invalid && price?.touched">
+                        Price must be 0 or greater
+                    </span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="stockQuantity">Stock Quantity *</label>
+                    <input type="number" id="stockQuantity" formControlName="stockQuantity"
+                        [class.error]="stockQuantity?.invalid && stockQuantity?.touched">
+                    <span class="error-text" *ngIf="stockQuantity?.invalid && stockQuantity?.touched">
+                        Stock must be 0 or greater
+                    </span>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" formControlName="active">
+                        <span>Active</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+                <button type="submit" class="btn btn-primary" [disabled]="productForm.invalid || isSubmitting">
+                    {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Create') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

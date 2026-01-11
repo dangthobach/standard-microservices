@@ -80,6 +80,14 @@ export const routes: Routes = [
   },
 
   {
+    path: 'products/:id',
+    loadComponent: () => import('./features/products/product-detail/product-detail.component')
+      .then(m => m.ProductDetailComponent),
+    canActivate: [authGuard],
+    title: 'Product Details - Enterprise Microservices'
+  },
+
+  {
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.component')
       .then(m => m.SettingsComponent),

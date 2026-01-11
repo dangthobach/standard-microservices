@@ -97,8 +97,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * @param keycloakId Keycloak user ID (sub claim from JWT)
      * @return List of role names
      */
-    @org.springframework.data.jpa.repository.Query(
-        "SELECT r.name FROM User u JOIN u.roles r " +
-        "WHERE u.keycloakId = :keycloakId AND u.deleted = false AND r.deleted = false")
-    java.util.List<String> findRoleNamesByKeycloakId(String keycloakId);
+    @org.springframework.data.jpa.repository.Query("SELECT r.name FROM User u JOIN u.roles r " +
+            "WHERE u.keycloakId = :keycloakId AND u.deleted = false AND r.deleted = false")
+    java.util.List<String> findRoleNamesByKeycloakId(
+            @org.springframework.data.repository.query.Param("keycloakId") String keycloakId);
 }

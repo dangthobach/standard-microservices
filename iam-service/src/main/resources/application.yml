@@ -60,9 +60,9 @@ spring:
     hibernate:
       ddl-auto: validate  # Changed from 'update' to 'validate' for production safety
     show-sql: false
+    open-in-view: false  # Disable OSIV for better performance
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         use_sql_comments: true
         jdbc:

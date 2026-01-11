@@ -2,7 +2,6 @@ package com.enterprise.gateway.health;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,16 +33,15 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class DownstreamServicesHealthIndicator implements ReactiveHealthIndicator {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
-    
+
     /**
-     * Use standard WebClient.Builder (not @LoadBalanced) for direct HTTP calls.
-     * This prevents LoadBalancer from trying to resolve IP addresses as service names.
+     * Standard WebClient.Builder (not @LoadBalanced) for direct HTTP calls.
+     * This prevents LoadBalancer from trying to resolve IP addresses as service
+     * names.
      */
-    @Qualifier("standardWebClientBuilder")
     private final WebClient.Builder standardWebClientBuilder;
 
     // Health check URLs are now configured via application.yml
@@ -58,6 +56,27 @@ public class DownstreamServicesHealthIndicator implements ReactiveHealthIndicato
             "iam-service",
             "business-service"
     };
+
+    /**
+     * Constructor with explicit @Qualifier for standardWebClientBuilder.
+     * <p>
+     * NOTE: We cannot use Lombok @RequiredArgsConstructor here because
+     * 
+     * @Qualifier on fields is not propagated to constructor parameters by Lombok.
+     *            Spring needs @Qualifier on the constructor parameter to properly
+     *            inject
+     *            the correct bean when multiple WebClient.Builder beans exist.
+     *
+     * @param circuitBreakerRegistry   Registry for circuit breakers
+     * @param standardWebClientBuilder Standard WebClient.Builder (not LoadBalanced)
+     */
+    public DownstreamServicesHealthIndicator(
+            CircuitBreakerRegistry circuitBreakerRegistry,
+            @Qualifier("standardWebClientBuilder") WebClient.Builder standardWebClientBuilder) {
+        this.circuitBreakerRegistry = circuitBreakerRegistry;
+        this.standardWebClientBuilder = standardWebClientBuilder;
+        log.info("✅ DownstreamServicesHealthIndicator initialized with standardWebClientBuilder (non-LoadBalanced)");
+    }
 
     @Override
     public Mono<Health> health() {
@@ -89,10 +108,8 @@ public class DownstreamServicesHealthIndicator implements ReactiveHealthIndicato
      */
     private Mono<Map<String, Map<String, Object>>> checkAllServices() {
         return Flux.fromArray(SERVICES)
-                .flatMap(service ->
-                        checkServiceHealth(service)
-                                .map(health -> Map.entry(service, health))
-                )
+                .flatMap(service -> checkServiceHealth(service)
+                        .map(health -> Map.entry(service, health)))
                 .collectMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 

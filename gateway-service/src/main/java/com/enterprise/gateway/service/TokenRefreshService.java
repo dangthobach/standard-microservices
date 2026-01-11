@@ -1,7 +1,6 @@
 package com.enterprise.gateway.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,30 +26,21 @@ import reactor.core.publisher.Mono;
  * Error Handling:
  * - If refresh fails (refresh token expired), session is invalidated
  * - User must re-authenticate via /auth/login
+ * <p>
+ * Uses standard (non-load-balanced) WebClient.Builder for direct HTTP calls
+ * to Keycloak token endpoint (full URL, not service discovery).
  *
  * @author Enterprise Team
  * @since 1.0.0
  */
-/**
- * Token Refresh Service
- * <p>
- * Handles automatic token refresh with Keycloak using refresh tokens.
- * This is a critical component of the BFF pattern for maintaining user sessions
- * without requiring re-authentication.
- * <p>
- * Uses standard (non-load-balanced) WebClient.Builder for direct HTTP calls
- * to Keycloak token endpoint (full URL, not service discovery).
- */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TokenRefreshService {
 
     /**
-     * Use standard WebClient.Builder (not @LoadBalanced) for direct HTTP calls to Keycloak.
-     * Keycloak token endpoint is accessed via full URL, not service discovery.
+     * Standard WebClient.Builder (not @LoadBalanced) for direct HTTP calls to
+     * Keycloak.
      */
-    @Qualifier("standardWebClientBuilder")
     private final WebClient.Builder standardWebClientBuilder;
     private final SessionService sessionService;
 
@@ -64,11 +54,32 @@ public class TokenRefreshService {
     private String clientSecret;
 
     /**
+     * Constructor with explicit @Qualifier for standardWebClientBuilder.
+     * <p>
+     * NOTE: We cannot use Lombok @RequiredArgsConstructor here because
+     * 
+     * @Qualifier on fields is not propagated to constructor parameters by Lombok.
+     *            Spring needs @Qualifier on the constructor parameter to properly
+     *            inject
+     *            the correct bean when multiple WebClient.Builder beans exist.
+     *
+     * @param standardWebClientBuilder Standard WebClient.Builder (not LoadBalanced)
+     * @param sessionService           Session management service
+     */
+    public TokenRefreshService(
+            @Qualifier("standardWebClientBuilder") WebClient.Builder standardWebClientBuilder,
+            SessionService sessionService) {
+        this.standardWebClientBuilder = standardWebClientBuilder;
+        this.sessionService = sessionService;
+        log.info("✅ TokenRefreshService initialized with standardWebClientBuilder (non-LoadBalanced)");
+    }
+
+    /**
      * Refresh access token for a session.
      * <p>
      * Uses OAuth2 refresh_token grant to obtain new access token from Keycloak.
      *
-     * @param sessionId Session ID
+     * @param sessionId    Session ID
      * @param refreshToken Current refresh token
      * @return Mono that completes when tokens are refreshed
      */
@@ -92,8 +103,7 @@ public class TokenRefreshService {
                     return sessionService.updateTokens(
                             sessionId,
                             response.getAccessToken(),
-                            response.getRefreshToken() != null ? response.getRefreshToken() : refreshToken
-                    );
+                            response.getRefreshToken() != null ? response.getRefreshToken() : refreshToken);
                 })
                 .doOnError(error -> {
                     log.error("Failed to refresh token for session: {}", sessionId, error);
