@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:flowable="http://flowable.org/dmn"
+             id="definitions"
+             name="Route Decision"
+             namespace="http://flowable.org/dmn"
+             targetNamespace="http://flowable.org/dmn">
+
+  <decision id="routeDecision" name="Route Decision">
+    <decisionTable id="decisionTable_1" hitPolicy="FIRST">
+      
+      <!-- Input -->
+      <input id="input_1" label="Route Type">
+        <inputExpression id="inputExpression_1" typeRef="string">
+          <text>routeType</text>
+        </inputExpression>
+      </input>
+      
+      <input id="input_2" label="Priority">
+        <inputExpression id="inputExpression_2" typeRef="integer">
+          <text>priority</text>
+        </inputExpression>
+      </input>
+      
+      <!-- Output -->
+      <output id="output_1" label="Route Result" typeRef="string" />
+      <output id="output_2" label="Assignee" typeRef="string" />
+      
+      <!-- Rules -->
+      <rule id="rule_1">
+        <description>High priority fast route</description>
+        <inputEntry id="inputEntry_1">
+          <text>"fast"</text>
+        </inputEntry>
+        <inputEntry id="inputEntry_2">
+          <text>&gt;= 8</text>
+        </inputEntry>
+        <outputEntry id="outputEntry_1">
+          <text>"fastRoute"</text>
+        </outputEntry>
+        <outputEntry id="outputEntry_2">
+          <text>"senior_approver"</text>
+        </outputEntry>
+      </rule>
+      
+      <rule id="rule_2">
+        <description>High priority normal route</description>
+        <inputEntry id="inputEntry_3">
+          <text>"normal"</text>
+        </inputEntry>
+        <inputEntry id="inputEntry_4">
+          <text>&gt;= 8</text>
+        </inputEntry>
+        <outputEntry id="outputEntry_3">
+          <text>"normalRoute"</text>
+        </outputEntry>
+        <outputEntry id="outputEntry_4">
+          <text>"manager"</text>
+        </outputEntry>
+      </rule>
+      
+      <rule id="rule_3">
+        <description>Low priority route</description>
+        <inputEntry id="inputEntry_5">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="inputEntry_6">
+          <text>&lt; 8</text>
+        </inputEntry>
+        <outputEntry id="outputEntry_5">
+          <text>"defaultRoute"</text>
+        </outputEntry>
+        <outputEntry id="outputEntry_6">
+          <text>"junior_approver"</text>
+        </outputEntry>
+      </rule>
+      
+      <rule id="rule_4">
+        <description>Default route</description>
+        <inputEntry id="inputEntry_7">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="inputEntry_8">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="outputEntry_7">
+          <text>"defaultRoute"</text>
+        </outputEntry>
+        <outputEntry id="outputEntry_8">
+          <text>"default_assignee"</text>
+        </outputEntry>
+      </rule>
+      
+    </decisionTable>
+  </decision>
+  
+</definitions>

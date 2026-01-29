@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             targetNamespace="Examples">
+  <process id="helloProcess" name="Hello Process" isExecutable="true">
+    <startEvent id="start"/>
+    <sequenceFlow id="f1" sourceRef="start" targetRef="decision"/>
+          <serviceTask id="decision" name="Route by Service" flowable:class="vn.com.learnmore.bpmn.RouteServiceTask"/>
+    <sequenceFlow id="f2" sourceRef="decision" targetRef="manual"/>
+    <userTask id="manual" name="Approve"/>
+    <sequenceFlow id="f3" sourceRef="manual" targetRef="end"/>
+    <endEvent id="end"/>
+  </process>
+</definitions>

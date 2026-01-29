@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/CMMN/20151109/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/cmmn"
+             id="Definitions_1"
+             targetNamespace="http://flowable.org/casedef">
+
+  <case id="sampleCase" name="Sample Case">
+    <casePlanModel id="CasePlanModel_1" name="Sample Case">
+
+      <!-- Plan items (thực thể runtime) -->
+      <planItem id="pi_review"  name="Review Case"       definitionRef="HumanTask_1"/>
+      <planItem id="pi_manual"  name="Process Documents" definitionRef="Task_1">
+        <entryCriterion id="ec_manual" sentryRef="Sentry_after_review"/>
+      </planItem>
+      <planItem id="pi_milestone" name="Case Completed"  definitionRef="Milestone_1">
+        <entryCriterion id="ec_milestone" sentryRef="Sentry_after_manual"/>
+      </planItem>
+      <planItem id="pi_stage"   name="Processing Stage"  definitionRef="Stage_1"/>
+
+      <!-- Sentries ở cùng cấp với planItem; sourceRef phải là ID của planItem -->
+      <sentry id="Sentry_after_review">
+        <planItemOnPart id="on_review_complete" sourceRef="pi_review">
+          <standardEvent>complete</standardEvent>
+        </planItemOnPart>
+      </sentry>
+      <sentry id="Sentry_after_manual">
+        <planItemOnPart id="on_manual_complete" sourceRef="pi_manual">
+          <standardEvent>complete</standardEvent>
+        </planItemOnPart>
+      </sentry>
+
+      <!-- Định nghĩa (plan item definitions) -->
+      <humanTask id="HumanTask_1" name="Review Case" flowable:assignee="user1"/>
+      <task      id="Task_1"      name="Process Documents"/>
+      <milestone id="Milestone_1" name="Case Completed"/>
+
+      <stage id="Stage_1" name="Processing Stage">
+        <planItem  id="pi_approve" name="Approve Stage" definitionRef="HumanTask_2"/>
+        <humanTask id="HumanTask_2" name="Approve Stage" flowable:assignee="manager"/>
+      </stage>
+
+      <!-- (Tuỳ chọn) exitCriterion cho toàn casePlanModel -->
+      <!-- <exitCriterion id="Exit_on_complete" sentryRef="Sentry_after_manual"/> -->
+
+    </casePlanModel>
+  </case>
+</definitions>

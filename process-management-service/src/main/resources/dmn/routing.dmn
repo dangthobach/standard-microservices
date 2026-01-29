@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             id="defs" name="Routing" namespace="examples">
+  <decision id="routeDecision" name="routeDecision">
+    <decisionTable hitPolicy="FIRST">
+      <input id="i1">
+        <inputExpression typeRef="number"><text>amount</text></inputExpression>
+      </input>
+      <output id="o1" name="route" typeRef="string"/>
+      <rule>
+        <inputEntry><text>&lt;= 1000</text></inputEntry>
+        <outputEntry><text>"FAST"</text></outputEntry>
+      </rule>
+      <rule>
+        <inputEntry><text>&gt; 1000</text></inputEntry>
+        <outputEntry><text>"REVIEW"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
