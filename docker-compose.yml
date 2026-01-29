@@ -352,7 +352,70 @@ services:
       retries: 5
       start_period: 60s
 
+  # Process Management Service
+  process-management-service:
+    build:
+      context: .
+      dockerfile: process-management-service/Dockerfile
+    container_name: process-management-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: enterprise_db?currentSchema=flowable
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+    depends_on:
+      consul:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8083/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
+  # Integration Service
+  integration-service:
+    build:
+      context: .
+      dockerfile: integration-service/Dockerfile
+    container_name: integration-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: redis_password
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+    depends_on:
+      consul:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8084/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   # Frontend Application
   frontend:

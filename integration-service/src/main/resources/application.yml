@@ -1,0 +1,82 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: integration-service
+
+  cloud:
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
+      discovery:
+        enabled: true
+        register: true
+        instance-id: ${spring.application.name}:${random.value}
+        service-name: ${spring.application.name}
+        prefer-ip-address: true
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+        tags:
+          - integration
+          - gateway
+
+  # Cache Configuration (L1 + L2)
+  cache:
+    type: redis
+    cache-names:
+      - thirdPartyData
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=60s
+
+  # Redis Configuration (L2)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 3
+      timeout: 3000ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLE_RATE:0.01}
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+logging:
+  level:
+    root: INFO
+    com.enterprise: DEBUG
+
+# Custom Integration Configuration
+integration:
+  providers:
+    # Example Provider A (JWT Auth)
+    provider-a:
+      base-url: https://mock-api.com/v1
+      auth:
+        type: JWT
+        token-url: https://mock-api.com/oauth/token
+        client-id: ${PROVIDER_A_CLIENT_ID:app-client}
+        client-secret: ${PROVIDER_A_CLIENT_SECRET:secret}
+      cache:
+        ttl: 3600 # 1 hour
+
+    # Example Provider B (Public Key / API Key)
+    provider-b:
+      base-url: https://partner-api.com/v2
+      auth:
+        type: API_KEY
+        header-name: X-API-KEY
+        value: ${PROVIDER_B_API_KEY:my-key}

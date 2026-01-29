@@ -18,10 +18,8 @@
         <module>gateway-service</module>
         <module>iam-service</module>
         <module>business-service</module>
-        <!-- TODO: Uncomment when implementing these services
         <module>process-management-service</module>
         <module>integration-service</module>
-        -->
     </modules>
 
     <properties>
