@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package com.enterprise.process.proto;
+
+option java_package = "com.enterprise.process.proto";
+option java_outer_classname = "ProductStatusProto";
+option java_multiple_files = false;
+
+/**
+ * Message for Product Status Change - sent from Process Service to Business Service.
+ */
+message ProductStatusChangedEvent {
+    // ID of the product being updated
+    string product_id = 1;
+
+    // The new status (e.g., PENDING_CONFIRMATION, ACTIVE)
+    string new_status = 2;
+
+    // The process instance ID that triggered this change
+    string process_instance_id = 3;
+
+    // Timestamp of the change
+    string timestamp = 4;
+}

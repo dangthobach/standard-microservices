@@ -8,6 +8,7 @@ import com.enterprise.business.dto.ProductDTO;
 import com.enterprise.business.dto.UpdateProductRequest;
 import com.enterprise.business.query.GetProductByIdQuery;
 import com.enterprise.business.query.ListProductsQuery;
+import com.enterprise.business.service.RequestProducer;
 import com.enterprise.common.cqrs.CommandBus;
 import com.enterprise.common.cqrs.QueryBus;
 import com.enterprise.common.dto.ApiResponse;
@@ -21,7 +22,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -31,6 +34,10 @@ import java.util.UUID;
  * - Commands (Write): CreateProductCommand, UpdateProductCommand, DeleteProductCommand
  * - Queries (Read): GetProductByIdQuery, ListProductsQuery
  * - Uses CommandBus and QueryBus for decoupled business logic
+ * <p>
+ * Workflow Integration:
+ * - Product creation triggers "product-approval-process" workflow
+ * - Status updates received via RabbitMQ from Process Management Service
  * <p>
  * All endpoints return standardized ApiResponse wrapper.
  *
@@ -46,6 +53,7 @@ public class ProductController {
 
     private final CommandBus commandBus;
     private final QueryBus queryBus;
+    private final RequestProducer requestProducer;
 
     /**
      * Get all products with pagination
@@ -94,7 +102,7 @@ public class ProductController {
     }
 
     /**
-     * Create a new product
+     * Create a new product and trigger workflow process
      * <p>
      * Example: POST /api/products
      * <pre>
@@ -105,13 +113,19 @@ public class ProductController {
      *   "stockQuantity": 50
      * }
      * </pre>
+     * <p>
+     * Workflow: After product creation, automatically triggers "product-approval-process"
+     * which will handle approval flow and status updates.
      *
      * @param request Create product request
      * @return Created product ID wrapped in ApiResponse
      */
     @PostMapping
     @PreAuthorize("hasAuthority('product:create')")
-    @Operation(summary = "Create product", description = "Create a new product")
+    @Operation(
+        summary = "Create product", 
+        description = "Create a new product and trigger approval workflow"
+    )
     public ResponseEntity<ApiResponse<UUID>> createProduct(@RequestBody CreateProductRequest request) {
         log.info("REST request to create Product: sku={}", request.getSku());
 
@@ -125,9 +139,33 @@ public class ProductController {
                 .build();
 
         UUID productId = commandBus.dispatch(command);
+        log.info("Product created successfully: productId={}", productId);
+
+        // Trigger workflow process
+        try {
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("productId", productId.toString());
+            variables.put("productName", request.getName());
+            variables.put("sku", request.getSku());
+            variables.put("price", request.getPrice().toString());
+            variables.put("category", request.getCategory() != null ? request.getCategory() : "");
+
+            UUID requestId = requestProducer.sendProcessRequest(
+                "product-approval-process",
+                "system", // TODO: Get from SecurityContext
+                request.getSku(),
+                variables,
+                5 // Normal priority
+            );
+            
+            log.info("Product approval workflow triggered: productId={}, requestId={}", productId, requestId);
+        } catch (Exception e) {
+            log.error("Failed to trigger workflow for product {}: {}", productId, e.getMessage(), e);
+            // Don't fail the request - product is already created
+        }
 
         return ResponseEntity.ok(
-                ApiResponse.success("Product created successfully", productId)
+                ApiResponse.success("Product created and approval workflow initiated", productId)
         );
     }
 

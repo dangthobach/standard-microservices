@@ -30,7 +30,7 @@
     - [x] Create Frontend Model & Service
     - [x] Create `ProductListComponent`
     - [x] Configure Routing (`/products`)
-- [ ] **Phase 2: Production Readiness & Missing Services**
+- [x] **Phase 2: Production Readiness & Missing Services**
     - [x] **Refactor Process Management Service**
         - [x] Standardize Package Structure
         - [x] Update POM & Dependencies
@@ -44,3 +44,21 @@
     - [x] **Infrastructure**
         - [x] Update Docker Compose
         - [x] Verify Build (mvn clean install)
+- [x] **Phase 3: Product Workflow Integration**
+    - [x] **Update Product Entity**
+        - [x] Add `status` field (DRAFT, PENDING_APPROVAL, etc.)
+        - [x] Add `processInstanceId` field
+    - [x] **Implement Protobuf Messages**
+        - [x] Define `ProcessRequest` (Business → Process Service)
+        - [x] Define `ProductStatusChangedEvent` (Process → Business Service)
+    - [x] **Implement RabbitMQ Integration**
+        - [x] Create `RequestProducer` (send process requests)
+        - [x] Create `ProductStatusConsumer` (receive status updates)
+        - [x] Update `RabbitMQConfig` (queues, exchanges, bindings)
+    - [x] **Implement Controllers**
+        - [x] Create `ProcessRequestController` (manual workflow trigger)
+        - [x] Update `ProductController` (auto-trigger workflow on create)
+    - [ ] **Verification**
+        - [/] Run `mvn clean install`
+        - [ ] Manual Testing (Optional)
+

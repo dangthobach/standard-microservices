@@ -43,11 +43,19 @@ public class Product extends SoftDeletableEntity<UUID> {
     @Column(nullable = false)
     private Boolean active = true;
 
+    // Workflow Fields
+    @Column(length = 50)
+    private String status = "DRAFT"; // DRAFT, PENDING_APPROVAL, PENDING_CONFIRMATION, ACTIVE, REJECTED
+
+    @Column(length = 64)
+    private String processInstanceId;
+
     @Builder
     public Product(UUID id, String createdBy, Instant createdAt, String updatedBy, Instant updatedAt,
             boolean deleted, String deletedBy, Instant deletedAt,
             String name, String sku, String description, BigDecimal price, String category,
-            Integer stockQuantity, Boolean active) {
+            Integer stockQuantity, Boolean active,
+            String status, String processInstanceId) {
         this.setId(id);
         this.setCreatedBy(createdBy);
         this.setCreatedAt(createdAt);
@@ -63,5 +71,7 @@ public class Product extends SoftDeletableEntity<UUID> {
         this.category = category;
         this.stockQuantity = stockQuantity;
         this.active = active;
+        this.status = status != null ? status : "DRAFT";
+        this.processInstanceId = processInstanceId;
     }
 }

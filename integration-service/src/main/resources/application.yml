@@ -34,7 +34,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD}
       database: 3
       timeout: 3000ms
 
@@ -69,7 +69,7 @@ integration:
         type: JWT
         token-url: https://mock-api.com/oauth/token
         client-id: ${PROVIDER_A_CLIENT_ID:app-client}
-        client-secret: ${PROVIDER_A_CLIENT_SECRET:secret}
+        client-secret: ${PROVIDER_A_CLIENT_SECRET}
       cache:
         ttl: 3600 # 1 hour
 
@@ -79,4 +79,4 @@ integration:
       auth:
         type: API_KEY
         header-name: X-API-KEY
-        value: ${PROVIDER_B_API_KEY:my-key}
+        value: ${PROVIDER_B_API_KEY}
