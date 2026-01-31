@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { 
-  Task, 
-  ProcessInstance, 
-  ProcessDefinition, 
+import {
+  Task,
+  ProcessInstance,
+  ProcessDefinition,
   CaseDefinition,
   CaseInstance,
   PlanItemInstance,
@@ -33,7 +33,7 @@ export const taskApi = {
     const response = await api.get(`/flow/tasks/${taskId}`);
     return response.data as Task;
   },
-  
+
   // New paginated method with filtering
   getTasksPaginated: async (params: {
     page?: number;
@@ -55,7 +55,7 @@ export const taskApi = {
         searchParams.append(key, value.toString());
       }
     });
-    
+
     const response = await api.get(`/batch/tasks?${searchParams.toString()}`);
     return response.data as PaginatedResponse<Task>;
   },
@@ -92,67 +92,16 @@ export const taskApi = {
 };
 
 export const processApi = {
-  getProcesses: async (): Promise<ProcessDefinition[]> => {
-    const response = await api.get('/flow/processes');
-    return response.data as ProcessDefinition[];
-  },
-  startProcess: async (processKey: string, variables?: Record<string, any>): Promise<ProcessInstance> => {
-    const response = await api.post(`/flow/processes/${processKey}/start`, variables || {});
-    return response.data as ProcessInstance;
-  },
-  getProcessInstances: async (processKey?: string): Promise<ProcessInstance[]> => {
-    const url = processKey 
-      ? `/flow/processes/instances?processDefinitionKey=${processKey}`
-      : '/flow/processes/instances';
-    const response = await api.get(url);
-    return response.data as ProcessInstance[];
-  },
-  getProcessInstance: async (instanceId: string): Promise<ProcessInstance> => {
-    const response = await api.get(`/flow/instances/${instanceId}`);
-    return response.data as ProcessInstance;
-  },
-  // Suspend process instance
-  suspendProcessInstance: async (instanceId: string): Promise<void> => {
-    await api.put(`/flow/instances/${instanceId}/suspend`);
-  },
-  // Activate process instance
-  activateProcessInstance: async (instanceId: string): Promise<void> => {
-    await api.put(`/flow/instances/${instanceId}/activate`);
-  },
-  // Delete process instance
-  deleteProcessInstance: async (instanceId: string, deleteReason?: string): Promise<void> => {
-    await api.delete(`/flow/instances/${instanceId}?deleteReason=${encodeURIComponent(deleteReason || 'Deleted by user')}`);
-  },
-  // Lấy BPMN XML của process
-  getProcessBpmn: async (processKey: string): Promise<string> => {
-    const response = await api.get(`/flow/processes/${processKey}/bpmn`);
-    return response.data as string;
-  },
-  // Deploy process từ BPMN XML
-  deployProcess: async (bpmnXml: string, processKey: string, processName: string): Promise<any> => {
-    const formData = new FormData();
-    const blob = new Blob([bpmnXml], { type: 'application/xml' });
-    formData.append('file', blob, `${processKey}.bpmn`);
-    formData.append('processKey', processKey);
-    formData.append('processName', processName);
-    
-    const response = await api.post('/flow/deploy', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+  // Deployment API
+  getDeployments: async (): Promise<any[]> => {
+    const response = await api.get('/deployments');
     return response.data;
   },
-  // Xóa process definition
-  deleteProcess: async (processId: string): Promise<void> => {
-    await api.delete(`/flow/processes/${processId}`);
+
+  deleteDeployment: async (deploymentId: string): Promise<void> => {
+    await api.delete(`/deployments/${deploymentId}`);
   },
 
-  // Get task history for a process instance
-  getTaskHistory: async (processInstanceId: string): Promise<any[]> => {
-    const response = await api.get(`/flow/history/tasks?processInstanceId=${processInstanceId}`);
-    return response.data as any[];
-  },
 
   // Get process variables
   getProcessVariables: async (processInstanceId: string): Promise<any[]> => {
@@ -195,7 +144,7 @@ export const cmmnApi = {
     const response = await api.get(`/cmmn/definitions/${key}`);
     return response.data as CaseDefinition;
   },
-  
+
   // Case Instances
   startCase: async (caseKey: string, variables?: Record<string, any>): Promise<CaseInstance> => {
     const response = await api.post(`/cmmn/cases/${caseKey}/start`, variables || {});
@@ -212,7 +161,7 @@ export const cmmnApi = {
   terminateCase: async (caseInstanceId: string): Promise<void> => {
     await api.delete(`/cmmn/cases/${caseInstanceId}`);
   },
-  
+
   // Plan Items
   getPlanItems: async (caseInstanceId: string): Promise<PlanItemInstance[]> => {
     const response = await api.get(`/cmmn/cases/${caseInstanceId}/plan-items`);
@@ -224,7 +173,7 @@ export const cmmnApi = {
   completePlanItem: async (planItemId: string): Promise<void> => {
     await api.post(`/cmmn/plan-items/${planItemId}/complete`);
   },
-  
+
   // Case Tasks
   getCaseTasks: async (): Promise<CaseTask[]> => {
     const response = await api.get('/cmmn/tasks');
@@ -247,7 +196,7 @@ export const cmmnApi = {
   setCaseTaskVariables: async (taskId: string, variables: Record<string, any>): Promise<void> => {
     await api.post(`/cmmn/tasks/${taskId}/variables`, variables);
   },
-  
+
   // History
   getHistoricCaseInstances: async (): Promise<CaseInstance[]> => {
     const response = await api.get('/cmmn/history/cases');
@@ -274,7 +223,7 @@ export const decisionApi = {
     const response = await api.get(`/dmn/definitions/${key}`);
     return response.data as DecisionDefinition;
   },
-  
+
   // Execute Decisions
   evaluateDecision: async (decisionKey: string, variables: Record<string, any>): Promise<any> => {
     const response = await api.post(`/dmn/decisions/${decisionKey}/execute`, variables);
@@ -284,7 +233,7 @@ export const decisionApi = {
     const response = await api.post(`/dmn/decisions/${decisionKey}/execute-all`, variables);
     return response.data as DecisionResultAll;
   },
-  
+
   // Deploy decision
   deployDecision: async (dmnXml: string, decisionKey: string, decisionName: string): Promise<any> => {
     const formData = new FormData();
@@ -292,7 +241,7 @@ export const decisionApi = {
     formData.append('file', blob, `${decisionKey}.dmn`);
     formData.append('decisionKey', decisionKey);
     formData.append('decisionName', decisionName);
-    
+
     const response = await api.post('/dmn/deploy', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -300,12 +249,12 @@ export const decisionApi = {
     });
     return response.data;
   },
-  
+
   // Delete decision
   deleteDecision: async (decisionId: string): Promise<void> => {
     await api.delete(`/dmn/decisions/${decisionId}`);
   },
-  
+
   // Decision Tables
   getDecisionTables: async (): Promise<DecisionTable[]> => {
     const response = await api.get('/dmn/tables');
@@ -315,7 +264,7 @@ export const decisionApi = {
     const response = await api.get(`/dmn/tables/${key}`);
     return response.data as DecisionTable;
   },
-  
+
   // History
   getDecisionHistory: async (): Promise<DecisionExecution[]> => {
     const response = await api.get('/dmn/history');
@@ -325,4 +274,38 @@ export const decisionApi = {
     const response = await api.get(`/dmn/history/${executionId}`);
     return response.data as DecisionExecution;
   },
+};
+
+// Form API
+export const formApi = {
+  getForms: async (): Promise<any[]> => {
+    const response = await api.get('/forms');
+    return response.data;
+  },
+  deployForm: async (file: File, formKey?: string, formName?: string): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (formKey) formData.append('formKey', formKey);
+    if (formName) formData.append('formName', formName);
+
+    const response = await api.post('/forms', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  deleteForm: async (deploymentId: string): Promise<void> => {
+    await api.delete(`/forms/${deploymentId}`);
+  },
+  getFormModel: async (formId: string): Promise<any> => {
+    const response = await api.get(`/forms/${formId}/model`);
+    return response.data;
+  },
+};
+
+// Dashboard API
+export const dashboardApi = {
+  getStats: async (): Promise<any> => {
+    const response = await api.get('/dashboard/stats');
+    return response.data;
+  }
 };

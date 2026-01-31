@@ -52,7 +52,7 @@ public class DecisionController {
                 .decisionKey(key)
                 .latestVersion()
                 .singleResult();
-        
+
         if (dd == null) {
             throw new RuntimeException("Decision definition not found");
         }
@@ -71,7 +71,7 @@ public class DecisionController {
     // Execute Decisions
     @PostMapping("/decisions/{key}/execute")
     public Map<String, Object> executeDecision(@PathVariable("key") String decisionKey,
-                                              @RequestBody Map<String, Object> variables) {
+            @RequestBody Map<String, Object> variables) {
         var result = decisionService.createExecuteDecisionBuilder()
                 .decisionKey(decisionKey)
                 .variables(variables)
@@ -81,12 +81,12 @@ public class DecisionController {
 
     @PostMapping("/decisions/{key}/execute-all")
     public Map<String, Object> executeDecisionAllResults(@PathVariable("key") String decisionKey,
-                                                        @RequestBody Map<String, Object> variables) {
+            @RequestBody Map<String, Object> variables) {
         var results = decisionService.createExecuteDecisionBuilder()
                 .decisionKey(decisionKey)
                 .variables(variables)
                 .execute();
-        
+
         List<Map<String, Object>> resultList = results.stream()
                 .map(result -> {
                     Map<String, Object> resultMap = new HashMap<>();
@@ -96,7 +96,7 @@ public class DecisionController {
                     return resultMap;
                 })
                 .collect(Collectors.toList());
-        
+
         return Map.of("decisionKey", decisionKey, "results", resultList);
     }
 
@@ -125,7 +125,7 @@ public class DecisionController {
                 .decisionKey(key)
                 .latestVersion()
                 .singleResult();
-        
+
         if (dd == null) {
             throw new RuntimeException("Decision table not found");
         }
@@ -165,7 +165,7 @@ public class DecisionController {
         var hde = dmnHistoryService.createHistoricDecisionExecutionQuery()
                 .executionId(id)
                 .singleResult();
-        
+
         if (hde == null) {
             throw new RuntimeException("Decision execution not found");
         }
@@ -181,5 +181,64 @@ public class DecisionController {
         execution.put("outputVariables", new HashMap<>());
         return execution;
     }
-}
 
+    // Deploy decision
+    @PostMapping("/deploy")
+    public Map<String, Object> deployDecision(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "decisionKey", required = false) String decisionKey,
+            @RequestParam(value = "decisionName", required = false) String decisionName) {
+        try {
+            var deployment = dmnRepositoryService.createDeployment()
+                    .addInputStream(file.getOriginalFilename(), file.getInputStream())
+                    .name(decisionName != null ? decisionName : file.getOriginalFilename())
+                    .deploy();
+
+            return Map.of("id", deployment.getId(), "name", deployment.getName(), "deploymentTime",
+                    deployment.getDeploymentTime());
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to deploy decision", e);
+        }
+    }
+
+    // Delete decision (by deployment ID to be safe, or decision definition ID if
+    // cascading)
+    // The frontend sends decisionId which usually maps to a deployment or
+    // definition.
+    // Flowable typically deletes deployments. Let's assume the ID passed is the
+    // DEPLOYMENT ID for now,
+    // or we might need to look up the deployment ID from the decision definition
+    // ID.
+    // Looking at the frontend, it deletes by 'decisionId'. If it's a decision
+    // definition ID, we need to find its deployment.
+    @DeleteMapping("/decisions/{id}")
+    public void deleteDecision(@PathVariable("id") String id) {
+        // Check if it looks like a definition ID or deployment ID.
+        // For simplicity, let's try to delete as deployment first, if fail, try
+        // definition.
+        // Actually, dmnRepositoryService.deleteDeployment(id) is the standard way.
+        // But we need to know if 'id' is deploymentId.
+        // Let's assume the UI sends the DecisionDefinitionID, so we get the
+        // deploymentId from it.
+
+        var def = dmnRepositoryService.createDecisionQuery().decisionId(id).singleResult();
+        if (def != null) {
+            dmnRepositoryService.deleteDeployment(def.getDeploymentId());
+        } else {
+            // changes usually cascade, but let's try deleting deployment directly if it was
+            // a deployment ID
+            dmnRepositoryService.deleteDeployment(id);
+        }
+    }
+
+    // Get DMN XML
+    @GetMapping("/definitions/{id}/xml")
+    public org.springframework.http.ResponseEntity<String> getDecisionDefinitionXml(@PathVariable("id") String id) {
+        try (java.io.InputStream is = dmnRepositoryService.getDmnResource(id)) {
+            String xml = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            return org.springframework.http.ResponseEntity.ok(xml);
+        } catch (java.io.IOException e) {
+            return org.springframework.http.ResponseEntity.internalServerError().build();
+        }
+    }
+}

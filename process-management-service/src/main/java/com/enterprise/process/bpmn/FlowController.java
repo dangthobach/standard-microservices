@@ -25,12 +25,12 @@ public class FlowController {
     private final TaskService taskService;
     private final RepositoryService repositoryService;
     private final HistoryService historyService;
-    
+
     @Autowired
     private NotificationService notificationService;
 
-    public FlowController(RuntimeService runtimeService, TaskService taskService, 
-                         RepositoryService repositoryService, HistoryService historyService) {
+    public FlowController(RuntimeService runtimeService, TaskService taskService,
+            RepositoryService repositoryService, HistoryService historyService) {
         this.runtimeService = runtimeService;
         this.taskService = taskService;
         this.repositoryService = repositoryService;
@@ -65,32 +65,31 @@ public class FlowController {
 
     @PostMapping("/processes/{key}/start")
     public Map<String, Object> startProcess(@PathVariable("key") String key,
-                                           @RequestBody(required = false) Map<String, Object> vars) {
-        if (vars == null) vars = new HashMap<>();
+            @RequestBody(required = false) Map<String, Object> vars) {
+        if (vars == null)
+            vars = new HashMap<>();
         var pi = runtimeService.startProcessInstanceByKey(key, vars);
-        
+
         // Send real-time notification
         try {
             ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
                     .processDefinitionId(pi.getProcessDefinitionId())
                     .singleResult();
             String processName = processDefinition != null ? processDefinition.getName() : key;
-            
+
             notificationService.sendProcessStatusNotification(
-                pi.getId(), 
-                processName, 
-                "STARTED"
-            );
-            
+                    pi.getId(),
+                    processName,
+                    "STARTED");
+
             notificationService.sendGlobalNotification(
-                String.format("Process '%s' has been started", processName),
-                "success"
-            );
+                    String.format("Process '%s' has been started", processName),
+                    "success");
         } catch (Exception e) {
             // Log error but don't fail the process start
             System.err.println("Failed to send notification: " + e.getMessage());
         }
-        
+
         return Map.of("instanceId", pi.getId(), "definitionId", pi.getProcessDefinitionId());
     }
 
@@ -100,16 +99,15 @@ public class FlowController {
                 .processDefinitionKey(key)
                 .latestVersion()
                 .singleResult();
-        
+
         if (processDefinition == null) {
             throw new RuntimeException("Process definition not found");
         }
-        
+
         var resourceStream = repositoryService.getResourceAsStream(
-                processDefinition.getDeploymentId(), 
-                processDefinition.getResourceName()
-        );
-        
+                processDefinition.getDeploymentId(),
+                processDefinition.getResourceName());
+
         try {
             return new String(resourceStream.readAllBytes(), "UTF-8");
         } catch (Exception e) {
@@ -140,13 +138,14 @@ public class FlowController {
     }
 
     @GetMapping("/processes/instances")
-    public List<Map<String, Object>> getProcessInstancesByKey(@RequestParam(value = "processDefinitionKey", required = false) String processDefinitionKey) {
+    public List<Map<String, Object>> getProcessInstancesByKey(
+            @RequestParam(value = "processDefinitionKey", required = false) String processDefinitionKey) {
         var query = runtimeService.createProcessInstanceQuery().active();
-        
+
         if (processDefinitionKey != null && !processDefinitionKey.isEmpty()) {
             query.processDefinitionKey(processDefinitionKey);
         }
-        
+
         return query.list()
                 .stream()
                 .map(pi -> {
@@ -220,6 +219,7 @@ public class FlowController {
         map.put("created", task.getCreateTime());
         map.put("dueDate", task.getDueDate());
         map.put("processInstanceId", task.getProcessInstanceId());
+        map.put("processDefinitionId", task.getProcessDefinitionId());
         map.put("taskDefinitionKey", task.getTaskDefinitionKey());
         map.put("formKey", task.getFormKey());
         return map;
@@ -229,7 +229,7 @@ public class FlowController {
     public Map<String, String> claimTask(@PathVariable("id") String id, @RequestBody Map<String, String> request) {
         String userId = request.get("userId");
         taskService.claim(id, userId);
-        
+
         // Send real-time notification
         try {
             Task task = taskService.createTaskQuery().taskId(id).singleResult();
@@ -238,29 +238,27 @@ public class FlowController {
                         .processDefinitionId(task.getProcessDefinitionId())
                         .singleResult();
                 String processName = processDefinition != null ? processDefinition.getName() : "Unknown Process";
-                
+
                 notificationService.sendTaskAssignedNotification(
-                    userId, 
-                    id, 
-                    task.getName(), 
-                    processName
-                );
-                
+                        userId,
+                        id,
+                        task.getName(),
+                        processName);
+
                 notificationService.sendGlobalNotification(
-                    String.format("Task '%s' has been claimed by %s", task.getName(), userId),
-                    "info"
-                );
+                        String.format("Task '%s' has been claimed by %s", task.getName(), userId),
+                        "info");
             }
         } catch (Exception e) {
             System.err.println("Failed to send notification: " + e.getMessage());
         }
-        
+
         return Map.of("status", "claimed", "taskId", id, "userId", userId);
     }
 
     @PostMapping("/tasks/{id}/complete")
-    public Map<String, String> completeTask(@PathVariable("id") String id, 
-                                           @RequestBody(required = false) Map<String, Object> request) {
+    public Map<String, String> completeTask(@PathVariable("id") String id,
+            @RequestBody(required = false) Map<String, Object> request) {
         Map<String, Object> variables = new HashMap<>();
         if (request != null && request.containsKey("variables")) {
             Object variablesObj = request.get("variables");
@@ -268,7 +266,7 @@ public class FlowController {
                 variables = (Map<String, Object>) variablesObj;
             }
         }
-        
+
         // Get task info before completion for notification
         Task task = null;
         String processName = "Unknown Process";
@@ -283,21 +281,20 @@ public class FlowController {
         } catch (Exception e) {
             System.err.println("Failed to get task info: " + e.getMessage());
         }
-        
+
         taskService.complete(id, variables);
-        
+
         // Send real-time notification
         try {
             if (task != null) {
                 notificationService.sendGlobalNotification(
-                    String.format("Task '%s' has been completed in process '%s'", task.getName(), processName),
-                    "success"
-                );
+                        String.format("Task '%s' has been completed in process '%s'", task.getName(), processName),
+                        "success");
             }
         } catch (Exception e) {
             System.err.println("Failed to send notification: " + e.getMessage());
         }
-        
+
         return Map.of("status", "completed", "taskId", id);
     }
 
@@ -307,8 +304,8 @@ public class FlowController {
     }
 
     @PostMapping("/tasks/{id}/variables")
-    public Map<String, String> setTaskVariables(@PathVariable("id") String id, 
-                                               @RequestBody Map<String, Object> request) {
+    public Map<String, String> setTaskVariables(@PathVariable("id") String id,
+            @RequestBody Map<String, Object> request) {
         Map<String, Object> variables = (Map<String, Object>) request.get("variables");
         taskService.setVariables(id, variables);
         return Map.of("status", "variables_set", "taskId", id);
@@ -342,13 +339,14 @@ public class FlowController {
     }
 
     @GetMapping("/history/tasks")
-    public List<Map<String, Object>> getTaskHistory(@RequestParam(value = "processInstanceId", required = false) String processInstanceId) {
+    public List<Map<String, Object>> getTaskHistory(
+            @RequestParam(value = "processInstanceId", required = false) String processInstanceId) {
         var query = historyService.createHistoricTaskInstanceQuery();
-        
+
         if (processInstanceId != null && !processInstanceId.isEmpty()) {
             query.processInstanceId(processInstanceId);
         }
-        
+
         return query.list()
                 .stream()
                 .map(hi -> {
@@ -357,7 +355,8 @@ public class FlowController {
                     map.put("name", hi.getName());
                     map.put("description", hi.getDescription());
                     map.put("assignee", hi.getAssignee());
-                    map.put("startTime", hi.getCreateTime()); // Use getCreateTime() instead of deprecated getStartTime()
+                    map.put("startTime", hi.getCreateTime()); // Use getCreateTime() instead of deprecated
+                                                              // getStartTime()
                     map.put("endTime", hi.getEndTime());
                     map.put("durationInMillis", hi.getDurationInMillis());
                     map.put("processInstanceId", hi.getProcessInstanceId());
@@ -399,8 +398,8 @@ public class FlowController {
 
     @PutMapping("/processes/instances/{id}/variables/{name}")
     public Map<String, String> updateProcessVariable(@PathVariable("id") String processInstanceId,
-                                                    @PathVariable("name") String variableName,
-                                                    @RequestBody Map<String, Object> request) {
+            @PathVariable("name") String variableName,
+            @RequestBody Map<String, Object> request) {
         Object value = request.get("value");
         runtimeService.setVariable(processInstanceId, variableName, value);
         return Map.of("status", "updated", "variableName", variableName);
@@ -409,29 +408,29 @@ public class FlowController {
     // Process Deployment
     @PostMapping("/deploy")
     public Map<String, Object> deployProcess(@RequestParam("file") MultipartFile file,
-                                           @RequestParam(value = "processKey", required = false) String processKey,
-                                           @RequestParam(value = "processName", required = false) String processName) {
+            @RequestParam(value = "processKey", required = false) String processKey,
+            @RequestParam(value = "processName", required = false) String processName) {
         try {
             String bpmnXml = new String(file.getBytes(), StandardCharsets.UTF_8);
-            
+
             // Deploy the process
             Deployment deployment = repositoryService.createDeployment()
                     .addString(file.getOriginalFilename(), bpmnXml)
                     .name(processName != null ? processName : "Process Deployment")
                     .deploy();
-            
+
             // Get the deployed process definition
             ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
                     .deploymentId(deployment.getId())
                     .singleResult();
-            
+
             Map<String, Object> result = new HashMap<>();
             result.put("deploymentId", deployment.getId());
             result.put("processDefinitionId", processDefinition.getId());
             result.put("processKey", processDefinition.getKey());
             result.put("processName", processDefinition.getName());
             result.put("version", processDefinition.getVersion());
-            
+
             return result;
         } catch (Exception e) {
             throw new RuntimeException("Failed to deploy process: " + e.getMessage(), e);
@@ -445,27 +444,26 @@ public class FlowController {
             ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
                     .processDefinitionId(processDefinitionId)
                     .singleResult();
-            
+
             if (processDefinition == null) {
                 throw new RuntimeException("Process definition not found");
             }
-            
+
             // Check if there are running instances
             long runningInstances = runtimeService.createProcessInstanceQuery()
                     .processDefinitionId(processDefinitionId)
                     .count();
-            
+
             if (runningInstances > 0) {
                 throw new RuntimeException("Cannot delete process with running instances");
             }
-            
+
             // Delete the deployment (cascade will delete process definition)
             repositoryService.deleteDeployment(processDefinition.getDeploymentId(), true);
-            
+
             return Map.of("message", "Process definition deleted successfully");
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete process: " + e.getMessage(), e);
         }
     }
 }
-

@@ -10,6 +10,9 @@ import {
   Tag,
   Popconfirm,
   Tabs,
+  Modal,
+  Input,
+  Upload
 } from 'antd';
 import {
   PlusOutlined,
@@ -18,44 +21,32 @@ import {
   EyeOutlined,
   FormOutlined,
   BuildOutlined,
-  CopyOutlined,
   ReloadOutlined,
+  UploadOutlined
 } from '@ant-design/icons';
 import { FormDefinition } from '../types';
 import PageBuilder from '../components/pageBuilder/PageBuilder';
+import { formApi } from '../services/flowableApi';
 
 const { Title, Text } = Typography;
-
-interface FormField {
-  id: string;
-  name: string;
-  label: string;
-  type: 'text' | 'number' | 'email' | 'password' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'date';
-  required: boolean;
-  placeholder?: string;
-  options?: string[];
-  validation?: string;
-}
 
 interface FormDesigner {
   formKey: string;
   formName: string;
   description: string;
-  fields: FormField[];
-  processDefinitionKey?: string;
-  userTaskId?: string;
 }
 
 const FormManagement: React.FC = () => {
   const [legacyForms, setLegacyForms] = useState<FormDefinition[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
   // Form Builder states
   const [formBuilderVisible, setFormBuilderVisible] = useState(false);
   const [editingForm, setEditingForm] = useState<any | null>(null);
-  
+
   // Legacy form states
-  const [legacyEditingForm, setLegacyEditingForm] = useState<FormDesigner | null>(null);
+  const [legacyModalVisible, setLegacyModalVisible] = useState(false);
+  const [fileList, setFileList] = useState<any[]>([]);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -65,95 +56,62 @@ const FormManagement: React.FC = () => {
   const fetchLegacyForms = async () => {
     setLoading(true);
     try {
-      // Mock data - replace with actual API call
-      const mockForms: FormDefinition[] = [
-        {
-          id: '1',
-          key: 'user-registration',
-          name: 'User Registration Form',
-          version: 1,
-          deploymentId: 'dep-1',
-          resourceName: 'user-registration.form'
-        },
-        {
-          id: '2',
-          key: 'expense-request',
-          name: 'Expense Request Form',
-          version: 1,
-          deploymentId: 'dep-2',
-          resourceName: 'expense-request.form'
-        }
-      ];
-      setLegacyForms(mockForms);
+      const data = await formApi.getForms();
+      setLegacyForms(data);
     } catch (error) {
-      message.error('Failed to fetch legacy forms');
-      console.error('Error fetching legacy forms:', error);
+      message.error('Failed to fetch forms');
+      console.error('Error fetching forms:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Form Builder Management Functions
+  // Form Builder Management Functions (Placeholder for now, focused on Legacy/Repo forms)
   const handleCreateFormBuilder = () => {
     setEditingForm(null);
     setFormBuilderVisible(true);
   };
 
   const handleSaveFormBuilder = async (formData: any) => {
-    try {
-      console.log('Saving form builder form:', formData);
-      message.success('Form saved successfully');
-      setFormBuilderVisible(false);
-      setEditingForm(null);
-      fetchLegacyForms();
-    } catch (error) {
-      message.error('Failed to save form');
-      console.error('Error saving form:', error);
-    }
+    // Logic for saving JSON-based form builder forms would go here.
+    // For now, we reuse the deployment API if we can save it as a JSON file.
+    message.info("Save logic for builder needs backend support for raw JSON save");
+    setFormBuilderVisible(false);
   };
 
   // Legacy Form Management
-  const handleSaveForm = async (values: FormDesigner) => {
+  const handleSaveLegacyForm = async (values: any) => {
+    if (fileList.length === 0) {
+      message.error("Please upload a Form file (.form or .json)");
+      return;
+    }
+    const file = fileList[0].originFileObj;
+
     try {
-      console.log('Form submitted:', values);
-      message.success('Form saved successfully!');
-      setLegacyEditingForm(null);
+      await formApi.deployForm(file, values.formKey, values.formName);
+      message.success('Form deployed successfully!');
+      setLegacyModalVisible(false);
       form.resetFields();
+      setFileList([]);
       fetchLegacyForms();
     } catch (error) {
-      message.error('Failed to save form');
+      message.error('Failed to deploy form');
       console.error('Error saving form:', error);
     }
   };
 
   const handleEditLegacyForm = (record: FormDefinition) => {
-    const formDesigner: FormDesigner = {
-      formKey: record.key,
-      formName: record.name,
-      description: `Legacy form: ${record.name}`,
-      fields: []
-    };
-    setLegacyEditingForm(formDesigner);
-    // Modal functionality can be added later if needed
+    message.info("Edit functionality requires Model Editor");
   };
 
-  const handleDeleteForm = async (id: string) => {
+  const handleDeleteForm = async (deploymentId: string) => {
     try {
+      await formApi.deleteForm(deploymentId);
       message.success('Form deleted successfully');
       fetchLegacyForms();
     } catch (error) {
       message.error('Failed to delete form');
       console.error('Error deleting form:', error);
-    }
-  };
-
-  const handleDuplicateForm = async (id: string) => {
-    try {
-      message.success('Form duplicated successfully');
-      fetchLegacyForms();
-    } catch (error) {
-      message.error('Failed to duplicate form');
-      console.error('Error duplicating form:', error);
     }
   };
 
@@ -183,28 +141,25 @@ const FormManagement: React.FC = () => {
       render: (text: string) => <Text code>{text}</Text>
     },
     {
+      title: 'Deployment ID',
+      dataIndex: 'deploymentId',
+      key: 'deploymentId',
+      render: (text: string) => <Text type="secondary" style={{ fontSize: '12px' }}>{text}</Text>
+    },
+    {
       title: 'Actions',
       key: 'actions',
       render: (_: any, record: FormDefinition) => (
         <Space>
           <Button
             size="small"
-            icon={<EyeOutlined />}
-            onClick={() => message.info('Preview functionality coming soon')}
-          />
-          <Button
-            size="small"
             icon={<EditOutlined />}
             onClick={() => handleEditLegacyForm(record)}
-          />
-          <Button
-            size="small"
-            icon={<CopyOutlined />}
-            onClick={() => handleDuplicateForm(record.id)}
+            disabled
           />
           <Popconfirm
             title="Delete this form?"
-            onConfirm={() => handleDeleteForm(record.id)}
+            onConfirm={() => handleDeleteForm(record.deploymentId)}
             okText="Delete"
             cancelText="Cancel"
           >
@@ -219,13 +174,29 @@ const FormManagement: React.FC = () => {
     }
   ];
 
+  const uploadProps = {
+    onRemove: (file: any) => {
+      setFileList([]);
+    },
+    beforeUpload: (file: any) => {
+      const isForm = file.name.endsWith('.form') || file.name.endsWith('.json');
+      if (!isForm) {
+        message.error('You can only upload .form or .json files!');
+        return Upload.LIST_IGNORE;
+      }
+      setFileList([file]);
+      return false;
+    },
+    fileList,
+  };
+
   const tabItems = [
     {
-      key: 'page-builder',
+      key: 'repo-forms',
       label: (
         <span>
-          <BuildOutlined />
-          Page Builder Forms
+          <FormOutlined />
+          Form Definitions
         </span>
       ),
       children: (
@@ -235,16 +206,20 @@ const FormManagement: React.FC = () => {
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={handleCreateFormBuilder}
+                onClick={() => {
+                  setLegacyModalVisible(true);
+                  form.resetFields();
+                  setFileList([]);
+                }}
               >
-                Create New Form
+                Deploy New Form
               </Button>
               <Button icon={<ReloadOutlined />} onClick={fetchLegacyForms}>
                 Refresh
               </Button>
             </Space>
           </div>
-          
+
           <Table
             columns={legacyFormColumns}
             dataSource={legacyForms}
@@ -256,40 +231,20 @@ const FormManagement: React.FC = () => {
       )
     },
     {
-      key: 'legacy',
+      key: 'page-builder',
       label: (
         <span>
-          <FormOutlined />
-          Legacy Forms
+          <BuildOutlined />
+          Page Builder (Beta)
         </span>
       ),
       children: (
         <Card>
-          <div style={{ marginBottom: 16 }}>
-            <Space>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setLegacyEditingForm(null);
-                  // Modal functionality can be added later if needed
-                }}
-              >
-                Create Legacy Form
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={fetchLegacyForms}>
-                Refresh
-              </Button>
-            </Space>
+          <div className="text-center py-8">
+            <BuildOutlined style={{ fontSize: '48px', color: '#ccc', marginBottom: '16px' }} />
+            <Title level={4}>Page Builder Integration Pending</Title>
+            <Text type="secondary">The visual page builder is currently in development.</Text>
           </div>
-          
-          <Table
-            columns={legacyFormColumns}
-            dataSource={legacyForms}
-            rowKey="id"
-            loading={loading}
-            pagination={{ pageSize: 10 }}
-          />
         </Card>
       )
     }
@@ -300,26 +255,58 @@ const FormManagement: React.FC = () => {
       <div style={{ marginBottom: 24 }}>
         <Title level={2}>Form Management</Title>
         <Text type="secondary">
-          Manage your forms using the modern Page Builder or create legacy forms
+          Manage your form definitions and deployments.
         </Text>
       </div>
 
       <Tabs
         items={tabItems}
-        defaultActiveKey="page-builder"
+        defaultActiveKey="repo-forms"
         size="large"
       />
 
       {/* Legacy Form Creation Modal */}
-      <Form
-        form={form}
-        name="form-management"
-        onFinish={handleSaveForm}
-        layout="vertical"
-        initialValues={legacyEditingForm || {}}
+      <Modal
+        title="Deploy New Form"
+        open={legacyModalVisible}
+        onCancel={() => setLegacyModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setLegacyModalVisible(false)}>
+            Cancel
+          </Button>,
+          <Button key="save" type="primary" onClick={() => form.submit()}>
+            Deploy
+          </Button>
+        ]}
       >
-        {/* Modal implementation would go here */}
-      </Form>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSaveLegacyForm}
+        >
+          <Form.Item
+            label="Form Key (Optional)"
+            name="formKey"
+          >
+            <Input placeholder="Enter unique form key" />
+          </Form.Item>
+          <Form.Item
+            label="Form Name (Optional)"
+            name="formName"
+          >
+            <Input placeholder="Enter form name" />
+          </Form.Item>
+          <Form.Item
+            label="Form File"
+            required
+            tooltip="Upload a .form or .json file"
+          >
+            <Upload {...uploadProps} maxCount={1}>
+              <Button icon={<UploadOutlined />}>Select File</Button>
+            </Upload>
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* Page Builder Full Screen */}
       {formBuilderVisible && (
@@ -350,8 +337,8 @@ const FormManagement: React.FC = () => {
               <Title level={4} style={{ margin: 0 }}>
                 {editingForm?.formName ? `Edit: ${editingForm.formName}` : 'Create New Form'}
               </Title>
-              <Button 
-                type="text" 
+              <Button
+                type="text"
                 size="large"
                 onClick={() => {
                   setFormBuilderVisible(false);
@@ -362,7 +349,7 @@ const FormManagement: React.FC = () => {
                 ✕
               </Button>
             </div>
-            
+
             {/* PageBuilder Container */}
             <div style={{ flex: 1, overflow: 'hidden' }}>
               <PageBuilder

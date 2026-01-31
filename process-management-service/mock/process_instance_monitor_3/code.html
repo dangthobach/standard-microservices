@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DMN Decision Table Manager - Flowable UI</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2563eb", // Vibrant blue
+                        "primary-hover": "#1d4ed8",
+                        "surface": "#ffffff",
+                        "surface-alt": "#f8fafc", // Very light grey for backgrounds
+                        "border-light": "#e2e8f0",
+                        "text-main": "#1e293b", // Slate 800
+                        "text-muted": "#64748b", // Slate 500
+                        "table-header-input": "#eff6ff", // Blue 50
+                        "table-header-output": "#ecfeff", // Cyan 50
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
+                    },
+                    boxShadow: {
+                        'float': '0 10px 40px -10px rgba(0,0,0,0.1)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .dmn-header-input {
+            background-color: #eff6ff;border-bottom: 2px solid #93c5fd;color: #1e3a8a;}
+        .dmn-header-output {
+            background-color: #ecfeff;border-bottom: 2px solid #67e8f9;color: #164e63;}
+        .hit-policy-corner {
+            background: repeating-linear-gradient(
+                45deg,
+                #f1f5f9,
+                #f1f5f9 10px,
+                #e2e8f0 10px,
+                #e2e8f0 20px
+            );
+        }
+    </style>
+</head>
+<body class="bg-surface text-text-main font-display overflow-hidden h-screen flex">
+<aside class="w-16 flex-shrink-0 bg-surface border-r border-border-light flex flex-col h-full z-30 shadow-sm">
+<div class="p-3 flex flex-col h-full items-center">
+<div class="mb-6">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-xl size-10 border border-border-light shadow-sm" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDzdre4WS9Mv-_mSfD7huXQWp17Nh_RRpyWKn_5sEzLjOEVZBUNLECiZSVmDWOXxrwm_G4P-vBVRiWD0QynkwjeamICzJAKSf1Ie1DO_ZsnQXiKplYSucXv8sXv0h3JdL_PPYXpaQeKBpVbn7ZSPW_mh5zTDNcBBR-Hj5YKqVNTwnuhmc4pIfuV8WUwIP1OZ8iW7xFHEW8E5mZgNgx-Id_FLTCEGZv9kPLKNZ_ZHT7pVIti5cOJJzSB8xj5euFzyBJVerfOH_S_e3qQ");'></div>
+</div>
+<nav class="flex flex-col gap-4 flex-1 w-full items-center">
+<a class="flex items-center justify-center size-10 rounded-lg text-text-muted hover:bg-blue-50 hover:text-primary transition-colors relative group" href="#">
+<span class="material-symbols-outlined text-[24px]">dashboard</span>
+<div class="absolute left-12 bg-text-main px-2 py-1 rounded text-xs text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">Dashboard</div>
+</a>
+<a class="flex items-center justify-center size-10 rounded-lg text-text-muted hover:bg-blue-50 hover:text-primary transition-colors relative group" href="#">
+<span class="material-symbols-outlined text-[24px]">account_tree</span>
+<div class="absolute left-12 bg-text-main px-2 py-1 rounded text-xs text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">BPMN Processes</div>
+</a>
+<a class="flex items-center justify-center size-10 rounded-lg bg-primary text-white shadow-lg shadow-primary/30 transition-colors relative group" href="#">
+<span class="material-symbols-outlined text-[24px] fill-1">table_chart</span>
+<div class="absolute left-12 bg-text-main px-2 py-1 rounded text-xs text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">DMN Decisions</div>
+</a>
+<a class="flex items-center justify-center size-10 rounded-lg text-text-muted hover:bg-blue-50 hover:text-primary transition-colors relative group" href="#">
+<span class="material-symbols-outlined text-[24px]">cases</span>
+<div class="absolute left-12 bg-text-main px-2 py-1 rounded text-xs text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">CMMN Cases</div>
+</a>
+<div class="my-auto"></div>
+<div class="w-8 h-px bg-border-light my-2"></div>
+<a class="flex items-center justify-center size-10 rounded-lg text-text-muted hover:bg-blue-50 hover:text-primary transition-colors relative group" href="#">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+<div class="absolute left-12 bg-text-main px-2 py-1 rounded text-xs text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">Settings</div>
+</a>
+</nav>
+<div class="mt-4 pt-4 border-t border-border-light w-full flex justify-center">
+<div class="size-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs cursor-pointer hover:ring-2 ring-primary ring-offset-2 transition-all">AD</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative bg-surface-alt">
+<header class="bg-surface border-b border-border-light flex-shrink-0 z-10 px-6 py-3 shadow-sm">
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-2 text-xs text-text-muted">
+<a class="hover:text-primary transition-colors" href="#">Library</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Loans &amp; Financing</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-text-main font-medium">Decision Tables</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 text-text-muted hover:text-primary transition-colors border border-border-light hover:border-primary/50 px-2 py-1 rounded bg-surface" title="Toggle Decision List">
+<span class="material-symbols-outlined text-[18px]">menu_open</span>
+</button>
+<div class="h-6 w-px bg-border-light"></div>
+<h1 class="text-text-main text-xl font-bold tracking-tight">Loan Risk Qualification</h1>
+<span class="bg-blue-50 text-primary text-[10px] px-2 py-0.5 rounded-full border border-blue-100 font-mono font-bold">v3.4 (Draft)</span>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 h-9 px-4 rounded-lg bg-white hover:bg-slate-50 text-text-muted text-sm font-semibold border border-border-light transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">history</span>
+                        History
+                    </button>
+<button class="flex items-center gap-2 h-9 px-4 rounded-lg bg-white hover:bg-slate-50 text-text-muted text-sm font-semibold border border-border-light transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">code</span>
+                        XML
+                    </button>
+<button class="flex items-center gap-2 h-9 px-4 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-semibold shadow-lg shadow-blue-200 transition-all">
+<span class="material-symbols-outlined text-[18px]">save</span>
+                        Save Changes
+                    </button>
+</div>
+</div>
+</div>
+</header>
+<div class="flex-1 overflow-hidden relative flex flex-row">
+<div class="flex-1 flex flex-col h-full min-w-0 bg-surface-alt">
+<div class="h-12 border-b border-border-light bg-surface flex items-center px-4 justify-between">
+<div class="flex items-center gap-1">
+<button class="text-text-muted hover:text-primary p-1.5 rounded-md hover:bg-blue-50 transition-colors" title="Undo"><span class="material-symbols-outlined text-[20px]">undo</span></button>
+<button class="text-text-muted hover:text-primary p-1.5 rounded-md hover:bg-blue-50 transition-colors" title="Redo"><span class="material-symbols-outlined text-[20px]">redo</span></button>
+<div class="w-px h-5 bg-border-light mx-2"></div>
+<button class="text-text-muted hover:text-primary p-1.5 rounded-md hover:bg-blue-50 transition-colors" title="Add Input"><span class="material-symbols-outlined text-[20px]">add_column_left</span></button>
+<button class="text-text-muted hover:text-primary p-1.5 rounded-md hover:bg-blue-50 transition-colors" title="Add Output"><span class="material-symbols-outlined text-[20px]">add_column_right</span></button>
+<button class="text-text-muted hover:text-primary p-1.5 rounded-md hover:bg-blue-50 transition-colors" title="Add Rule"><span class="material-symbols-outlined text-[20px]">playlist_add</span></button>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Hit Policy:</span>
+<select class="bg-surface border border-border-light text-text-main text-sm rounded-md px-3 py-1 outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-sm cursor-pointer">
+<option value="UNIQUE">Unique (U)</option>
+<option value="FIRST">First (F)</option>
+<option value="PRIORITY">Priority (P)</option>
+<option value="ANY">Any (A)</option>
+<option value="COLLECT">Collect (C)</option>
+</select>
+</div>
+</div>
+<div class="flex-1 overflow-auto p-8">
+<div class="inline-block min-w-full shadow-lg rounded-xl overflow-hidden border border-border-light bg-surface">
+<table class="w-full border-collapse text-sm">
+<thead>
+<tr>
+<th class="w-12 bg-slate-50 text-slate-400 border border-border-light p-0 text-center relative hit-policy-corner" rowspan="2">
+<span class="font-black text-lg text-slate-800">U</span>
+</th>
+<th class="dmn-header-input font-bold border-r border-blue-200 p-2 text-center" colspan="3">
+                                    Inputs (Conditions)
+                                </th>
+<th class="dmn-header-output font-bold border-r border-cyan-200 p-2 text-center" colspan="2">
+                                    Outputs (Results)
+                                </th>
+<th class="bg-slate-50 text-text-muted font-normal border-b border-border-light p-2 text-left" rowspan="2">
+                                    Annotation
+                                </th>
+</tr>
+<tr>
+<th class="bg-slate-50 border border-border-light p-2 min-w-[150px] text-left group cursor-pointer hover:bg-slate-100 transition-colors">
+<div class="text-text-main font-mono text-xs mb-1 font-bold">applicant_age</div>
+<div class="text-text-muted text-[10px] font-normal font-mono bg-slate-200/50 inline-block px-1 rounded">integer</div>
+</th>
+<th class="bg-slate-50 border border-border-light p-2 min-w-[150px] text-left group cursor-pointer hover:bg-slate-100 transition-colors">
+<div class="text-text-main font-mono text-xs mb-1 font-bold">credit_score</div>
+<div class="text-text-muted text-[10px] font-normal font-mono bg-slate-200/50 inline-block px-1 rounded">integer</div>
+</th>
+<th class="bg-slate-50 border border-border-light p-2 min-w-[150px] text-left group cursor-pointer hover:bg-slate-100 transition-colors">
+<div class="text-text-main font-mono text-xs mb-1 font-bold">loan_amount</div>
+<div class="text-text-muted text-[10px] font-normal font-mono bg-slate-200/50 inline-block px-1 rounded">long</div>
+</th>
+<th class="bg-slate-50 border border-border-light p-2 min-w-[150px] text-left group cursor-pointer hover:bg-slate-100 transition-colors">
+<div class="text-text-main font-mono text-xs mb-1 font-bold">risk_rating</div>
+<div class="text-text-muted text-[10px] font-normal font-mono bg-slate-200/50 inline-block px-1 rounded">string</div>
+</th>
+<th class="bg-slate-50 border border-border-light p-2 min-w-[150px] text-left group cursor-pointer hover:bg-slate-100 transition-colors">
+<div class="text-text-main font-mono text-xs mb-1 font-bold">approval_status</div>
+<div class="text-text-muted text-[10px] font-normal font-mono bg-slate-200/50 inline-block px-1 rounded">boolean</div>
+</th>
+</tr>
+</thead>
+<tbody class="text-text-main font-mono text-xs">
+<tr class="group hover:bg-blue-50/30 transition-colors">
+<td class="bg-slate-50 border border-border-light text-center text-text-muted select-none font-sans">1</td>
+<td class="bg-surface border border-border-light p-2 text-blue-600 font-bold cursor-text outline-none focus:bg-blue-50 focus:ring-2 focus:ring-primary/20" contenteditable="true">&lt; 18</td>
+<td class="bg-surface border border-border-light p-2 text-slate-400 cursor-text outline-none focus:bg-blue-50 focus:ring-2 focus:ring-primary/20" contenteditable="true">-</td>
+<td class="bg-surface border border-border-light p-2 text-slate-400 cursor-text outline-none focus:bg-blue-50 focus:ring-2 focus:ring-primary/20" contenteditable="true">-</td>
+<td class="bg-surface border border-border-light p-2 text-orange-600 font-bold cursor-text" contenteditable="true">"HIGH"</td>
+<td class="bg-surface border border-border-light p-2 text-red-600 font-bold cursor-text" contenteditable="true">false</td>
+<td class="bg-surface border-b border-border-light p-2 text-text-muted italic text-[11px] font-sans">Too young</td>
+</tr>
+<tr class="group hover:bg-blue-50/30 transition-colors">
+<td class="bg-slate-50 border border-border-light text-center text-text-muted select-none font-sans">2</td>
+<td class="bg-surface border border-border-light p-2 text-blue-600 font-bold cursor-text outline-none focus:bg-blue-50" contenteditable="true">[18..25]</td>
+<td class="bg-surface border border-border-light p-2 text-blue-600 font-bold cursor-text outline-none focus:bg-blue-50" contenteditable="true">&lt; 650</td>
+<td class="bg-surface border border-border-light p-2 text-slate-400 cursor-text outline-none focus:bg-blue-50" contenteditable="true">-</td>
+<td class="bg-surface border border-border-light p-2 text-orange-600 font-bold cursor-text" contenteditable="true">"MEDIUM"</td>
+<td class="bg-surface border border-border-light p-2 text-amber-600 font-bold cursor-text" contenteditable="true">false</td>
+<td class="bg-surface border-b border-border-light p-2 text-text-muted italic text-[11px] font-sans">Risky demographic</td>
+</tr>
+<tr class="group hover:bg-blue-50/30 transition-colors">
+<td class="bg-slate-50 border border-border-light text-center text-text-muted select-none font-sans">3</td>
+<td class="bg-surface border border-border-light p-2 text-blue-600 font-bold cursor-text outline-none focus:bg-blue-50" contenteditable="true">&gt;= 18</td>
+<td class="bg-surface border border-border-light p-2 text-blue-600 font-bold cursor-text outline-none focus:bg-blue-50" contenteditable="true">&gt;= 700</td>
+<td class="bg-surface border border-border-light p-2 text-blue-600 font-bold cursor-text outline-none focus:bg-blue-50" contenteditable="true">&lt; 50000</td>
+<td class="bg-surface border border-border-light p-2 text-emerald-600 font-bold cursor-text" contenteditable="true">"LOW"</td>
+<td class="bg-surface border border-border-light p-2 text-emerald-600 font-bold cursor-text" contenteditable="true">true</td>
+<td class="bg-surface border-b border-border-light p-2 text-text-muted italic text-[11px] font-sans">Standard approval</td>
+</tr>
+<tr class="group hover:bg-blue-50/30 transition-colors">
+<td class="bg-slate-50 border border-border-light text-center text-text-muted select-none font-sans">4</td>
+<td class="bg-surface border border-border-light p-2 text-blue-600 font-bold cursor-text outline-none focus:bg-blue-50" contenteditable="true">&gt;= 18</td>
+<td class="bg-surface border border-border-light p-2 text-blue-600 font-bold cursor-text outline-none focus:bg-blue-50" contenteditable="true">&gt;= 750</td>
+<td class="bg-surface border border-border-light p-2 text-blue-600 font-bold cursor-text outline-none focus:bg-blue-50" contenteditable="true">&gt;= 50000</td>
+<td class="bg-surface border border-border-light p-2 text-emerald-600 font-bold cursor-text" contenteditable="true">"LOW"</td>
+<td class="bg-surface border border-border-light p-2 text-emerald-600 font-bold cursor-text" contenteditable="true">true</td>
+<td class="bg-surface border-b border-border-light p-2 text-text-muted italic text-[11px] font-sans">High value customer</td>
+</tr>
+<tr class="group relative shadow-md z-10">
+<td class="bg-blue-50 border-l-4 border-l-primary border-y border-r border-blue-200 text-center text-primary font-bold select-none font-sans">5</td>
+<td class="bg-blue-50/30 border border-blue-200 p-2 text-blue-600 font-bold cursor-text outline-none"> - </td>
+<td class="bg-blue-50/30 border border-blue-200 p-2 text-blue-600 font-bold cursor-text outline-none"> &lt; 500 </td>
+<td class="bg-blue-50/30 border border-blue-200 p-2 text-slate-400 cursor-text outline-none"> - </td>
+<td class="bg-blue-50/30 border border-blue-200 p-2 text-orange-600 font-bold cursor-text"> "HIGH" </td>
+<td class="bg-blue-50/30 border border-blue-200 p-2 text-red-600 font-bold cursor-text"> false </td>
+<td class="bg-blue-50/30 border-b border-blue-200 p-2 text-text-muted italic text-[11px] font-sans">Default reject bad credit</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-6 flex justify-center">
+<button class="flex items-center gap-2 text-text-muted hover:text-primary hover:bg-blue-50 transition-colors text-sm py-2 px-6 border border-dashed border-border-light hover:border-primary rounded-lg w-full justify-center">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Add New Rule
+                    </button>
+</div>
+<div class="h-20"></div>
+</div>
+</div>
+<div class="absolute right-6 top-6 bottom-6 w-80 bg-surface rounded-xl shadow-float border border-border-light flex flex-col z-20 overflow-hidden transform transition-all duration-300">
+<div class="p-4 border-b border-border-light bg-slate-50 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">science</span>
+<h2 class="text-text-main text-sm font-bold">Test Bench</h2>
+</div>
+<button class="text-text-muted hover:text-primary transition-colors hover:bg-white rounded p-1"><span class="material-symbols-outlined text-[20px]">close</span></button>
+</div>
+<div class="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
+<div>
+<h3 class="text-text-muted text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+                        Simulation Inputs
+                        <button class="bg-white border border-border-light hover:border-primary text-xs px-2 py-0.5 rounded text-text-muted hover:text-primary transition-colors ml-auto font-normal shadow-sm">JSON</button>
+</h3>
+<div class="space-y-4">
+<div class="group">
+<label class="block text-xs font-semibold text-text-muted mb-1 group-focus-within:text-primary transition-colors">applicant_age <span class="text-slate-400 font-normal ml-1">(integer)</span></label>
+<input class="w-full bg-slate-50 border border-border-light rounded-lg p-2 text-sm text-text-main focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-mono shadow-sm" type="number" value="24"/>
+</div>
+<div class="group">
+<label class="block text-xs font-semibold text-text-muted mb-1 group-focus-within:text-primary transition-colors">credit_score <span class="text-slate-400 font-normal ml-1">(integer)</span></label>
+<input class="w-full bg-slate-50 border border-border-light rounded-lg p-2 text-sm text-text-main focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-mono shadow-sm" type="number" value="450"/>
+</div>
+<div class="group">
+<label class="block text-xs font-semibold text-text-muted mb-1 group-focus-within:text-primary transition-colors">loan_amount <span class="text-slate-400 font-normal ml-1">(long)</span></label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+<input class="w-full bg-slate-50 border border-border-light rounded-lg p-2 pl-7 text-sm text-text-main focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-mono shadow-sm" type="number" value="15000"/>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 bg-primary hover:bg-primary-hover text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-[20px]">play_arrow</span>
+                        Run Test
+                    </button>
+</div>
+<div class="border-t border-border-light pt-5">
+<h3 class="text-text-muted text-xs font-bold uppercase tracking-wider mb-3">Result</h3>
+<div class="bg-white border border-green-200 rounded-lg p-0 relative overflow-hidden shadow-sm">
+<div class="bg-green-50 px-4 py-2 border-b border-green-100 flex justify-between items-center">
+<span class="text-emerald-600 text-xs font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] fill-1">check_circle</span>
+                                Match Found
+                            </span>
+<span class="text-emerald-600/70 text-[10px] font-mono">12ms</span>
+</div>
+<div class="p-3 space-y-2.5">
+<div class="flex justify-between items-center text-xs">
+<span class="text-text-muted font-medium">Rule Hit:</span>
+<span class="text-primary font-mono bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded text-[10px] font-bold">Rule #5</span>
+</div>
+<div class="h-px bg-border-light"></div>
+<div class="grid grid-cols-[1fr_auto] gap-2 text-xs items-center">
+<span class="text-text-muted">risk_rating:</span>
+<span class="text-orange-600 font-mono font-bold">"HIGH"</span>
+</div>
+<div class="grid grid-cols-[1fr_auto] gap-2 text-xs items-center">
+<span class="text-text-muted">approval_status:</span>
+<span class="text-red-600 font-mono font-bold">false</span>
+</div>
+</div>
+</div>
+<div class="mt-4">
+<button class="flex items-center gap-1 text-[11px] text-text-muted hover:text-primary transition-colors mb-2 font-medium">
+<span class="material-symbols-outlined text-[16px]">expand_more</span>
+                            Show Execution Trace
+                        </button>
+<div class="text-[10px] font-mono text-slate-500 bg-slate-50 p-3 rounded-lg border border-border-light h-28 overflow-y-auto leading-relaxed shadow-inner">
+                            &gt; Evaluating Decision 'Loan Risk Qual'...<br/>
+                            &gt; Input: {age: 24, score: 450, amt: 15000}<br/>
+                            &gt; Checking Rule 1... [FALSE]<br/>
+                            &gt; Checking Rule 2... [FALSE]<br/>
+                            &gt; Checking Rule 3... [FALSE]<br/>
+                            &gt; Checking Rule 4... [FALSE]<br/>
+<span class="text-emerald-600 font-bold">&gt; Checking Rule 5... [MATCH]</span><br/>
+                            &gt; Output: {risk: "HIGH", status: false}<br/>
+                            &gt; Completed in 12ms.
+                        </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

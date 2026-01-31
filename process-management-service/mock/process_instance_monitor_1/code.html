@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CMMN Case Instance Monitor - Light Minimalist</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6", 
+                        "primary-soft": "#eff6ff",
+                        "surface": "#ffffff",
+                        "surface-highlight": "#f8fafc",
+                        "border-light": "#e2e8f0",
+                        "text-main": "#1e293b",
+                        "text-secondary": "#64748b",
+                        "pastel-blue": "#eff6ff",
+                        "pastel-green": "#f0fdf4",
+                        "pastel-orange": "#fff7ed",
+                        "pastel-purple": "#faf5ff",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                    },
+                    boxShadow: {
+                        "soft": "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+                        "float": "0 10px 40px -10px rgba(0, 0, 0, 0.1)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .bg-dot-pattern {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .sentry-diamond {
+            width: 14px;
+            height: 14px;
+            background-color: #ffffff;
+            border: 2px solid #94a3b8;
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
+        }
+        .sentry-diamond.active {
+            border-color: #3b82f6;
+            background-color: #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-surface-highlight font-display text-text-main h-screen flex overflow-hidden">
+<aside class="w-20 flex-shrink-0 bg-surface border-r border-border-light flex flex-col items-center h-full z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+<div class="p-4 mb-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-xl size-10 shadow-sm ring-1 ring-slate-100" data-alt="Logo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDzdre4WS9Mv-_mSfD7huXQWp17Nh_RRpyWKn_5sEzLjOEVZBUNLECiZSVmDWOXxrwm_G4P-vBVRiWD0QynkwjeamICzJAKSf1Ie1DO_ZsnQXiKplYSucXv8sXv0h3JdL_PPYXpaQeKBpVbn7ZSPW_mh5zTDNcBBR-Hj5YKqVNTwnuhmc4pIfuV8WUwIP1OZ8iW7xFHEW8E5mZgNgx-Id_FLTCEGZv9kPLKNZ_ZHT7pVIti5cOJJzSB8xj5euFzyBJVerfOH_S_e3qQ");'></div>
+</div>
+<nav class="flex flex-col gap-4 flex-1 w-full px-3">
+<a class="flex justify-center items-center size-12 rounded-xl text-text-secondary hover:bg-slate-50 hover:text-primary transition-colors group relative" href="#">
+<span class="material-symbols-outlined text-[24px]">dashboard</span>
+<span class="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">Dashboard</span>
+</a>
+<a class="flex justify-center items-center size-12 rounded-xl bg-primary-soft text-primary shadow-sm" href="#">
+<span class="material-symbols-outlined text-[24px] fill-1">folder_open</span>
+</a>
+<a class="flex justify-center items-center size-12 rounded-xl text-text-secondary hover:bg-slate-50 hover:text-primary transition-colors group relative" href="#">
+<span class="material-symbols-outlined text-[24px]">check_box</span>
+<span class="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">Work Items</span>
+</a>
+<a class="flex justify-center items-center size-12 rounded-xl text-text-secondary hover:bg-slate-50 hover:text-primary transition-colors group relative" href="#">
+<span class="material-symbols-outlined text-[24px]">bar_chart</span>
+<span class="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">Reports</span>
+</a>
+<div class="my-auto"></div>
+<a class="flex justify-center items-center size-12 rounded-xl text-text-secondary hover:bg-slate-50 hover:text-primary transition-colors mb-4" href="#">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+</a>
+<div class="size-10 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-slate-600 font-bold text-xs mb-6 cursor-pointer">
+                AD
+            </div>
+</nav>
+</aside>
+<main class="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative">
+<header class="bg-surface/80 backdrop-blur-sm border-b border-border-light flex-shrink-0 z-20 sticky top-0">
+<div class="px-8 py-4 flex flex-col gap-2">
+<div class="flex items-center gap-2 text-sm text-text-secondary">
+<span class="hover:text-primary cursor-pointer transition-colors">Cases</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="hover:text-primary cursor-pointer transition-colors">Auto Insurance Claim</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-text-main font-semibold bg-slate-100 px-2 py-0.5 rounded text-xs">#CASE-2201-XYZ</span>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="flex items-center justify-center size-12 rounded-xl bg-indigo-50 text-indigo-500 shadow-sm border border-indigo-100">
+<span class="material-symbols-outlined text-[28px]">folder_managed</span>
+</div>
+<div>
+<h1 class="text-text-main text-2xl font-bold tracking-tight">Auto Insurance Claim</h1>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-text-secondary text-sm">Created 3 days ago by <strong>Customer Portal</strong></span>
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100">
+<div class="size-1.5 rounded-full bg-blue-500"></div>
+<span class="text-blue-600 text-[10px] font-bold uppercase tracking-wide">Active</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 h-10 px-4 rounded-xl bg-white hover:bg-slate-50 text-text-secondary text-sm font-semibold border border-border-light shadow-sm transition-all">
+<span class="material-symbols-outlined text-[20px]">history</span>
+                            Audit Log
+                        </button>
+<button class="flex items-center gap-2 h-10 px-5 rounded-xl bg-primary hover:bg-blue-600 text-white text-sm font-semibold shadow-lg shadow-blue-500/20 transition-all">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+                            Add Note
+                        </button>
+</div>
+</div>
+</div>
+</header>
+<div class="flex-1 overflow-hidden relative bg-slate-50 bg-dot-pattern">
+<div class="absolute bottom-28 left-8 z-10 flex flex-col gap-2 bg-white border border-border-light p-1.5 rounded-xl shadow-float">
+<button class="size-9 flex items-center justify-center text-text-secondary hover:bg-slate-50 hover:text-primary rounded-lg transition-colors" title="Zoom In">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+<button class="size-9 flex items-center justify-center text-text-secondary hover:bg-slate-50 hover:text-primary rounded-lg transition-colors" title="Zoom Out">
+<span class="material-symbols-outlined text-[20px]">remove</span>
+</button>
+<button class="size-9 flex items-center justify-center text-text-secondary hover:bg-slate-50 hover:text-primary rounded-lg transition-colors" title="Fit to Screen">
+<span class="material-symbols-outlined text-[20px]">center_focus_strong</span>
+</button>
+</div>
+<div class="absolute inset-0 overflow-auto flex items-center justify-center p-12">
+<div class="relative w-[900px] min-h-[550px] bg-white rounded-3xl shadow-xl border border-slate-200 p-10 ring-1 ring-slate-100/50">
+<div class="absolute -top-4 left-10 bg-white px-4 py-1.5 rounded-full border border-slate-200 shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">folder_open</span>
+<span class="text-text-main font-bold text-sm tracking-tight">Claim Handling Plan Model</span>
+</div>
+<div class="grid grid-cols-12 gap-8 h-full">
+<div class="col-span-12 flex justify-between items-start mb-2">
+<div class="flex flex-col gap-1">
+<div class="h-9 px-4 rounded-full border border-emerald-200 bg-pastel-green flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-emerald-600 text-[20px]">flag</span>
+<span class="text-emerald-700 text-xs font-bold uppercase">Claim Registered</span>
+</div>
+<span class="text-slate-400 text-[10px] ml-4">Completed Oct 12</span>
+</div>
+<div class="flex items-center gap-2 opacity-60">
+<div class="h-9 px-4 rounded-full border border-slate-200 bg-slate-50 flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-[20px] filled">flag</span>
+<span class="text-slate-500 text-xs font-bold uppercase">Settlement</span>
+</div>
+</div>
+</div>
+<div class="col-span-4 flex flex-col gap-4">
+<div class="border border-slate-200 bg-slate-50/80 rounded-2xl p-5 relative">
+<div class="absolute -top-2.5 left-4 bg-white px-2 py-0.5 rounded border border-slate-100 text-slate-500 text-[11px] font-bold shadow-sm">Triage Stage</div>
+<div class="flex flex-col gap-3 mt-2 opacity-60 grayscale-[0.5]">
+<div class="bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3 shadow-sm">
+<span class="material-symbols-outlined text-emerald-500 text-[18px]">check_circle</span>
+<span class="text-slate-500 text-sm font-medium line-through">Validate Policy</span>
+</div>
+<div class="bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3 shadow-sm">
+<span class="material-symbols-outlined text-emerald-500 text-[18px]">check_circle</span>
+<span class="text-slate-500 text-sm font-medium line-through">Initial Contact</span>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-5 flex flex-col gap-4">
+<div class="border-2 border-primary/20 border-dashed bg-primary-soft rounded-2xl p-6 relative shadow-[0_0_30px_rgba(59,130,246,0.05)] transition-all ring-4 ring-blue-50/50">
+<div class="absolute -top-3 left-4 bg-white border border-blue-100 px-3 py-0.5 rounded-full text-primary text-sm font-bold flex items-center gap-1.5 shadow-sm z-10">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+</span>
+                                    Investigation
+                                </div>
+<div class="flex flex-col gap-5 mt-2">
+<div class="relative bg-white border border-primary/30 rounded-xl p-4 flex items-start gap-4 shadow-lg shadow-blue-500/5 group cursor-pointer hover:-translate-y-0.5 transition-transform duration-300">
+<div class="absolute -left-[8px] top-1/2 -translate-y-1/2 sentry-diamond active z-10" title="Entry Criteria Met"></div>
+<div class="bg-blue-50 p-2 rounded-lg text-primary">
+<span class="material-symbols-outlined text-[24px]">person_search</span>
+</div>
+<div class="flex flex-col flex-1">
+<div class="flex justify-between items-start">
+<span class="text-text-main text-sm font-bold">Assess Damages</span>
+<span class="material-symbols-outlined text-slate-300 text-[16px]" title="Manually Activated">play_circle</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<div class="size-4 rounded-full bg-slate-200 text-[8px] flex items-center justify-center font-bold text-slate-600">JD</div>
+<span class="text-text-secondary text-[10px]">Assigned: John D.</span>
+</div>
+</div>
+</div>
+<div class="relative bg-white/60 border border-slate-200 rounded-xl p-4 flex items-center gap-4 opacity-80 hover:opacity-100 transition-opacity cursor-pointer border-dashed">
+<div class="absolute -left-[8px] top-1/2 -translate-y-1/2 sentry-diamond z-10" title="Waiting for criteria"></div>
+<div class="bg-slate-100 p-2 rounded-lg text-slate-400">
+<span class="material-symbols-outlined text-[24px]">settings_suggest</span>
+</div>
+<div class="flex flex-col">
+<span class="text-slate-600 text-sm font-medium">Calculate Estimates</span>
+<span class="text-slate-400 text-[10px] font-medium bg-slate-100 px-1.5 py-0.5 rounded self-start mt-1">Waiting for assessment</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-3 flex flex-col gap-4 pt-8 pl-4 border-l border-dashed border-slate-200">
+<h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Ad-Hoc Zone</h4>
+<div class="relative bg-pastel-orange border border-orange-100 rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow cursor-pointer group">
+<div class="absolute -top-2 -right-2 bg-white text-orange-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-100 shadow-sm">Optional</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-orange-400 group-hover:text-orange-500 transition-colors">gavel</span>
+<span class="text-slate-600 text-sm font-bold group-hover:text-orange-700 transition-colors">Legal Review</span>
+</div>
+<p class="text-slate-400 text-[10px] leading-tight">Trigger if liability is disputed.</p>
+</div>
+<div class="relative bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-2 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group">
+<div class="absolute -top-2 -right-2 bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">Optional</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-slate-600 transition-colors">security</span>
+<span class="text-slate-600 text-sm font-bold group-hover:text-slate-800 transition-colors">Fraud Check</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute top-6 right-6 w-80 glass-panel rounded-2xl shadow-float flex flex-col overflow-hidden transition-all duration-300">
+<div class="bg-white/50 border-b border-white/60 p-4 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="size-2 rounded-full bg-primary animate-pulse"></div>
+<span class="text-sm font-bold text-text-main">Inspector</span>
+</div>
+<span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Context: Stage</span>
+</div>
+<div class="p-5 bg-gradient-to-b from-blue-50/50 to-transparent">
+<h2 class="text-lg font-bold text-text-main mb-1">Investigation</h2>
+<p class="text-xs text-text-secondary mb-3">Currently active stage in the case plan.</p>
+<div class="flex gap-2 mb-4">
+<span class="px-2 py-1 rounded-md bg-white border border-slate-200 text-[10px] font-semibold text-slate-500 uppercase">Required</span>
+<span class="px-2 py-1 rounded-md bg-white border border-slate-200 text-[10px] font-semibold text-slate-500 uppercase">Non-Repetitive</span>
+</div>
+<div class="bg-white rounded-xl border border-border-light shadow-sm overflow-hidden">
+<div class="bg-slate-50 px-3 py-2 border-b border-slate-100 flex justify-between items-center">
+<span class="text-xs font-bold text-slate-500">Entry Criteria</span>
+<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 rounded font-bold">MET</span>
+</div>
+<div class="p-3 flex flex-col gap-2">
+<div class="flex items-start gap-2.5">
+<span class="material-symbols-outlined text-emerald-500 text-[16px]">check_circle</span>
+<div>
+<p class="text-xs font-medium text-slate-700">Triage Completed</p>
+<p class="text-[10px] text-slate-400">Previous stage closed successfully</p>
+</div>
+</div>
+<div class="flex items-start gap-2.5">
+<span class="material-symbols-outlined text-emerald-500 text-[16px]">check_circle</span>
+<div>
+<p class="text-xs font-medium text-slate-700">Policy Validated</p>
+<p class="text-[10px] text-slate-400">variable: policyStatus == 'valid'</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-5 border-t border-slate-100">
+<h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+                        Available Actions
+                    </h3>
+<div class="flex flex-col gap-2">
+<button class="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200 hover:border-primary/50 hover:shadow-md transition-all group text-left">
+<div class="flex items-center gap-3">
+<div class="bg-purple-50 text-purple-600 p-1.5 rounded-lg group-hover:bg-purple-100 transition-colors">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</div>
+<div>
+<span class="text-sm font-bold text-text-main block">Add Evidence</span>
+<span class="text-[10px] text-text-secondary">Upload photos/docs</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-[18px]">play_circle</span>
+</button>
+<button class="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200 hover:border-primary/50 hover:shadow-md transition-all group text-left">
+<div class="flex items-center gap-3">
+<div class="bg-red-50 text-red-500 p-1.5 rounded-lg group-hover:bg-red-100 transition-colors">
+<span class="material-symbols-outlined text-[18px]">emergency_home</span>
+</div>
+<div>
+<span class="text-sm font-bold text-text-main block">Expedite</span>
+<span class="text-[10px] text-text-secondary">Mark high priority</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-[18px]">play_circle</span>
+</button>
+</div>
+</div>
+</div>
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+<div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-float border border-white/50 p-2 flex items-center gap-1">
+<button class="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<div class="flex items-center px-4 relative">
+<div class="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-100 -z-10"></div>
+<div class="flex gap-8">
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="size-2.5 rounded-full bg-emerald-500 ring-4 ring-white shadow-sm transition-transform group-hover:scale-125"></div>
+<span class="text-[10px] font-bold text-slate-600 opacity-0 group-hover:opacity-100 absolute -top-6 bg-white px-2 py-0.5 rounded shadow-sm whitespace-nowrap transition-opacity">Created Oct 10</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="size-2.5 rounded-full bg-emerald-500 ring-4 ring-white shadow-sm transition-transform group-hover:scale-125"></div>
+<span class="text-[10px] font-bold text-slate-600 opacity-0 group-hover:opacity-100 absolute -top-6 bg-white px-2 py-0.5 rounded shadow-sm whitespace-nowrap transition-opacity">Triage Complete</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="size-3.5 rounded-full bg-primary ring-4 ring-blue-50 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-transform group-hover:scale-110"></div>
+<span class="text-[10px] font-bold text-primary absolute -top-8 bg-white px-2 py-0.5 rounded shadow-sm whitespace-nowrap border border-blue-100">Investigation</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="size-2.5 rounded-full bg-slate-200 ring-4 ring-white shadow-sm transition-transform group-hover:scale-125"></div>
+<span class="text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 absolute -top-6 bg-white px-2 py-0.5 rounded shadow-sm whitespace-nowrap transition-opacity">Closed</span>
+</div>
+</div>
+</div>
+<button class="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

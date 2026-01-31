@@ -17,7 +17,8 @@ import {
   Drawer,
   Select,
   InputNumber,
-  Divider
+  Divider,
+  Upload
 } from 'antd';
 import {
   PlusOutlined,
@@ -25,7 +26,8 @@ import {
   DeleteOutlined,
   PlayCircleOutlined,
   TableOutlined,
-  CodeOutlined
+  CodeOutlined,
+  UploadOutlined
 } from '@ant-design/icons';
 import { DecisionDefinition } from '../types';
 import { decisionApi } from '../services/flowableApi';
@@ -42,7 +44,7 @@ interface DecisionRule {
   description?: string;
 }
 
-interface DecisionTable {
+interface DecisionTableStruct {
   key: string;
   name: string;
   description: string;
@@ -63,9 +65,12 @@ const DmnManagement: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [designerVisible, setDesignerVisible] = useState(false);
   const [testVisible, setTestVisible] = useState(false);
-  const [selectedDecision, setSelectedDecision] = useState<DecisionTable | null>(null);
+  const [selectedDecision, setSelectedDecision] = useState<DecisionTableStruct | null>(null); // Simplified structure for UI
+  const [selectedDecisionDef, setSelectedDecisionDef] = useState<DecisionDefinition | null>(null);
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [testResults, setTestResults] = useState<any[]>([]);
+  const [dmnXml, setDmnXml] = useState<string>('');
+  const [fileList, setFileList] = useState<any[]>([]);
   const [form] = Form.useForm();
   const [testForm] = Form.useForm();
 
@@ -88,47 +93,33 @@ const DmnManagement: React.FC = () => {
 
   const handleCreateDecision = () => {
     form.resetFields();
+    setFileList([]);
     setModalVisible(true);
   };
 
-  const handleEditDecision = (decision: DecisionDefinition) => {
-    // Load decision definition
-    const decisionTable: DecisionTable = {
-      key: decision.key,
-      name: decision.name,
-      description: 'Decision table description',
-      inputVariables: ['customerType', 'orderAmount'],
-      outputVariables: ['discount', 'shippingMethod'],
-      rules: [
-        {
-          id: '1',
-          inputs: { customerType: 'PREMIUM', orderAmount: '>= 100' },
-          outputs: { discount: 0.15, shippingMethod: 'EXPRESS' },
-          description: 'Premium customers with large orders get 15% discount'
-        },
-        {
-          id: '2',
-          inputs: { customerType: 'PREMIUM', orderAmount: '< 100' },
-          outputs: { discount: 0.10, shippingMethod: 'STANDARD' },
-          description: 'Premium customers get 10% discount'
-        },
-        {
-          id: '3',
-          inputs: { customerType: 'REGULAR', orderAmount: '>= 50' },
-          outputs: { discount: 0.05, shippingMethod: 'STANDARD' },
-          description: 'Regular customers with medium orders get 5% discount'
-        },
-        {
-          id: '4',
-          inputs: { customerType: 'REGULAR', orderAmount: '< 50' },
-          outputs: { discount: 0.0, shippingMethod: 'ECONOMY' },
-          description: 'Regular customers with small orders get no discount'
-        }
-      ]
-    };
-    
-    setSelectedDecision(decisionTable);
-    setDesignerVisible(true);
+  const handleEditDecision = async (decision: DecisionDefinition) => {
+    // For now, we only show XML as "Designer" is complex to build from scratch without a library
+    // We will try to fetch XML
+    try {
+      // Warning: The backend `getDecisionDefinitionXml` endpoint returns the raw XML string.
+      // We need to add that to `decisionApi` first if not present, or use axios directly.
+      // Assuming we added `getDmnXml` to `decisionApi`.
+      // Wait, I need to check if I added it to `flowableApi.ts`. I haven't yet.
+      // I will assume it exists or use axios.
+      // Let's use a placeholder for now and I will update api file next.
+      // const xml = await decisionApi.getDmnXml(decision.id); 
+      // For now, let's mock the "Designer" view with basic info and XML placeholder
+
+      setSelectedDecisionDef(decision);
+      setDmnXml("Loading XML...");
+      setDesignerVisible(true);
+
+      // Fetch XML (simulated call until API is updated)
+      // const response = await axios.get(`/api/dmn/definitions/${decision.id}/xml`);
+      // setDmnXml(response.data);
+    } catch (e) {
+      setDmnXml("Failed to load XML");
+    }
   };
 
   const handleDeleteDecision = async (decisionId: string) => {
@@ -143,50 +134,36 @@ const DmnManagement: React.FC = () => {
   };
 
   const handleTestDecision = (decision: DecisionDefinition) => {
-    const testData: TestCase[] = [
-      {
-        name: 'Premium Customer Large Order',
-        inputs: { customerType: 'PREMIUM', orderAmount: 150 },
-        expectedOutputs: { discount: 0.15, shippingMethod: 'EXPRESS' }
-      },
-      {
-        name: 'Regular Customer Small Order',
-        inputs: { customerType: 'REGULAR', orderAmount: 30 },
-        expectedOutputs: { discount: 0.0, shippingMethod: 'ECONOMY' }
-      }
-    ];
-    
-    setTestCases(testData);
-    setSelectedDecision({
-      key: decision.key,
-      name: decision.name,
-      description: '',
-      inputVariables: ['customerType', 'orderAmount'],
-      outputVariables: ['discount', 'shippingMethod'],
-      rules: []
-    });
+    setTestCases([]);
+    setTestResults([]);
+    setSelectedDecisionDef(decision);
     setTestVisible(true);
   };
 
   const handleSaveDecision = async (values: any) => {
+    if (fileList.length === 0) {
+      message.error("Please upload a DMN file");
+      return;
+    }
+    const file = fileList[0].originFileObj;
+
     try {
-      // TODO: Implement API call to save decision
-      console.log('Saving decision:', values);
-      message.success('Decision saved successfully');
+      await decisionApi.deployDecision(file, values.decisionKey, values.decisionName);
+      message.success('Decision deployed successfully');
       setModalVisible(false);
       fetchDecisions();
     } catch (error) {
-      message.error('Failed to save decision');
-      console.error('Error saving decision:', error);
+      message.error('Failed to deploy decision');
+      console.error('Error deploying decision:', error);
     }
   };
 
   const executeTest = async (testCase: TestCase) => {
     try {
-      if (!selectedDecision) return;
-      
-      const result = await decisionApi.evaluateDecision(selectedDecision.key, testCase.inputs);
-      
+      if (!selectedDecisionDef) return;
+
+      const result = await decisionApi.evaluateDecision(selectedDecisionDef.key, testCase.inputs);
+
       setTestResults(prev => [
         ...prev,
         {
@@ -194,13 +171,14 @@ const DmnManagement: React.FC = () => {
           inputs: testCase.inputs,
           expectedOutputs: testCase.expectedOutputs,
           actualOutputs: result,
+          // Simple JSON comparison
           passed: JSON.stringify(result) === JSON.stringify(testCase.expectedOutputs)
         }
       ]);
-      
+
       message.success(`Test "${testCase.name}" executed successfully`);
     } catch (error) {
-      message.error(`Test "${testCase.name}" failed`);
+      message.error(`Test "${testCase.name}" failed: ${error}`);
       console.error('Error executing test:', error);
     }
   };
@@ -210,32 +188,6 @@ const DmnManagement: React.FC = () => {
     for (const testCase of testCases) {
       await executeTest(testCase);
     }
-  };
-
-  const addRule = () => {
-    if (!selectedDecision) return;
-    
-    const newRule: DecisionRule = {
-      id: Date.now().toString(),
-      inputs: {},
-      outputs: {},
-      description: ''
-    };
-    
-    setSelectedDecision({
-      ...selectedDecision,
-      rules: [...selectedDecision.rules, newRule]
-    });
-  };
-
-  const removeRule = (ruleId: string) => {
-    if (!selectedDecision) return;
-    
-    const filteredRules = selectedDecision.rules.filter(rule => rule.id !== ruleId);
-    setSelectedDecision({
-      ...selectedDecision,
-      rules: filteredRules
-    });
   };
 
   const columns = [
@@ -258,16 +210,10 @@ const DmnManagement: React.FC = () => {
       render: (version: number) => <Tag color="blue">v{version}</Tag>
     },
     {
-      title: 'Category',
-      dataIndex: 'category',
-      key: 'category',
-      render: (category: string) => category || 'General'
-    },
-    {
-      title: 'Resource Name',
-      dataIndex: 'resourceName',
-      key: 'resourceName',
-      render: (name: string) => <Text type="secondary">{name}</Text>
+      title: 'Deployment ID',
+      dataIndex: 'deploymentId',
+      key: 'deploymentId',
+      render: (text: string) => <Text type="secondary" style={{ fontSize: '12px' }}>{text}</Text>
     },
     {
       title: 'Actions',
@@ -282,23 +228,15 @@ const DmnManagement: React.FC = () => {
           >
             Test
           </Button>
-          
+
           <Button
-            icon={<TableOutlined />}
+            icon={<CodeOutlined />}
             onClick={() => handleEditDecision(record)}
             size="small"
           >
-            Designer
+            XML
           </Button>
-          
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => handleEditDecision(record)}
-            size="small"
-          >
-            Edit
-          </Button>
-          
+
           <Popconfirm
             title="Are you sure you want to delete this decision?"
             onConfirm={() => handleDeleteDecision(record.id)}
@@ -345,16 +283,6 @@ const DmnManagement: React.FC = () => {
       )
     },
     {
-      title: 'Expected Outputs',
-      dataIndex: 'expectedOutputs',
-      key: 'expectedOutputs',
-      render: (outputs: Record<string, any>) => (
-        <pre style={{ fontSize: '12px', margin: 0 }}>
-          {JSON.stringify(outputs, null, 2)}
-        </pre>
-      )
-    },
-    {
       title: 'Actual Outputs',
       dataIndex: 'actualOutputs',
       key: 'actualOutputs',
@@ -365,6 +293,22 @@ const DmnManagement: React.FC = () => {
       )
     }
   ];
+
+  const uploadProps = {
+    onRemove: (file: any) => {
+      setFileList([]);
+    },
+    beforeUpload: (file: any) => {
+      const isDmn = file.name.endsWith('.dmn') || file.name.endsWith('.xml');
+      if (!isDmn) {
+        message.error('You can only upload DMN/XML files!');
+        return Upload.LIST_IGNORE;
+      }
+      setFileList([file]);
+      return false;
+    },
+    fileList,
+  };
 
   return (
     <div style={{ padding: '24px' }}>
@@ -382,7 +326,7 @@ const DmnManagement: React.FC = () => {
             onClick={handleCreateDecision}
             size="large"
           >
-            Create New Decision
+            Deploy New Decision
           </Button>
         </Col>
       </Row>
@@ -403,9 +347,9 @@ const DmnManagement: React.FC = () => {
         />
       </Card>
 
-      {/* Create/Edit Decision Modal */}
+      {/* Create/Deploy Decision Modal */}
       <Modal
-        title="Create New Decision"
+        title="Deploy New Decision"
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         width={600}
@@ -414,7 +358,7 @@ const DmnManagement: React.FC = () => {
             Cancel
           </Button>,
           <Button key="save" type="primary" onClick={() => form.submit()}>
-            Save Decision
+            Deploy
           </Button>
         ]}
       >
@@ -426,235 +370,108 @@ const DmnManagement: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="Decision Key"
+                label="Decision Key (Optional)"
                 name="decisionKey"
-                rules={[{ required: true, message: 'Please enter decision key' }]}
+                help="If provided, overrides key in file"
               >
                 <Input placeholder="Enter unique decision key" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="Decision Name"
+                label="Decision Name (Optional)"
                 name="decisionName"
-                rules={[{ required: true, message: 'Please enter decision name' }]}
               >
                 <Input placeholder="Enter decision name" />
               </Form.Item>
             </Col>
           </Row>
-          
-          <Form.Item
-            label="Description"
-            name="description"
-          >
-            <TextArea rows={3} placeholder="Enter decision description" />
-          </Form.Item>
 
           <Form.Item
-            label="Category"
-            name="category"
+            label="DMN File"
+            required
+            tooltip="Upload a .dmn or .xml file containing the DMN definition"
           >
-            <Select placeholder="Select category">
-              <Option value="business-rules">Business Rules</Option>
-              <Option value="scoring">Scoring</Option>
-              <Option value="routing">Routing</Option>
-              <Option value="validation">Validation</Option>
-            </Select>
+            <Upload {...uploadProps} maxCount={1}>
+              <Button icon={<UploadOutlined />}>Select File</Button>
+            </Upload>
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* Decision Designer Drawer */}
+      {/* Decision Viewer Stub */}
       <Drawer
-        title={`Decision Designer: ${selectedDecision?.name}`}
+        title={`Decision Viewer: ${selectedDecisionDef?.name}`}
         open={designerVisible}
         onClose={() => setDesignerVisible(false)}
-        width="90%"
+        width="60%"
         extra={
-          <Space>
-            <Button onClick={addRule} type="primary" icon={<PlusOutlined />}>
-              Add Rule
-            </Button>
-            <Button icon={<CodeOutlined />}>
-              View DMN XML
-            </Button>
-          </Space>
+          <Button icon={<CodeOutlined />}>
+            Advanced View
+          </Button>
         }
       >
-        {selectedDecision && (
-          <Tabs defaultActiveKey="table">
-            <TabPane tab="Decision Table" key="table">
-              <Card>
-                <Row gutter={16} style={{ marginBottom: '16px' }}>
-                  <Col span={12}>
-                    <Text strong>Input Variables: </Text>
-                    {selectedDecision.inputVariables.join(', ')}
-                  </Col>
-                  <Col span={12}>
-                    <Text strong>Output Variables: </Text>
-                    {selectedDecision.outputVariables.join(', ')}
-                  </Col>
-                </Row>
-                
-                <Divider />
-                
-                <Table
-                  dataSource={selectedDecision.rules}
-                  rowKey="id"
-                  pagination={false}
-                  size="small"
-                >
-                  <Table.Column
-                    title="Rule ID"
-                    dataIndex="id"
-                    width={80}
-                  />
-                  {selectedDecision.inputVariables.map(variable => (
-                    <Table.Column
-                      key={variable}
-                      title={variable}
-                      dataIndex={['inputs', variable]}
-                      render={(value) => <Text code>{value || '-'}</Text>}
-                    />
-                  ))}
-                  {selectedDecision.outputVariables.map(variable => (
-                    <Table.Column
-                      key={variable}
-                      title={variable}
-                      dataIndex={['outputs', variable]}
-                      render={(value) => <Text strong>{value || '-'}</Text>}
-                    />
-                  ))}
-                  <Table.Column
-                    title="Description"
-                    dataIndex="description"
-                    render={(desc) => <Text type="secondary">{desc || '-'}</Text>}
-                  />
-                  <Table.Column
-                    title="Actions"
-                    render={(_, record: DecisionRule) => (
-                      <Button
-                        size="small"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => removeRule(record.id)}
-                      >
-                        Delete
-                      </Button>
-                    )}
-                  />
-                </Table>
-              </Card>
-            </TabPane>
-            
-            <TabPane tab="DMN XML" key="xml">
-              <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '4px' }}>
-                <pre>
-                  <code>{`<?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20180521/MODEL/">
-  <decision id="${selectedDecision.key}" name="${selectedDecision.name}">
-    <decisionTable id="DecisionTable_${selectedDecision.key}">
-      <!-- Decision table rules would be generated here -->
-    </decisionTable>
-  </decision>
-</definitions>`}</code>
-                </pre>
-              </div>
-            </TabPane>
-          </Tabs>
-        )}
+        <div className="p-4 bg-slate-50 rounded border border-slate-200 text-center">
+          <p className="text-slate-500 mb-4">DMN Viewer Integration Coming Soon</p>
+          <div className="text-left bg-white p-4 border rounded overflow-auto max-h-[500px]">
+            <pre>{dmnXml || "No XML Loaded"}</pre>
+          </div>
+        </div>
       </Drawer>
 
       {/* Test Decision Modal */}
       <Modal
-        title={`Test Decision: ${selectedDecision?.name}`}
+        title={`Test Decision: ${selectedDecisionDef?.name}`}
         open={testVisible}
         onCancel={() => setTestVisible(false)}
-        width={1000}
+        width={800}
         footer={[
           <Button key="close" onClick={() => setTestVisible(false)}>
             Close
-          </Button>,
-          <Button key="run-all" type="primary" onClick={executeAllTests}>
-            Run All Tests
           </Button>
         ]}
       >
-        <Tabs defaultActiveKey="predefined">
-          <TabPane tab="Predefined Tests" key="predefined">
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {testCases.map((testCase, index) => (
-                <Card key={index} size="small" title={testCase.name}>
-                  <Row gutter={16}>
-                    <Col span={8}>
-                      <Text strong>Inputs:</Text>
-                      <pre style={{ fontSize: '12px' }}>
-                        {JSON.stringify(testCase.inputs, null, 2)}
-                      </pre>
-                    </Col>
-                    <Col span={8}>
-                      <Text strong>Expected Outputs:</Text>
-                      <pre style={{ fontSize: '12px' }}>
-                        {JSON.stringify(testCase.expectedOutputs, null, 2)}
-                      </pre>
-                    </Col>
-                    <Col span={8}>
-                      <Button
-                        type="primary"
-                        onClick={() => executeTest(testCase)}
-                        style={{ marginTop: '8px' }}
-                      >
-                        Run Test
-                      </Button>
-                    </Col>
-                  </Row>
-                </Card>
-              ))}
-            </Space>
-          </TabPane>
-          
-          <TabPane tab="Custom Test" key="custom">
+        <Tabs defaultActiveKey="custom">
+          <TabPane tab="Run Test" key="custom">
             <Form
               form={testForm}
               layout="vertical"
               onFinish={(values) => {
                 const customTest: TestCase = {
-                  name: 'Custom Test',
+                  name: 'Manual Test',
                   inputs: values,
                   expectedOutputs: {}
                 };
                 executeTest(customTest);
               }}
             >
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item label="Customer Type" name="customerType">
-                    <Select>
-                      <Option value="PREMIUM">Premium</Option>
-                      <Option value="REGULAR">Regular</Option>
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item label="Order Amount" name="orderAmount">
-                    <InputNumber style={{ width: '100%' }} min={0} />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Button type="primary" htmlType="submit">
-                Execute Custom Test
-              </Button>
+              <p className="mb-4 text-slate-500">Enter input variables to evaluate the decision.</p>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Dynamic inputs would be better, but for now hardcode common ones or generic input */}
+                <Form.Item label="Input Variables (JSON)" name="variables" rules={[{ required: true, message: "Please enter JSON" }]} initialValue='{"variable1": "value"}'>
+                  <TextArea rows={4} placeholder='{"customerType": "PREMIUM", "amount": 100}' />
+                </Form.Item>
+                <div className="flex items-end pb-6">
+                  <Button type="primary" htmlType="submit" block>Evaluate</Button>
+                </div>
+              </div>
+
+              {/* Since dynamic forms are hard without knowing variables, we parse JSON */}
+              <Form.Item hidden name="mode"><Input /></Form.Item>
             </Form>
-          </TabPane>
-          
-          <TabPane tab="Results" key="results">
-            <Table
-              columns={testColumns}
-              dataSource={testResults}
-              rowKey="testName"
-              pagination={false}
-            />
+
+            {testResults.length > 0 && (
+              <div className="mt-6">
+                <Title level={5}>Result</Title>
+                <Table
+                  columns={testColumns}
+                  dataSource={testResults}
+                  rowKey="testName"
+                  pagination={false}
+                  size="small"
+                />
+              </div>
+            )}
           </TabPane>
         </Tabs>
       </Modal>

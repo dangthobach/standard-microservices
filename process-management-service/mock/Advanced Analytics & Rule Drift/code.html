@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Advanced Analytics &amp; Decision Drift</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b8cee",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#0d141b] transition-colors duration-200">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 border-r border-[#cfdbe7] dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full shrink-0">
+<div class="p-6 flex items-center gap-3">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<h2 class="text-lg font-bold tracking-tight">ProcessEngine</h2>
+</div>
+<nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+<div class="pb-4">
+<p class="px-3 text-xs font-semibold text-[#4c739a] uppercase tracking-wider mb-2">Workspace</p>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#0d141b] dark:text-slate-300 hover:bg-[#e7edf3] dark:hover:bg-slate-800 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span> Overview
+                    </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium bg-primary/10 text-primary rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1">shift</span> Decision Drift
+                    </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#0d141b] dark:text-slate-300 hover:bg-[#e7edf3] dark:hover:bg-slate-800 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">timeline</span> Performance
+                    </a>
+</div>
+<div class="pb-4 border-t border-[#cfdbe7] dark:border-slate-800 pt-4">
+<p class="px-3 text-xs font-semibold text-[#4c739a] uppercase tracking-wider mb-2">Automations</p>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#0d141b] dark:text-slate-300 hover:bg-[#e7edf3] dark:hover:bg-slate-800 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">account_tree</span> BPMN Models
+                    </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#0d141b] dark:text-slate-300 hover:bg-[#e7edf3] dark:hover:bg-slate-800 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">table_chart</span> DMN Rules
+                    </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#0d141b] dark:text-slate-300 hover:bg-[#e7edf3] dark:hover:bg-slate-800 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">psychology</span> ML Predictions
+                    </a>
+</div>
+</nav>
+<div class="p-4 border-t border-[#cfdbe7] dark:border-slate-800">
+<div class="flex items-center gap-3 p-2 bg-background-light dark:bg-slate-800 rounded-xl">
+<div class="size-9 rounded-full bg-cover" data-alt="User profile avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAEBlPLjCXGARACsDpTNQiwyVZ1iJOoCb1ZID8xPzbbqvp6UDVCMVZBLyAh-S5mbMdZInrBwzn5PyDbJjLI0F1gPfqgDQEVfN1xNbKTidYDJuwKvAB5Ie3T7cQQdBDncWbtG0nGfVNPU3TZVC_RP6f55hcdxfl9KApUUPhMAYd0EbebOProZ3O-V5uilSIPHcPN04V4Um_bMqjgUNR79__Uv_AtGPyA6c7gZRgAiNyMgWvJeRtP8cl8s6PJ0xVvEuIDSkNzdas8jSA");'></div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Alex Rivera</p>
+<p class="text-[10px] text-[#4c739a] truncate">Admin Account</p>
+</div>
+<span class="material-symbols-outlined text-sm">settings</span>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+<!-- Top Nav -->
+<header class="h-16 border-b border-[#cfdbe7] dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-10 px-8 flex items-center justify-between">
+<div class="flex items-center gap-2 text-sm text-[#4c739a]">
+<a class="hover:text-primary transition-colors" href="#">Analytics</a>
+<span>/</span>
+<span class="text-[#0d141b] dark:text-slate-100 font-semibold">Decision Drift Analysis</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center bg-[#e7edf3] dark:bg-slate-800 rounded-lg px-3 py-1.5 gap-2">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span class="text-xs font-medium">Last 30 Days</span>
+</div>
+<button class="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary/90">
+<span class="material-symbols-outlined text-sm">refresh</span> Refresh Analytics
+                    </button>
+</div>
+</header>
+<div class="p-8 space-y-8">
+<!-- Page Heading -->
+<div class="flex flex-col gap-1">
+<h1 class="text-3xl font-black tracking-tight text-[#0d141b] dark:text-white">Advanced Analytics &amp; Rule Drift</h1>
+<p class="text-[#4c739a] dark:text-slate-400">Real-time comparison of expected vs. actual rule hit distributions across active process engines.</p>
+</div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-[#cfdbe7] dark:border-slate-800 shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-[#4c739a]">Drift Score</p>
+<span class="p-1.5 bg-green-100 text-green-700 rounded-md text-[10px] font-bold">+2.1%</span>
+</div>
+<p class="text-3xl font-bold dark:text-white">12.4%</p>
+<p class="text-[11px] text-[#4c739a]">Confidence Level: High</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-[#cfdbe7] dark:border-slate-800 shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-[#4c739a]">Automation Rate</p>
+<span class="p-1.5 bg-red-100 text-red-700 rounded-md text-[10px] font-bold">-0.5%</span>
+</div>
+<p class="text-3xl font-bold dark:text-white">88.2%</p>
+<p class="text-[11px] text-[#4c739a]">Target: 92.0%</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-[#cfdbe7] dark:border-slate-800 shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-[#4c739a]">Avg Latency</p>
+<span class="p-1.5 bg-red-100 text-red-700 rounded-md text-[10px] font-bold">-4%</span>
+</div>
+<p class="text-3xl font-bold dark:text-white">42ms</p>
+<p class="text-[11px] text-[#4c739a]">P99: 112ms</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-[#cfdbe7] dark:border-slate-800 shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<p class="text-sm font-medium text-[#4c739a]">SLA Risk Level</p>
+<span class="p-1.5 bg-green-100 text-green-700 rounded-md text-[10px] font-bold">Low</span>
+</div>
+<p class="text-3xl font-bold dark:text-white">Minimal</p>
+<p class="text-[11px] text-[#4c739a]">ML Prediction: 2% breach</p>
+</div>
+</div>
+<!-- Main Chart Area -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Decision Drift Comparison -->
+<div class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-xl border border-[#cfdbe7] dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h3 class="font-bold text-lg dark:text-white">Decision Drift Analysis</h3>
+<p class="text-sm text-[#4c739a]">Comparing Expected vs. Actual rule hit distributions</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<div class="size-3 rounded-full bg-primary/30"></div>
+<span class="text-xs text-[#4c739a]">Expected</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="size-3 rounded-full bg-primary"></div>
+<span class="text-xs text-[#4c739a]">Actual Hits</span>
+</div>
+</div>
+</div>
+<!-- Visual Mockup of Chart -->
+<div class="h-64 flex items-end justify-between gap-4 px-4 border-b border-l border-[#e7edf3] dark:border-slate-800 pb-2">
+<div class="flex-1 flex flex-col items-center gap-1 group">
+<div class="w-full flex items-end justify-center gap-1 h-full">
+<div class="w-4 bg-primary/20 rounded-t-sm" style="height: 60%"></div>
+<div class="w-4 bg-primary rounded-t-sm" style="height: 52%"></div>
+</div>
+<span class="text-[10px] font-medium text-[#4c739a]">Rule-01</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 group">
+<div class="w-full flex items-end justify-center gap-1 h-full">
+<div class="w-4 bg-primary/20 rounded-t-sm" style="height: 40%"></div>
+<div class="w-4 bg-primary rounded-t-sm" style="height: 65%"></div>
+</div>
+<span class="text-[10px] font-medium text-[#4c739a]">Rule-02</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 group">
+<div class="w-full flex items-end justify-center gap-1 h-full">
+<div class="w-4 bg-primary/20 rounded-t-sm" style="height: 80%"></div>
+<div class="w-4 bg-primary rounded-t-sm" style="height: 85%"></div>
+</div>
+<span class="text-[10px] font-medium text-[#4c739a]">Rule-03</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 group">
+<div class="w-full flex items-end justify-center gap-1 h-full">
+<div class="w-4 bg-primary/20 rounded-t-sm" style="height: 30%"></div>
+<div class="w-4 bg-primary rounded-t-sm" style="height: 15%"></div>
+</div>
+<span class="text-[10px] font-medium text-[#4c739a]">Rule-04</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 group">
+<div class="w-full flex items-end justify-center gap-1 h-full">
+<div class="w-4 bg-primary/20 rounded-t-sm" style="height: 55%"></div>
+<div class="w-4 bg-primary rounded-t-sm" style="height: 60%"></div>
+</div>
+<span class="text-[10px] font-medium text-[#4c739a]">Rule-05</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1 group">
+<div class="w-full flex items-end justify-center gap-1 h-full">
+<div class="w-4 bg-primary/20 rounded-t-sm" style="height: 90%"></div>
+<div class="w-4 bg-primary rounded-t-sm" style="height: 40%"></div>
+</div>
+<span class="text-[10px] font-medium text-[#4c739a]">Rule-06</span>
+</div>
+</div>
+</div>
+<!-- Process Efficiency / ML Sidebar -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-[#cfdbe7] dark:border-slate-800 shadow-sm flex flex-col gap-6">
+<div class="flex flex-col gap-1">
+<h3 class="font-bold text-lg dark:text-white">Predictive Health</h3>
+<p class="text-sm text-[#4c739a]">ML model: process-v4.2</p>
+</div>
+<div class="space-y-6">
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-semibold">
+<span class="text-[#0d141b] dark:text-slate-300">SLA Breach Risk</span>
+<span class="text-primary">12% Prob.</span>
+</div>
+<div class="h-2 w-full bg-[#e7edf3] dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[12%] rounded-full"></div>
+</div>
+<p class="text-[10px] text-[#4c739a]">Stable compared to yesterday</p>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-semibold">
+<span class="text-[#0d141b] dark:text-slate-300">Automation Confidence</span>
+<span class="text-primary">94.8%</span>
+</div>
+<div class="h-2 w-full bg-[#e7edf3] dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[94%] rounded-full"></div>
+</div>
+<p class="text-[10px] text-[#4c739a]">Strong decision consistency</p>
+</div>
+<div class="p-4 bg-primary/5 rounded-lg border border-primary/20">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary text-xl">psychology</span>
+<span class="text-xs font-bold text-primary">AI Insight</span>
+</div>
+<p class="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">
+                                    "Rule-06 is hitting 55.6% less frequently than modeled. High probability of input data shift in <strong>Regional Markets</strong> segment."
+                                </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Row: Heatmap & Tables -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-12">
+<!-- Rule Heatmap -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-[#cfdbe7] dark:border-slate-800 shadow-sm">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="font-bold text-lg dark:text-white">DMN Execution Heatmap</h3>
+<p class="text-sm text-[#4c739a]">Most active rules in Decision Tables</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] text-[#4c739a]">Idle</span>
+<div class="w-24 h-2 rounded-full bg-gradient-to-r from-blue-50 to-primary"></div>
+<span class="text-[10px] text-[#4c739a]">Hot</span>
+</div>
+</div>
+<div class="grid grid-cols-10 gap-1.5">
+<!-- Heatmap Cells -->
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help" title="Rule 101: 2 Hits"></div>
+<div class="aspect-square bg-primary/40 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help" title="Rule 102: 450 Hits"></div>
+<div class="aspect-square bg-primary/90 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help" title="Rule 103: 1,200 Hits"></div>
+<div class="aspect-square bg-primary/10 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help" title="Rule 104: 110 Hits"></div>
+<div class="aspect-square bg-primary/60 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help" title="Rule 105: 780 Hits"></div>
+<div class="aspect-square bg-primary/20 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/30 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/10 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/80 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/10 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/10 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/20 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/40 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/10 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/10 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/10 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/95 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/20 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/10 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/10 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/20 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/40 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/10 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+<div class="aspect-square bg-primary/5 rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help"></div>
+</div>
+<div class="mt-4 flex justify-between">
+<button class="text-[11px] font-bold text-primary hover:underline">Download Heatmap PDF</button>
+<span class="text-[10px] text-[#4c739a]">Total Decisons: 1.2M (last 24h)</span>
+</div>
+</div>
+<!-- Process Performance Table -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-[#cfdbe7] dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="mb-6">
+<h3 class="font-bold text-lg dark:text-white">Active Performance Bottlenecks</h3>
+<p class="text-sm text-[#4c739a]">BPMN Process Instances with &gt;2h delay</p>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-[10px] font-bold text-[#4c739a] uppercase tracking-wider border-b border-[#e7edf3] dark:border-slate-800">
+<th class="pb-3 px-2">Process ID</th>
+<th class="pb-3 px-2">Task Node</th>
+<th class="pb-3 px-2">Avg Time</th>
+<th class="pb-3 px-2">Deviance</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="py-3 px-2 font-medium">Order-V2-Main</td>
+<td class="py-3 px-2">Credit Check</td>
+<td class="py-3 px-2">14.2 min</td>
+<td class="py-3 px-2 text-red-600 font-bold">+4.1m</td>
+</tr>
+<tr class="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="py-3 px-2 font-medium">Claims-Handling</td>
+<td class="py-3 px-2">Validation</td>
+<td class="py-3 px-2">2.5 min</td>
+<td class="py-3 px-2 text-green-600 font-bold">-0.8m</td>
+</tr>
+<tr class="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="py-3 px-2 font-medium">User-Onboarding</td>
+<td class="py-3 px-2">Doc Sync</td>
+<td class="py-3 px-2">45.0 sec</td>
+<td class="py-3 px-2 text-red-600 font-bold">+12s</td>
+</tr>
+<tr class="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="py-3 px-2 font-medium">Inventory-Sync</td>
+<td class="py-3 px-2">Update ERP</td>
+<td class="py-3 px-2">8.4 sec</td>
+<td class="py-3 px-2 text-slate-400 font-bold">Stable</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-4">
+<a class="text-xs font-bold text-primary hover:underline" href="#">View Performance Report</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

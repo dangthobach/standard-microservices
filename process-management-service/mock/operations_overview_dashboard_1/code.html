@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Operations Overview Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6", // Blue 500
+                        "primary-soft": "#eff6ff", // Blue 50
+                        "secondary": "#64748b", // Slate 500
+                        "background": "#f8fafc", // Slate 50
+                        "surface": "#ffffff", 
+                        "success": "#10b981", // Emerald 500
+                        "success-soft": "#ecfdf5", // Emerald 50
+                        "warning": "#f59e0b", // Amber 500
+                        "warning-soft": "#fffbeb", // Amber 50
+                        "danger": "#ef4444", // Red 500
+                        "danger-soft": "#fef2f2", // Red 50
+                        "border-light": "#e2e8f0", // Slate 200
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .sidebar-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+        .sidebar-item:hover .sidebar-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-background font-body text-slate-800 antialiased overflow-hidden selection:bg-primary/20">
+<div class="flex h-screen w-full overflow-hidden">
+<aside class="w-20 flex-shrink-0 flex flex-col border-r border-border-light bg-surface z-30">
+<div class="flex h-full flex-col justify-between items-center py-6">
+<div class="flex flex-col gap-8 w-full items-center">
+<div class="flex items-center justify-center">
+<div class="bg-primary flex items-center justify-center rounded-xl size-10 text-white shadow-lg shadow-primary/30 cursor-pointer hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-2xl">hub</span>
+</div>
+</div>
+<nav class="flex flex-col gap-4 w-full px-3">
+<a class="sidebar-item flex items-center justify-center w-full aspect-square rounded-xl bg-primary-soft text-primary transition-all relative group" href="#">
+<span class="material-symbols-outlined filled text-2xl">dashboard</span>
+<div class="sidebar-tooltip absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 shadow-md">Dashboard</div>
+</a>
+<a class="sidebar-item flex items-center justify-center w-full aspect-square rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all relative group" href="#">
+<span class="material-symbols-outlined text-2xl">account_tree</span>
+<div class="sidebar-tooltip absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 shadow-md">Processes</div>
+</a>
+<a class="sidebar-item flex items-center justify-center w-full aspect-square rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all relative group" href="#">
+<span class="material-symbols-outlined text-2xl">work</span>
+<div class="sidebar-tooltip absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 shadow-md">Cases</div>
+</a>
+<a class="sidebar-item flex items-center justify-center w-full aspect-square rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all relative group" href="#">
+<span class="material-symbols-outlined text-2xl">alt_route</span>
+<div class="sidebar-tooltip absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 shadow-md">Decisions</div>
+</a>
+<a class="sidebar-item flex items-center justify-center w-full aspect-square rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all relative group" href="#">
+<span class="material-symbols-outlined text-2xl">check_box</span>
+<div class="sidebar-tooltip absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 shadow-md">Tasks</div>
+</a>
+<div class="w-8 h-px bg-slate-100 mx-auto my-1"></div>
+<a class="sidebar-item flex items-center justify-center w-full aspect-square rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all relative group" href="#">
+<span class="material-symbols-outlined text-2xl">settings</span>
+<div class="sidebar-tooltip absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 shadow-md">Admin</div>
+</a>
+</nav>
+</div>
+<div class="flex flex-col items-center gap-4 w-full px-3">
+<button class="sidebar-item flex items-center justify-center w-full aspect-square rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all relative group">
+<span class="material-symbols-outlined text-2xl">help</span>
+<div class="sidebar-tooltip absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 shadow-md">Support</div>
+</button>
+<div class="size-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all">
+<div class="w-full h-full bg-center bg-no-repeat bg-cover" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuARvc4rRGrvhDaqewB2X_WUeyObEapLnXUSCYE9UlHkWCnf-1P6_kH5XsBZa7osIKpsFA1pgx-rBfncZkxtBCbT09a1RoWL65LPaqwnUXRQF93_Fvis_cITSq76nxzkzh7BSvXb4Tqa8ePcRb9IqkJkZ9Gy-N6Hh2EgvG_LYz8A-unWdU0hzNfoWSE5mhH-Mv2KVFG_Y6qX8L2aH7Ir1kFM6b2qCyzdNpY9XMheLnd6fQJQvC0uUBfzljrU2WYZO3O7d4SlpmQKaa48");'></div>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-background relative">
+<header class="flex-shrink-0 flex items-center justify-between bg-surface/80 backdrop-blur-md px-8 py-4 z-20 sticky top-0 border-b border-border-light">
+<div class="flex items-center gap-4">
+<h2 class="text-slate-800 text-xl font-bold tracking-tight font-display">Operations Overview</h2>
+<span class="px-2 py-1 rounded-md bg-slate-100 text-slate-500 text-xs font-medium">v3.12.0</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group hidden md:block">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">search</span>
+</div>
+<input class="block w-72 pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 sm:text-sm transition-all shadow-sm" placeholder="Search by ID, Key, or Name..." type="text"/>
+</div>
+<div class="flex items-center gap-2 pl-4 border-l border-slate-200">
+<button class="flex items-center justify-center size-10 rounded-xl text-slate-500 hover:text-primary hover:bg-primary-soft transition-colors relative">
+<span class="material-symbols-outlined text-[22px]">notifications</span>
+<span class="absolute top-2.5 right-2.5 size-2 bg-danger rounded-full ring-2 ring-white"></span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-xl text-slate-500 hover:text-primary hover:bg-primary-soft transition-colors">
+<span class="material-symbols-outlined text-[22px] animate-spin-slow">refresh</span>
+</button>
+</div>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8">
+<div class="max-w-[1600px] mx-auto flex flex-col gap-8">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+<div class="group flex flex-col gap-4 rounded-2xl p-6 bg-surface hover:shadow-soft border border-transparent hover:border-primary/10 transition-all shadow-card">
+<div class="flex justify-between items-start">
+<div class="bg-blue-50 text-blue-600 p-2.5 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined block">play_circle</span>
+</div>
+<span class="text-emerald-600 text-sm font-semibold bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-lg flex items-center">
+<span class="material-symbols-outlined text-base mr-0.5">trending_up</span> 1.2%
+                                </span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-slate-800 text-3xl font-bold font-display">1,245</h3>
+<p class="text-slate-500 text-sm font-medium">Running Instances</p>
+</div>
+</div>
+<div class="group flex flex-col gap-4 rounded-2xl p-6 bg-surface hover:shadow-soft border border-transparent hover:border-emerald-500/10 transition-all shadow-card">
+<div class="flex justify-between items-start">
+<div class="bg-emerald-50 text-emerald-600 p-2.5 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined block">check_circle</span>
+</div>
+<span class="text-emerald-600 text-sm font-semibold bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-lg flex items-center">
+<span class="material-symbols-outlined text-base mr-0.5">trending_up</span> 5.4%
+                                </span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-slate-800 text-3xl font-bold font-display">8,092</h3>
+<p class="text-slate-500 text-sm font-medium">Completed (24h)</p>
+</div>
+</div>
+<div class="group flex flex-col gap-4 rounded-2xl p-6 bg-surface hover:shadow-soft border border-transparent hover:border-amber-500/10 transition-all shadow-card">
+<div class="flex justify-between items-start">
+<div class="bg-amber-50 text-amber-600 p-2.5 rounded-xl group-hover:bg-amber-500 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined block">cancel</span>
+</div>
+<span class="text-emerald-600 text-sm font-semibold bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-lg flex items-center">
+<span class="material-symbols-outlined text-base mr-0.5">trending_down</span> 0.5%
+                                </span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-slate-800 text-3xl font-bold font-display">12</h3>
+<p class="text-slate-500 text-sm font-medium">Terminated</p>
+</div>
+</div>
+<div class="group flex flex-col gap-4 rounded-2xl p-6 bg-surface hover:shadow-soft border border-transparent hover:border-red-500/10 transition-all shadow-card relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-red-500/5 blur-2xl rounded-full -mr-10 -mt-10 pointer-events-none"></div>
+<div class="flex justify-between items-start">
+<div class="bg-red-50 text-red-600 p-2.5 rounded-xl group-hover:bg-red-600 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined block">error</span>
+</div>
+<span class="text-red-600 text-sm font-semibold bg-red-50 border border-red-100 px-2 py-1 rounded-lg flex items-center">
+<span class="material-symbols-outlined text-base mr-0.5">trending_up</span> 2.0%
+                                </span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-slate-800 text-3xl font-bold font-display">4</h3>
+<p class="text-slate-500 text-sm font-medium">Failed Jobs</p>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+<div class="flex flex-col gap-8">
+<div class="bg-surface rounded-2xl p-8 flex flex-col md:flex-row items-center gap-10 shadow-card border border-slate-100">
+<div class="flex flex-col gap-4 flex-1">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+<span class="material-symbols-outlined text-xl">monitor_heart</span>
+</div>
+<div>
+<h3 class="text-slate-800 text-lg font-bold font-display">System Health</h3>
+<p class="text-slate-400 text-xs font-medium uppercase tracking-wide">Infrastructure Status</p>
+</div>
+</div>
+<p class="text-slate-600 text-sm leading-relaxed">
+                                        All engines are performing optimally. CPU and Memory usage are within expected thresholds for the current load.
+                                    </p>
+<div class="flex gap-8 mt-2">
+<div class="flex flex-col gap-1">
+<span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Database</span>
+<div class="flex items-center gap-2">
+<div class="size-2 rounded-full bg-emerald-500"></div>
+<span class="text-slate-700 font-mono text-sm font-medium">45ms</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Async Exec</span>
+<div class="flex items-center gap-2">
+<div class="size-2 rounded-full bg-blue-500"></div>
+<span class="text-slate-700 font-mono text-sm font-medium">Idle</span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative size-44 flex-shrink-0">
+<div class="absolute inset-0 rounded-full shadow-inner" style="background: conic-gradient(#10b981 0% 88%, #ffffff 88% 90%, #3b82f6 90% 98%, #ffffff 98% 100%);"></div>
+<div class="absolute inset-4 bg-white rounded-full flex flex-col items-center justify-center shadow-sm">
+<span class="text-4xl font-bold text-slate-800 font-display">98%</span>
+<span class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mt-1">Uptime</span>
+</div>
+</div>
+</div>
+<div class="bg-surface rounded-2xl p-8 flex flex-col gap-6 shadow-card border border-slate-100 flex-1">
+<div class="flex justify-between items-center">
+<div>
+<h3 class="text-slate-800 text-lg font-bold font-display">Engine Load</h3>
+<p class="text-slate-500 text-sm">Distribution by definition type</p>
+</div>
+<div class="flex gap-4 text-xs font-medium bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
+<div class="flex items-center gap-2 text-slate-600"><span class="size-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-200"></span> BPMN</div>
+<div class="flex items-center gap-2 text-slate-600"><span class="size-2.5 rounded-full bg-indigo-400 shadow-sm shadow-indigo-200"></span> CMMN</div>
+<div class="flex items-center gap-2 text-slate-600"><span class="size-2.5 rounded-full bg-teal-400 shadow-sm shadow-teal-200"></span> DMN</div>
+</div>
+</div>
+<div class="flex-1 min-h-[220px] flex items-end justify-between gap-8 px-4 pt-8 pb-0 relative">
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none pb-0 px-4">
+<div class="w-full h-px bg-slate-100"></div>
+<div class="w-full h-px bg-slate-100"></div>
+<div class="w-full h-px bg-slate-100"></div>
+<div class="w-full h-px bg-slate-100"></div>
+<div class="w-full h-px bg-slate-200"></div> 
+</div>
+<div class="w-full flex flex-col items-center gap-3 z-10 group cursor-pointer">
+<div class="relative w-full max-w-[80px] rounded-t-lg h-full flex items-end overflow-hidden">
+<div class="w-full bg-blue-500 hover:bg-blue-600 transition-all duration-500 shadow-lg shadow-blue-500/20 rounded-t-lg" style="height: 75%;"></div>
+</div>
+<span class="text-xs font-bold text-slate-500 uppercase tracking-wide group-hover:text-blue-600 transition-colors">BPMN</span>
+</div>
+<div class="w-full flex flex-col items-center gap-3 z-10 group cursor-pointer">
+<div class="relative w-full max-w-[80px] rounded-t-lg h-full flex items-end overflow-hidden">
+<div class="w-full bg-indigo-400 hover:bg-indigo-500 transition-all duration-500 shadow-lg shadow-indigo-400/20 rounded-t-lg" style="height: 35%;"></div>
+</div>
+<span class="text-xs font-bold text-slate-500 uppercase tracking-wide group-hover:text-indigo-500 transition-colors">CMMN</span>
+</div>
+<div class="w-full flex flex-col items-center gap-3 z-10 group cursor-pointer">
+<div class="relative w-full max-w-[80px] rounded-t-lg h-full flex items-end overflow-hidden">
+<div class="w-full bg-teal-400 hover:bg-teal-500 transition-all duration-500 shadow-lg shadow-teal-400/20 rounded-t-lg" style="height: 55%;"></div>
+</div>
+<span class="text-xs font-bold text-slate-500 uppercase tracking-wide group-hover:text-teal-500 transition-colors">DMN</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-8">
+<div class="bg-surface rounded-2xl flex flex-col shadow-card border border-slate-100 overflow-hidden">
+<div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+<div class="flex items-center gap-3">
+<div class="bg-red-100 p-1.5 rounded text-red-600">
+<span class="material-symbols-outlined text-[20px] block">warning</span>
+</div>
+<h3 class="text-slate-800 text-base font-bold">Active Incidents</h3>
+</div>
+<span class="bg-red-50 text-red-600 border border-red-100 text-xs px-2.5 py-1 rounded-full font-bold shadow-sm">4 New</span>
+</div>
+<div class="flex flex-col divide-y divide-slate-100">
+<div class="p-5 hover:bg-slate-50 transition-colors flex items-start gap-4 group cursor-default">
+<div class="mt-0.5 flex-shrink-0 text-red-500 bg-red-50 p-1 rounded-full">
+<span class="material-symbols-outlined text-[18px] block">priority_high</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h4 class="text-sm font-semibold text-slate-800 truncate">OrderProcessing_v2</h4>
+<span class="text-xs text-slate-400 font-medium">2m ago</span>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 font-mono">ID: 8723-ac12</span>
+</div>
+<p class="text-xs text-red-600 font-medium bg-red-50/50 px-2 py-1 rounded inline-block">Error 500: External API Timeout</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-white border border-slate-200 hover:border-primary hover:text-primary text-slate-600 text-xs font-bold rounded shadow-sm transition-all">
+                                            Retry
+                                        </button>
+</div>
+<div class="p-5 hover:bg-slate-50 transition-colors flex items-start gap-4 group cursor-default">
+<div class="mt-0.5 flex-shrink-0 text-red-500 bg-red-50 p-1 rounded-full">
+<span class="material-symbols-outlined text-[18px] block">priority_high</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h4 class="text-sm font-semibold text-slate-800 truncate">InvoiceApproval_Main</h4>
+<span class="text-xs text-slate-400 font-medium">15m ago</span>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 font-mono">ID: 1102-ff45</span>
+</div>
+<p class="text-xs text-red-600 font-medium bg-red-50/50 px-2 py-1 rounded inline-block">JavaDelegate: NullPointer</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-white border border-slate-200 hover:border-primary hover:text-primary text-slate-600 text-xs font-bold rounded shadow-sm transition-all">
+                                            Retry
+                                        </button>
+</div>
+<div class="p-5 hover:bg-slate-50 transition-colors flex items-start gap-4 group cursor-default">
+<div class="mt-0.5 flex-shrink-0 text-red-500 bg-red-50 p-1 rounded-full">
+<span class="material-symbols-outlined text-[18px] block">priority_high</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h4 class="text-sm font-semibold text-slate-800 truncate">Onboarding_Flow</h4>
+<span class="text-xs text-slate-400 font-medium">1h ago</span>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 font-mono">ID: 9912-aa33</span>
+</div>
+<p class="text-xs text-red-600 font-medium bg-red-50/50 px-2 py-1 rounded inline-block">Script Evaluation Error</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-white border border-slate-200 hover:border-primary hover:text-primary text-slate-600 text-xs font-bold rounded shadow-sm transition-all">
+                                            Retry
+                                        </button>
+</div>
+</div>
+<div class="px-4 py-3 border-t border-slate-100 bg-slate-50 text-center">
+<button class="text-xs font-bold text-primary hover:text-blue-700 transition-colors">View All Incidents</button>
+</div>
+</div>
+<div class="bg-surface rounded-2xl flex flex-col shadow-card border border-slate-100 flex-1">
+<div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+<h3 class="text-slate-800 text-base font-bold">Recent Activity</h3>
+<button class="text-slate-400 hover:text-slate-700 transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="p-6">
+<div class="relative border-l-2 border-slate-100 ml-3 space-y-8 pb-2">
+<div class="ml-8 relative">
+<div class="absolute -left-[41px] bg-white ring-4 ring-white border-2 border-blue-500 rounded-full size-4 mt-1 z-10"></div>
+<p class="text-sm font-semibold text-slate-800">Deployment: "Finance Ops v2.1"</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-xs text-slate-500 bg-slate-100 px-1.5 rounded">Admin</span>
+<span class="text-xs text-slate-400">• 10 mins ago</span>
+</div>
+</div>
+<div class="ml-8 relative">
+<div class="absolute -left-[41px] bg-white ring-4 ring-white border-2 border-emerald-500 rounded-full size-4 mt-1 z-10"></div>
+<p class="text-sm font-semibold text-slate-800">Process Completed: "Loan_App_992"</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-xs text-emerald-600 bg-emerald-50 px-1.5 rounded font-medium">4m 23s</span>
+<span class="text-xs text-slate-400">• 24 mins ago</span>
+</div>
+</div>
+<div class="ml-8 relative">
+<div class="absolute -left-[41px] bg-white ring-4 ring-white border-2 border-slate-400 rounded-full size-4 mt-1 z-10"></div>
+<p class="text-sm font-semibold text-slate-800">System Backup Created</p>
+<p class="text-xs text-slate-400 mt-1">Automated Task • 1 hour ago</p>
+</div>
+<div class="ml-8 relative">
+<div class="absolute -left-[41px] bg-white ring-4 ring-white border-2 border-amber-500 rounded-full size-4 mt-1 z-10"></div>
+<p class="text-sm font-semibold text-slate-800">High Load Alert: Worker Node 2</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-xs text-amber-600 bg-amber-50 px-1.5 rounded font-medium">CPU &gt; 90%</span>
+<span class="text-xs text-slate-400">• 2 hours ago</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

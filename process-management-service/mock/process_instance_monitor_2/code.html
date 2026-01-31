@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Light Minimalist Process Monitor - Flowable UI</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b8cee",
+                        "slate-850": "#1a202c",
+                        "surface-light": "#f8fafc",
+                        "border-light": "#e2e8f0",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "glow-orange": "0 0 20px rgba(249, 115, 22, 0.25)",
+                        "soft": "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+                        "panel": "0 0 15px rgba(0,0,0,0.03)"
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .bg-dot-pattern {
+            background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        @keyframes pulse-soft {
+            0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.2); border-color: rgba(249, 115, 22, 0.5); }
+            70% { box-shadow: 0 0 15px 5px rgba(249, 115, 22, 0.1); border-color: rgba(249, 115, 22, 0.8); }
+            100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); border-color: rgba(249, 115, 22, 0.5); }
+        }
+        .animate-pulse-soft {
+            animation: pulse-soft 3s infinite;
+        }
+        .tooltip-arrow::after {
+            content: " ";
+            position: absolute;
+            top: 100%; left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+        }
+    </style>
+</head>
+<body class="bg-white font-display text-slate-800 overflow-hidden h-screen flex">
+<aside class="w-64 flex-shrink-0 bg-slate-50 border-r border-border-light flex flex-col h-full z-30">
+<div class="p-4 flex flex-col h-full">
+<div class="flex gap-3 mb-8 items-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-200 shadow-sm" data-alt="Abstract blue gradient logo representing flowable connection" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDzdre4WS9Mv-_mSfD7huXQWp17Nh_RRpyWKn_5sEzLjOEVZBUNLECiZSVmDWOXxrwm_G4P-vBVRiWD0QynkwjeamICzJAKSf1Ie1DO_ZsnQXiKplYSucXv8sXv0h3JdL_PPYXpaQeKBpVbn7ZSPW_mh5zTDNcBBR-Hj5YKqVNTwnuhmc4pIfuV8WUwIP1OZ8iW7xFHEW8E5mZgNgx-Id_FLTCEGZv9kPLKNZ_ZHT7pVIti5cOJJzSB8xj5euFzyBJVerfOH_S_e3qQ");'></div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 text-base font-bold leading-normal">Flowable UI</h1>
+<p class="text-slate-500 text-xs font-medium leading-normal">Ops Manager</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1 flex-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:bg-white hover:text-primary hover:shadow-sm transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white text-primary shadow-sm border border-slate-100" href="#">
+<span class="material-symbols-outlined text-[20px] fill-1">account_tree</span>
+<p class="text-sm font-medium leading-normal">Processes</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:bg-white hover:text-primary hover:shadow-sm transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">check_box</span>
+<p class="text-sm font-medium leading-normal">Tasks</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:bg-white hover:text-primary hover:shadow-sm transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">bar_chart</span>
+<p class="text-sm font-medium leading-normal">Reports</p>
+</a>
+<div class="my-3 border-t border-slate-200 mx-2"></div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:bg-white hover:text-primary hover:shadow-sm transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<p class="text-sm font-medium leading-normal">Settings</p>
+</a>
+</nav>
+<div class="mt-auto pt-4 flex items-center gap-3 border-t border-slate-200">
+<div class="size-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs shadow-md shadow-primary/30">AD</div>
+<div>
+<p class="text-slate-800 text-sm font-bold">Admin User</p>
+<p class="text-slate-500 text-xs">admin@flowable.io</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full min-w-0 overflow-hidden relative bg-white">
+<header class="bg-white border-b border-slate-200 flex-shrink-0 z-20 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+<div class="px-6 py-3 flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<h1 class="text-slate-800 text-xl font-bold tracking-tight">Invoice Approval</h1>
+<div class="flex items-center gap-2 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+</span>
+<span class="text-emerald-700 text-[11px] font-bold uppercase tracking-wide">Running</span>
+</div>
+</div>
+<div class="relative group cursor-pointer w-96">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">search</span>
+</div>
+<input class="block w-full pl-10 pr-20 py-1.5 border border-slate-200 rounded-lg leading-5 bg-slate-50 text-slate-600 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all sm:text-sm" placeholder="Type a command..." readonly="" type="text"/>
+<div class="absolute inset-y-0 right-0 flex items-center pr-2 gap-1">
+<kbd class="inline-flex items-center border border-slate-200 rounded px-1.5 text-[10px] font-sans font-medium text-slate-400 bg-white">Ctrl</kbd>
+<kbd class="inline-flex items-center border border-slate-200 rounded px-1.5 text-[10px] font-sans font-medium text-slate-400 bg-white">K</kbd>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 text-xs">
+<a class="text-slate-500 hover:text-primary transition-colors" href="#">Processes</a>
+<span class="text-slate-300 material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-slate-800 font-medium">#ID-9928-ABX</span>
+<span class="w-px h-3 bg-slate-200 mx-2"></span>
+<span class="text-slate-500">Started 2 hours ago by <strong class="text-slate-700">System API</strong></span>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden relative">
+<div class="flex-1 bg-white bg-dot-pattern relative overflow-hidden flex flex-col">
+<div class="absolute top-6 left-0 w-full flex justify-center z-10 pointer-events-none">
+<div class="bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full shadow-soft px-1 p-1 flex items-center gap-1 pointer-events-auto">
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-100">
+<span class="material-symbols-outlined text-slate-500 text-[16px]">account_tree</span>
+<span class="text-xs text-slate-600 font-semibold">Root Process</span>
+</div>
+<span class="material-symbols-outlined text-slate-300 text-[16px]">chevron_right</span>
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[16px]">subdirectory_arrow_right</span>
+<span class="text-xs text-slate-800 font-bold">SubProcess: Review Chain</span>
+</div>
+</div>
+</div>
+<div class="absolute top-6 right-6 z-10 flex flex-col gap-2">
+<div class="flex bg-white rounded-lg shadow-soft border border-slate-100 p-1">
+<button class="size-8 flex items-center justify-center text-slate-500 hover:bg-slate-50 rounded hover:text-primary transition-colors" title="Zoom In">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+<button class="size-8 flex items-center justify-center text-slate-500 hover:bg-slate-50 rounded hover:text-primary transition-colors" title="Zoom Out">
+<span class="material-symbols-outlined text-[20px]">remove</span>
+</button>
+<button class="size-8 flex items-center justify-center text-slate-500 hover:bg-slate-50 rounded hover:text-primary transition-colors" title="Fit to Screen">
+<span class="material-symbols-outlined text-[20px]">center_focus_strong</span>
+</button>
+</div>
+<div class="flex bg-white rounded-lg shadow-soft border border-slate-100 p-1">
+<button class="size-8 flex items-center justify-center text-slate-400 hover:bg-slate-50 rounded hover:text-orange-500 transition-colors" title="Toggle Heatmap">
+<span class="material-symbols-outlined text-[20px]">local_fire_department</span>
+</button>
+</div>
+</div>
+<div class="flex-1 flex items-center justify-center overflow-auto p-10 min-w-[800px]">
+<div class="flex items-center gap-0 relative">
+<div class="flex flex-col items-center gap-2 relative group cursor-pointer">
+<div class="size-10 rounded-full border-2 border-emerald-500 bg-white flex items-center justify-center text-emerald-600 z-10 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">play_arrow</span>
+</div>
+<span class="text-emerald-700 text-xs font-bold absolute -bottom-6 whitespace-nowrap bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Start</span>
+</div>
+<div class="w-16 h-[2px] bg-emerald-400"></div>
+<div class="flex flex-col items-center gap-2 relative group cursor-pointer">
+<div class="w-32 h-20 rounded-lg border-2 border-emerald-400 bg-emerald-50/50 flex flex-col items-center justify-center p-2 z-10 shadow-sm hover:shadow-md transition-all">
+<div class="flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-emerald-600 text-[18px]">fact_check</span>
+<span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Done</span>
+</div>
+<span class="text-slate-700 text-xs font-semibold text-center leading-tight">Data Validation</span>
+</div>
+<div class="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs p-2 rounded shadow-xl whitespace-nowrap z-20 pointer-events-none tooltip-arrow">
+<div class="font-bold text-emerald-300 mb-1">Completed Automatically</div>
+                            Duration: 300ms<br/>Output: Validated
+                        </div>
+</div>
+<div class="w-16 h-[2px] bg-emerald-400"></div>
+<div class="flex flex-col items-center gap-2 relative group">
+<div class="w-36 h-24 rounded-lg border-2 border-orange-400 bg-white flex flex-col items-center justify-center p-2 z-10 shadow-glow-orange animate-pulse-soft relative cursor-pointer">
+<div class="absolute -top-3 -right-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm z-20">1</div>
+<span class="material-symbols-outlined text-orange-500 mb-1">supervised_user_circle</span>
+<span class="text-slate-800 text-sm font-bold text-center leading-tight">Manager Approval</span>
+<span class="text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded text-[10px] font-bold mt-1">Due in 4h</span>
+</div>
+<div class="absolute -bottom-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 z-30 translate-y-2 group-hover:translate-y-0">
+<button class="p-1.5 bg-white border border-slate-200 text-slate-500 hover:text-blue-500 rounded-full shadow-lg transition-colors" title="Retry">
+<span class="material-symbols-outlined text-[16px]">replay</span>
+</button>
+<button class="p-1.5 bg-white border border-slate-200 text-slate-500 hover:text-amber-500 rounded-full shadow-lg transition-colors" title="Override">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+</button>
+<button class="p-1.5 bg-white border border-slate-200 text-slate-500 hover:text-purple-500 rounded-full shadow-lg transition-colors" title="Reassign">
+<span class="material-symbols-outlined text-[16px]">person_add</span>
+</button>
+</div>
+</div>
+<div class="w-16 h-[2px] bg-slate-300 relative border-t border-b border-white">
+<span class="absolute -top-4 left-1/2 -translate-x-1/2 text-slate-400 text-[9px] font-bold bg-white px-1">PENDING</span>
+</div>
+<div class="flex flex-col items-center gap-2 relative opacity-75 group">
+<div class="size-12 rotate-45 border-2 border-slate-300 bg-white flex items-center justify-center z-10 cursor-help shadow-sm">
+<span class="material-symbols-outlined text-slate-400 -rotate-45 text-[20px]">question_mark</span>
+</div>
+<span class="text-slate-400 text-xs font-medium absolute -bottom-8 whitespace-nowrap">Approved?</span>
+</div>
+<div class="w-16 h-[2px] bg-slate-300 opacity-60"></div>
+<div class="flex flex-col items-center gap-2 relative opacity-60">
+<div class="size-10 rounded-full border-4 border-slate-300 bg-white flex items-center justify-center z-10"></div>
+<span class="text-slate-400 text-xs font-medium absolute -bottom-6 whitespace-nowrap">End</span>
+</div>
+</div>
+</div>
+<div class="h-24 bg-white border-t border-slate-200 px-6 py-2 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
+<div class="flex justify-between items-center mb-2">
+<h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                        Execution Timeline
+                    </h3>
+<button class="text-primary text-[10px] font-bold hover:underline">FULL LOG</button>
+</div>
+<div class="relative px-4 pb-2 mt-2">
+<div class="absolute top-[9px] left-0 w-full h-[1px] bg-slate-200 -translate-y-1/2 z-0"></div>
+<div class="relative z-10 flex justify-between w-full max-w-4xl mx-auto">
+<div class="flex flex-col items-center gap-2 group">
+<div class="size-3 rounded-full bg-emerald-500 ring-4 ring-white shadow-sm"></div>
+<div class="flex flex-col items-center">
+<span class="text-slate-700 text-[10px] font-bold">Start</span>
+<span class="text-slate-400 text-[9px]">10:00:05</span>
+</div>
+</div>
+<div class="flex flex-col items-center gap-2 group">
+<div class="size-3 rounded-full bg-emerald-500 ring-4 ring-white shadow-sm"></div>
+<div class="flex flex-col items-center">
+<span class="text-slate-700 text-[10px] font-bold">Validation</span>
+<span class="text-slate-400 text-[9px]">10:00:08</span>
+</div>
+</div>
+<div class="flex flex-col items-center gap-2 group">
+<div class="size-4 rounded-full bg-orange-500 ring-4 ring-orange-50 shadow-glow-orange z-10"></div>
+<div class="flex flex-col items-center">
+<span class="text-orange-600 text-[10px] font-bold">Manager Approval</span>
+<span class="text-slate-400 text-[9px] font-medium">Current</span>
+</div>
+</div>
+<div class="flex flex-col items-center gap-2 group opacity-40">
+<div class="size-2 rounded-full bg-slate-300 ring-4 ring-white"></div>
+<div class="flex flex-col items-center">
+<span class="text-slate-400 text-[10px] font-bold">End</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="w-80 bg-white border-l border-slate-200 flex flex-col overflow-hidden shadow-xl z-40">
+<div class="flex items-center justify-between p-2 border-b border-slate-200 bg-slate-50/50">
+<div class="flex gap-1">
+<button class="px-3 py-1.5 text-xs font-bold text-primary bg-white border border-slate-200 rounded shadow-sm">Details</button>
+<button class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors">Vars</button>
+<button class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors">Logs</button>
+</div>
+<button class="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded" title="Collapse Panel">
+<span class="material-symbols-outlined text-[18px]">last_page</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-5 flex flex-col gap-6 bg-white">
+<div>
+<h3 class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-2">Active Task</h3>
+<div class="bg-white rounded-lg border border-slate-200 shadow-sm p-3 flex flex-col gap-3 group hover:border-orange-200 transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex flex-col">
+<span class="text-slate-800 text-sm font-bold flex items-center gap-1">
+                                    Manager Approval
+                                    <span class="size-1.5 rounded-full bg-orange-500"></span>
+</span>
+<span class="text-slate-400 text-[10px]">Task ID: 88293</span>
+</div>
+<span class="bg-orange-50 text-orange-600 text-[9px] px-2 py-0.5 rounded-full font-bold border border-orange-100">High Priority</span>
+</div>
+<div class="flex items-center gap-2 mt-1 bg-slate-50 p-2 rounded border border-slate-100">
+<div class="size-6 bg-purple-100 text-purple-600 border border-purple-200 rounded-full flex items-center justify-center text-[10px] font-bold">JD</div>
+<div>
+<p class="text-xs font-bold text-slate-700">John Doe</p>
+<p class="text-[10px] text-slate-500">Assignee</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1">
+<button class="flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[14px]">check</span> Complete
+                            </button>
+<button class="flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-[14px]">close</span> Reject
+                            </button>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                        Execution Path Analysis
+                    </h3>
+<div class="bg-white rounded-lg border border-slate-200 shadow-sm p-3">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs text-slate-500 font-medium">Path Efficiency</span>
+<span class="text-xs text-emerald-600 font-bold bg-emerald-50 px-1.5 rounded">85%</span>
+</div>
+<div class="w-full bg-slate-100 h-1.5 rounded-full mb-3 overflow-hidden">
+<div class="bg-emerald-500 h-1.5 rounded-full" style="width: 85%"></div>
+</div>
+<div class="flex gap-2 items-start p-2 bg-red-50 border border-red-100 rounded mb-2">
+<span class="material-symbols-outlined text-red-400 text-[16px] mt-0.5">timer_off</span>
+<div>
+<p class="text-red-800 text-xs font-bold">Bottleneck Detected</p>
+<p class="text-red-600 text-[10px] leading-snug mt-0.5">Duration exceeds average by 115%.</p>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<h3 class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Key Variables</h3>
+<button class="text-primary text-[10px] font-bold hover:underline">EDIT</button>
+</div>
+<div class="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+<div class="grid grid-cols-[1fr_1.5fr] gap-0 text-xs border-b border-slate-100 last:border-0">
+<div class="bg-slate-50 p-2 text-slate-500 border-r border-slate-100 font-medium">invoice_id</div>
+<div class="p-2 text-slate-800 font-mono break-all">INV-2023-001</div>
+</div>
+<div class="grid grid-cols-[1fr_1.5fr] gap-0 text-xs border-b border-slate-100 last:border-0">
+<div class="bg-slate-50 p-2 text-slate-500 border-r border-slate-100 font-medium">amount</div>
+<div class="p-2 text-emerald-600 font-mono font-bold">$ 1,500.00</div>
+</div>
+<div class="grid grid-cols-[1fr_1.5fr] gap-0 text-xs">
+<div class="bg-slate-50 p-2 text-slate-500 border-r border-slate-100 font-medium">risk_lvl</div>
+<div class="p-2 text-orange-500 font-mono font-bold">MEDIUM</div>
+</div>
+</div>
+</div>
+<div class="mt-auto bg-blue-50 border border-blue-100 rounded-lg p-3">
+<div class="flex gap-2 items-start">
+<span class="material-symbols-outlined text-blue-500 text-sm mt-0.5">info</span>
+<div class="flex flex-col gap-1">
+<p class="text-blue-800 text-xs font-bold">SLA Warning</p>
+<p class="text-blue-600 text-[10px] leading-relaxed">Approaching SLA limit. Please review.</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+
+</body></html>

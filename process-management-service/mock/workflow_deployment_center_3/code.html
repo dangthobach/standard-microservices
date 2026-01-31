@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Workflow Design Editor</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b8cee",
+                        "background-light": "#f9fafb",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "border-light": "#e5e7eb",
+                        "text-main": "#0d141b",
+                        "text-secondary": "#4c739a",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main antialiased h-screen flex flex-col overflow-hidden">
+<header class="h-16 shrink-0 bg-surface-light border-b border-border-light shadow-sm z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+<div class="flex items-center gap-4">
+<a class="flex items-center gap-3 hover:opacity-80 transition-opacity" href="#">
+<div class="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-xl">hub</span>
+</div>
+<h1 class="text-lg font-bold tracking-tight text-text-main hidden md:block">Workflow Manager</h1>
+</a>
+<div class="h-6 w-[1px] bg-border-light mx-2 hidden md:block"></div>
+<div class="flex items-center gap-2 text-sm">
+<span class="text-text-secondary">Processes</span>
+<span class="text-text-secondary">/</span>
+<div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 cursor-pointer transition-colors group">
+<span class="font-bold text-text-main">Order_Fulfillment_Process.bpmn</span>
+<span class="material-symbols-outlined text-[16px] text-text-secondary group-hover:text-primary">edit</span>
+</div>
+<span class="text-xs font-mono text-text-secondary bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">v2.4 (Draft)</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center bg-gray-50 rounded-lg p-1 border border-border-light">
+<button class="p-1.5 rounded hover:bg-white hover:shadow-sm text-text-secondary hover:text-primary transition-all" title="Undo">
+<span class="material-symbols-outlined text-[20px]">undo</span>
+</button>
+<button class="p-1.5 rounded hover:bg-white hover:shadow-sm text-text-secondary hover:text-primary transition-all" title="Redo">
+<span class="material-symbols-outlined text-[20px]">redo</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-border-light"></div>
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-9 border border-border-light cursor-pointer" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA56XsaU3Awiz6v6eo4KeWiJiBBlhHtybWFi8jVnsrFc-xLFjEC5on0bCxOCeHxTV9-Sb-V4JKmfcXk63MtoxnF84OgLT4sEhXgECboPWW3LporheHkFlsyjiwsyVLYiD3Gw6e9T-0LXidbtVjNbMBtY2q4fPD_MfoXuja2b-mDiuVAn139b88HZbRvA1ojziCrUEPbVXZS-cbpq4QQCj77Tq82CkrNNmpkSRzDlOcBNznMAbykw8-6mtUrHygldtZBI_k5wNz7-2RO");'></div>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden relative">
+<aside class="w-64 bg-surface-light border-r border-border-light flex flex-col z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+<div class="h-12 border-b border-border-light flex items-center justify-between px-4 bg-gray-50/50">
+<span class="text-xs font-bold uppercase tracking-wider text-text-secondary">Palette</span>
+<button class="text-text-secondary hover:text-primary">
+<span class="material-symbols-outlined text-[18px]">first_page</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-6">
+<div class="space-y-3">
+<h3 class="text-xs font-bold text-text-main flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">timer</span> Events
+                </h3>
+<div class="grid grid-cols-2 gap-2">
+<div class="flex flex-col items-center justify-center p-3 rounded border border-border-light bg-white hover:border-primary hover:bg-blue-50/50 cursor-move transition-colors group">
+<div class="size-8 rounded-full border-2 border-green-500 flex items-center justify-center mb-1 bg-white group-hover:scale-110 transition-transform"></div>
+<span class="text-[10px] font-medium text-text-secondary">Start</span>
+</div>
+<div class="flex flex-col items-center justify-center p-3 rounded border border-border-light bg-white hover:border-primary hover:bg-blue-50/50 cursor-move transition-colors group">
+<div class="size-8 rounded-full border-4 border-red-500 flex items-center justify-center mb-1 bg-white group-hover:scale-110 transition-transform"></div>
+<span class="text-[10px] font-medium text-text-secondary">End</span>
+</div>
+<div class="flex flex-col items-center justify-center p-3 rounded border border-border-light bg-white hover:border-primary hover:bg-blue-50/50 cursor-move transition-colors group">
+<div class="size-8 rounded-full border-2 border-double border-orange-500 flex items-center justify-center mb-1 bg-white group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px] text-orange-500">schedule</span>
+</div>
+<span class="text-[10px] font-medium text-text-secondary">Timer</span>
+</div>
+</div>
+</div>
+<div class="space-y-3">
+<h3 class="text-xs font-bold text-text-main flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">check_box</span> Tasks
+                </h3>
+<div class="grid grid-cols-1 gap-2">
+<div class="flex items-center gap-3 p-2 rounded border border-border-light bg-white hover:border-primary hover:bg-blue-50/50 cursor-move transition-colors group">
+<div class="w-8 h-6 rounded border-2 border-primary bg-white flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[14px]">person</span>
+</div>
+<span class="text-xs font-medium text-text-main">User Task</span>
+</div>
+<div class="flex items-center gap-3 p-2 rounded border border-border-light bg-white hover:border-primary hover:bg-blue-50/50 cursor-move transition-colors group">
+<div class="w-8 h-6 rounded border-2 border-text-secondary bg-white flex items-center justify-center text-text-secondary">
+<span class="material-symbols-outlined text-[14px]">settings</span>
+</div>
+<span class="text-xs font-medium text-text-main">Service Task</span>
+</div>
+<div class="flex items-center gap-3 p-2 rounded border border-border-light bg-white hover:border-primary hover:bg-blue-50/50 cursor-move transition-colors group">
+<div class="w-8 h-6 rounded border-2 border-text-secondary bg-white flex items-center justify-center text-text-secondary">
+<span class="material-symbols-outlined text-[14px]">code</span>
+</div>
+<span class="text-xs font-medium text-text-main">Script Task</span>
+</div>
+</div>
+</div>
+<div class="space-y-3">
+<h3 class="text-xs font-bold text-text-main flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">share</span> Gateways
+                </h3>
+<div class="grid grid-cols-2 gap-2">
+<div class="flex flex-col items-center justify-center p-3 rounded border border-border-light bg-white hover:border-primary hover:bg-blue-50/50 cursor-move transition-colors group">
+<div class="size-8 rotate-45 border-2 border-yellow-600 flex items-center justify-center mb-1 bg-white group-hover:scale-110 transition-transform mb-2">
+<span class="material-symbols-outlined text-[16px] text-yellow-600 -rotate-45">close</span>
+</div>
+<span class="text-[10px] font-medium text-text-secondary">Exclusive</span>
+</div>
+<div class="flex flex-col items-center justify-center p-3 rounded border border-border-light bg-white hover:border-primary hover:bg-blue-50/50 cursor-move transition-colors group">
+<div class="size-8 rotate-45 border-2 border-yellow-600 flex items-center justify-center mb-1 bg-white group-hover:scale-110 transition-transform mb-2">
+<span class="material-symbols-outlined text-[16px] text-yellow-600 -rotate-45">add</span>
+</div>
+<span class="text-[10px] font-medium text-text-secondary">Parallel</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col relative bg-white">
+<div class="h-14 border-b border-border-light bg-surface-light/80 backdrop-blur flex items-center justify-between px-4 z-10">
+<div class="flex items-center gap-2">
+<div class="flex bg-gray-100 rounded-lg p-0.5">
+<button class="px-3 py-1.5 rounded-md bg-white shadow-sm text-xs font-bold text-text-main">Design</button>
+<button class="px-3 py-1.5 rounded-md hover:bg-gray-200 text-xs font-medium text-text-secondary transition-colors">XML</button>
+</div>
+<div class="h-6 w-[1px] bg-border-light mx-2"></div>
+<button class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-text-secondary hover:text-primary hover:bg-blue-50 rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">center_focus_strong</span>
+                     Reset View
+                 </button>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-text-secondary hover:text-text-main hover:bg-gray-100 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">file_download</span>
+                    Download XML
+                 </button>
+<button class="flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-text-secondary hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    Validate
+                 </button>
+<button class="flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-text-secondary hover:text-text-main hover:bg-gray-100 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">save</span>
+                    Save
+                 </button>
+<button class="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm shadow-blue-200 ml-2">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+                    Deploy
+                </button>
+</div>
+</div>
+<div class="flex-1 overflow-auto relative cursor-grab active:cursor-grabbing group" style="background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 24px 24px; background-color: #fcfcfc;">
+<div class="absolute inset-0 min-w-[1000px] min-h-[800px] flex items-center justify-center p-20 transform scale-100 origin-center">
+<div class="absolute top-1/2 left-[20%] -translate-y-1/2 flex flex-col items-center gap-2">
+<div class="size-10 rounded-full border-[3px] border-green-600 bg-white shadow-sm z-10 hover:ring-4 hover:ring-green-100 transition-all cursor-pointer"></div>
+<span class="text-xs font-bold text-text-main bg-white/80 px-1">Order Received</span>
+</div>
+<svg class="absolute top-1/2 left-[20%] w-[15%] h-10 -translate-y-1/2 pointer-events-none overflow-visible">
+<line marker-end="url(#arrowhead)" stroke="#94a3b8" stroke-width="2" x1="20" x2="100%" y1="20" y2="20"></line>
+</svg>
+<div class="absolute top-1/2 left-[35%] -translate-y-1/2 flex flex-col items-center gap-2">
+<div class="w-32 h-20 rounded-lg border-2 border-primary bg-white shadow-sm flex items-center justify-center z-10 hover:shadow-md hover:border-blue-600 cursor-pointer relative group">
+<span class="material-symbols-outlined text-primary text-2xl mb-1">person</span>
+<span class="text-[10px] font-bold text-primary absolute bottom-1 right-2">USER</span>
+<div class="absolute -right-12 top-0 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="size-6 bg-white border border-border-light rounded-full shadow flex items-center justify-center hover:text-primary"><span class="material-symbols-outlined text-[14px]">delete</span></button>
+<button class="size-6 bg-white border border-border-light rounded-full shadow flex items-center justify-center hover:text-primary"><span class="material-symbols-outlined text-[14px]">edit</span></button>
+</div>
+</div>
+<span class="text-xs font-bold text-text-main bg-white/80 px-1">Review Order</span>
+</div>
+<svg class="absolute top-1/2 left-[35%] w-[15%] h-10 -translate-y-1/2 pointer-events-none overflow-visible ml-[8rem]">
+<line marker-end="url(#arrowhead)" stroke="#94a3b8" stroke-width="2" x1="0" x2="100%" y1="20" y2="20"></line>
+</svg>
+<div class="absolute top-1/2 left-[55%] -translate-y-1/2 flex flex-col items-center gap-2">
+<div class="size-12 rotate-45 border-[3px] border-yellow-500 bg-white shadow-sm z-10 flex items-center justify-center">
+<span class="material-symbols-outlined text-yellow-600 -rotate-45">close</span>
+</div>
+<span class="text-xs font-bold text-text-main bg-white/80 px-1 mt-2">Approved?</span>
+</div>
+<svg class="absolute top-1/2 left-[55%] w-[15%] h-10 -translate-y-1/2 pointer-events-none overflow-visible ml-[3rem]">
+<line marker-end="url(#arrowhead)" stroke="#94a3b8" stroke-width="2" x1="10" x2="100%" y1="20" y2="20"></line>
+<text fill="#64748b" font-size="10" x="30" y="10">Yes</text>
+</svg>
+<svg class="absolute top-1/2 left-[55%] w-10 h-32 pointer-events-none overflow-visible ml-[1.5rem]">
+<path d="M 0 30 L 0 100" fill="none" marker-end="url(#arrowhead)" stroke="#94a3b8" stroke-width="2"></path>
+<text fill="#64748b" font-size="10" x="5" y="60">No</text>
+</svg>
+<div class="absolute top-1/2 left-[75%] -translate-y-1/2 flex flex-col items-center gap-2">
+<div class="w-32 h-20 rounded-lg border-2 border-text-secondary bg-blue-50/20 ring-2 ring-primary ring-offset-2 shadow-sm flex items-center justify-center z-10 cursor-pointer">
+<span class="material-symbols-outlined text-text-secondary text-2xl mb-1">settings</span>
+<span class="text-[10px] font-bold text-text-secondary absolute bottom-1 right-2">SVC</span>
+</div>
+<span class="text-xs font-bold text-text-main bg-white/80 px-1">Process Payment</span>
+</div>
+<div class="absolute top-1/2 left-[90%] -translate-y-1/2 flex flex-col items-center gap-2">
+<div class="size-10 rounded-full border-[4px] border-red-500 bg-white shadow-sm z-10"></div>
+<span class="text-xs font-bold text-text-main bg-white/80 px-1">Order Fulfilled</span>
+</div>
+<div class="absolute top-[75%] left-[55%] -translate-y-1/2 flex flex-col items-center gap-2 ml-[1.5rem]">
+<div class="size-10 rounded-full border-[4px] border-red-500 bg-white shadow-sm z-10"></div>
+<span class="text-xs font-bold text-text-main bg-white/80 px-1">Rejected</span>
+</div>
+<svg class="absolute" height="0" width="0">
+<defs>
+<marker id="arrowhead" markerHeight="7" markerWidth="10" orient="auto" refX="9" refY="3.5">
+<polygon fill="#94a3b8" points="0 0, 10 3.5, 0 7"></polygon>
+</marker>
+</defs>
+</svg>
+</div>
+<div class="absolute bottom-6 right-6 flex flex-col bg-white border border-border-light rounded-lg shadow-lg overflow-hidden">
+<button class="p-2 hover:bg-gray-100 text-text-secondary border-b border-gray-100"><span class="material-symbols-outlined text-[20px]">add</span></button>
+<button class="p-2 hover:bg-gray-100 text-text-secondary border-b border-gray-100"><span class="material-symbols-outlined text-[20px]">remove</span></button>
+<button class="p-2 hover:bg-gray-100 text-text-secondary"><span class="material-symbols-outlined text-[20px]">fit_screen</span></button>
+</div>
+</div>
+</main>
+<aside class="w-80 bg-surface-light border-l border-border-light flex flex-col z-20 shadow-[-4px_0_24px_rgba(0,0,0,0.02)]">
+<div class="h-12 border-b border-border-light flex items-center justify-between px-4 bg-gray-50/50">
+<span class="text-xs font-bold uppercase tracking-wider text-text-secondary">Properties Panel</span>
+<button class="text-text-secondary hover:text-primary">
+<span class="material-symbols-outlined text-[18px]">last_page</span>
+</button>
+</div>
+<div class="p-4 border-b border-border-light bg-blue-50/30">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">settings</span>
+<span class="text-xs font-medium text-text-secondary uppercase">Service Task</span>
+</div>
+<h2 class="text-lg font-bold text-text-main truncate">Process Payment</h2>
+</div>
+<div class="flex-1 overflow-y-auto">
+<div class="flex border-b border-border-light">
+<button class="flex-1 py-3 text-xs font-bold text-primary border-b-2 border-primary bg-blue-50/10">General</button>
+<button class="flex-1 py-3 text-xs font-medium text-text-secondary hover:bg-gray-50">Listeners</button>
+<button class="flex-1 py-3 text-xs font-medium text-text-secondary hover:bg-gray-50">I/O</button>
+</div>
+<div class="p-4 space-y-5">
+<div class="space-y-4">
+<div>
+<label class="block text-xs font-semibold text-text-secondary mb-1.5">ID</label>
+<input class="w-full text-sm bg-gray-50 border border-border-light rounded px-3 py-2 text-text-main focus:ring-1 focus:ring-primary focus:border-primary transition-shadow font-mono" type="text" value="ServiceTask_1x9s0a"/>
+</div>
+<div>
+<label class="block text-xs font-semibold text-text-secondary mb-1.5">Name</label>
+<input class="w-full text-sm bg-white border border-border-light rounded px-3 py-2 text-text-main focus:ring-1 focus:ring-primary focus:border-primary transition-shadow" type="text" value="Process Payment"/>
+</div>
+<div>
+<label class="block text-xs font-semibold text-text-secondary mb-1.5">Documentation</label>
+<textarea class="w-full text-sm bg-white border border-border-light rounded px-3 py-2 text-text-main focus:ring-1 focus:ring-primary focus:border-primary transition-shadow h-20 resize-none" placeholder="Add description..."></textarea>
+</div>
+</div>
+<div class="h-[1px] bg-border-light"></div>
+<div class="space-y-4">
+<h3 class="text-xs font-bold text-text-main uppercase tracking-wide">Implementation</h3>
+<div>
+<label class="block text-xs font-semibold text-text-secondary mb-1.5">Type</label>
+<select class="w-full text-sm bg-white border border-border-light rounded px-3 py-2 text-text-main focus:ring-1 focus:ring-primary focus:border-primary transition-shadow">
+<option>Java Class</option>
+<option selected="">Delegate Expression</option>
+<option>External</option>
+<option>Connector</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-semibold text-text-secondary mb-1.5">Delegate Expression</label>
+<input class="w-full text-sm bg-white border border-border-light rounded px-3 py-2 text-text-main focus:ring-1 focus:ring-primary focus:border-primary transition-shadow font-mono text-blue-600" type="text" value="${paymentDelegate}"/>
+</div>
+</div>
+<div class="h-[1px] bg-border-light"></div>
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<label class="text-xs font-semibold text-text-main">Asynchronous Before</label>
+<input class="rounded border-gray-300 text-primary focus:ring-primary" type="checkbox"/>
+</div>
+<div class="flex items-center justify-between">
+<label class="text-xs font-semibold text-text-main">Asynchronous After</label>
+<input checked="" class="rounded border-gray-300 text-primary focus:ring-primary" type="checkbox"/>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</body></html>

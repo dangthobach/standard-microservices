@@ -6,6 +6,7 @@ export interface Task {
   created: string;
   dueDate?: string;
   processInstanceId?: string;
+  processDefinitionId?: string;
   taskDefinitionKey?: string;
   formKey?: string;
 }

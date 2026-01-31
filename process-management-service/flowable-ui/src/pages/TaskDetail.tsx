@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Card, 
-  Form, 
-  Input, 
-  Button, 
-  Descriptions, 
-  Space, 
-  message, 
-  Spin, 
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Descriptions,
+  Space,
+  message,
+  Spin,
   Row,
   Col,
   Tag,
@@ -16,9 +16,9 @@ import {
   InputNumber,
   Checkbox
 } from 'antd';
-import { 
-  ArrowLeftOutlined, 
-  SaveOutlined, 
+import {
+  ArrowLeftOutlined,
+  SaveOutlined,
   CheckCircleOutlined,
   UserOutlined,
   ClockCircleOutlined,
@@ -47,16 +47,16 @@ const TaskDetail: React.FC = () => {
 
   const fetchTaskData = useCallback(async () => {
     if (!taskId) return;
-    
+
     setLoading(true);
     try {
       const [taskData, variablesData] = await Promise.all([
         taskApi.getTask(taskId),
         taskApi.getTaskVariables(taskId)
       ]);
-      
+
       setTask(taskData);
-      
+
       // Convert variables to array format
       const variablesArray = Object.entries(variablesData).map(([name, value]) => ({
         name,
@@ -64,25 +64,25 @@ const TaskDetail: React.FC = () => {
         type: typeof value
       }));
       setVariables(variablesArray);
-      
+
       // Set form values
       const formData: TaskFormData = {};
       variablesArray.forEach(variable => {
         formData[variable.name] = variable.value;
       });
       form.setFieldsValue(formData);
-      
+
       // Load BPMN diagram if process instance exists
-      if (taskData.processInstanceId) {
+      if (taskData.processInstanceId && taskData.processDefinitionId) {
         try {
-          const bpmnXml = await processApi.getProcessBpmn('helloProcess'); // You might need to get the actual process key
+          const bpmnXml = await processApi.getProcessBpmn(taskData.processDefinitionId);
           setProcessBpmn(bpmnXml);
           setCurrentActivity(taskData.taskDefinitionKey || '');
         } catch (error) {
           console.error('Failed to load BPMN diagram:', error);
         }
       }
-      
+
     } catch (error) {
       message.error('Failed to fetch task data');
       console.error('Error fetching task data:', error);
@@ -99,7 +99,7 @@ const TaskDetail: React.FC = () => {
 
   const handleSave = async (values: TaskFormData) => {
     if (!taskId) return;
-    
+
     try {
       await taskApi.setTaskVariables(taskId, values);
       message.success('Task variables saved successfully');
@@ -112,7 +112,7 @@ const TaskDetail: React.FC = () => {
 
   const handleComplete = async (values: TaskFormData) => {
     if (!taskId) return;
-    
+
     try {
       await taskApi.completeTask(taskId, values);
       message.success('Task completed successfully');
@@ -125,23 +125,23 @@ const TaskDetail: React.FC = () => {
 
   const renderFormField = (variable: Variable) => {
     const { name, type } = variable;
-    
+
     switch (type) {
       case 'string':
         if (name.toLowerCase().includes('description') || name.toLowerCase().includes('comment')) {
           return <TextArea rows={4} placeholder={`Enter ${name}`} />;
         }
         return <Input placeholder={`Enter ${name}`} />;
-        
+
       case 'number':
         return <InputNumber style={{ width: '100%' }} placeholder={`Enter ${name}`} />;
-        
+
       case 'boolean':
         return <Checkbox>Yes</Checkbox>;
-        
+
       case 'object':
         return <TextArea rows={3} placeholder={`Enter ${name} (JSON format)`} />;
-        
+
       default:
         return <Input placeholder={`Enter ${name}`} />;
     }
@@ -179,14 +179,14 @@ const TaskDetail: React.FC = () => {
     <div style={{ padding: '24px' }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <Button 
-          icon={<ArrowLeftOutlined />} 
+        <Button
+          icon={<ArrowLeftOutlined />}
           onClick={() => navigate('/tasks')}
           style={{ marginBottom: '16px' }}
         >
           Back to Tasks
         </Button>
-        
+
         <Title level={2}>
           <FileTextOutlined style={{ marginRight: '8px' }} />
           {task.name}
@@ -242,15 +242,15 @@ const TaskDetail: React.FC = () => {
           {/* Task Form */}
           <Card title="Task Form" extra={
             <Space>
-              <Button 
-                icon={<SaveOutlined />} 
+              <Button
+                icon={<SaveOutlined />}
                 onClick={() => form.submit()}
               >
                 Save
               </Button>
-              <Button 
-                type="primary" 
-                icon={<CheckCircleOutlined />} 
+              <Button
+                type="primary"
+                icon={<CheckCircleOutlined />}
                 onClick={() => form.submit()}
               >
                 Complete Task
@@ -281,7 +281,7 @@ const TaskDetail: React.FC = () => {
                   {renderFormField(variable)}
                 </Form.Item>
               ))}
-              
+
               {variables.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
                   No form fields defined for this task
