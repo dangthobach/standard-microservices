@@ -7,6 +7,7 @@ import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFacto
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.support.converter.MessageConversionException;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -84,7 +85,8 @@ public class RabbitMQConfig {
     // ==================== Bindings ====================
 
     @Bean
-    public Binding processRequestBinding(Queue processRequestQueue, TopicExchange businessEventsExchange) {
+    public Binding processRequestBinding(@Qualifier("processRequestQueue") Queue processRequestQueue, 
+                                         TopicExchange businessEventsExchange) {
         return BindingBuilder
                 .bind(processRequestQueue)
                 .to(businessEventsExchange)
@@ -92,7 +94,8 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding deadLetterBinding(Queue deadLetterQueue, DirectExchange deadLetterExchange) {
+    public Binding deadLetterBinding(@Qualifier("deadLetterQueue") Queue deadLetterQueue, 
+                                     DirectExchange deadLetterExchange) {
         return BindingBuilder
                 .bind(deadLetterQueue)
                 .to(deadLetterExchange)

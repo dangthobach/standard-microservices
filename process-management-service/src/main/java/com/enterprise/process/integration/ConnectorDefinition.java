@@ -1,7 +1,7 @@
 package com.enterprise.process.integration;
 
 import lombok.Data;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 

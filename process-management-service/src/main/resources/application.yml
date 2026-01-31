@@ -6,6 +6,7 @@ spring:
     name: process-management-service
 
   cloud:
+    # To run locally without Consul, use profile 'local': --spring.profiles.active=local
     consul:
       host: ${CONSUL_HOST:localhost}
       port: ${CONSUL_PORT:8500}
@@ -24,7 +25,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:process_db}?currentSchema=flowable
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -36,6 +37,9 @@ spring:
     baseline-on-migrate: true
     baseline-version: 0
     locations: classpath:db/migration
+    # Ignore missing migrations during validation
+    ignore-missing-migrations: true
+    validate-on-migrate: false
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
@@ -74,6 +78,8 @@ flowable:
   process:
     definition-location-pattern: "classpath*:processes/*.bpmn20.xml"
   cmmn:
+    enabled: true
+  form:
     enabled: false
   dmn:
     enabled: true

@@ -45,6 +45,12 @@
             <artifactId>flowable-spring-boot-starter</artifactId>
             <version>7.1.0</version>
         </dependency>
+        <!-- Flowable CMMN Engine (Case Management) -->
+        <dependency>
+            <groupId>org.flowable</groupId>
+            <artifactId>flowable-spring-boot-starter-cmmn</artifactId>
+            <version>7.1.0</version>
+        </dependency>
 
         <!-- Database -->
         <dependency>
@@ -58,6 +64,10 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
         <dependency>
