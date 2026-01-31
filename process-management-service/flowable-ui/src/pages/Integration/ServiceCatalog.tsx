@@ -1,11 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { integrationApi } from '../../services/flowableApi';
+import { message } from 'antd';
 
 const ServiceCatalog = () => {
+    const [connectors, setConnectors] = useState<any[]>([]);
     const [selectedConnector, setSelectedConnector] = useState<any>(null);
     const [activeTab, setActiveTab] = useState('Authentication');
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const connectors = [
+    const fetchConnectors = async () => {
+        setLoading(true);
+        try {
+            const data = await integrationApi.getConnectors();
+            if (data.length === 0) {
+                // Fallback to initial seed data if empty, or just empty
+                setConnectors(initialConnectors);
+            } else {
+                setConnectors(data.map(mapBackendToUi));
+            }
+        } catch (error) {
+            message.error("Failed to load connectors");
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchConnectors();
+    }, []);
+
+    const mapBackendToUi = (c: any) => ({
+        id: c.id,
+        name: c.name,
+        status: c.status || 'Draft',
+        statusColor: c.status === 'Ready' ? 'emerald' : 'amber',
+        description: c.description,
+        type: c.type,
+        icon: getIconForType(c.type),
+        highlight: c.type === 'REST' // Example logic
+    });
+
+    const getIconForType = (type: string) => {
+        if (type.includes('Kafka')) return 'hub';
+        if (type.includes('Rabbit')) return 'chat_bubble';
+        if (type.includes('REST')) return 'api';
+        if (type.includes('RPC')) return 'bolt';
+        return 'extension';
+    };
+
+    const handleSave = async () => {
+        if (!selectedConnector) return;
+        try {
+            // Simple mock of saving existing one, in real app we'd bind form inputs
+            const payload = {
+                ...selectedConnector,
+                status: 'Ready',
+                configuration: "{}" // Mock config
+            };
+            await integrationApi.saveConnector(payload);
+            message.success(`Saved ${selectedConnector.name}`);
+            setDrawerOpen(false);
+            fetchConnectors();
+        } catch (e) {
+            message.error("Failed to save");
+        }
+    };
+
+    const initialConnectors = [
         {
             id: 'kafka',
             name: 'Apache Kafka',
@@ -217,11 +280,7 @@ const ServiceCatalog = () => {
                             <button className="flex-1 px-4 py-2.5 bg-surface-highlight text-text-main rounded-lg font-bold text-sm hover:bg-slate-200 transition-colors">Test Connection</button>
                             <button
                                 className="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg font-bold text-sm hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all"
-                                onClick={() => {
-                                    setDrawerOpen(false);
-                                    // In a real app, this would use a notification system
-                                    alert(`Changes to "${selectedConnector.name}" saved successfully`);
-                                }}
+                                onClick={handleSave}
                             >
                                 Save Changes
                             </button>

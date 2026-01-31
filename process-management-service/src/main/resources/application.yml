@@ -76,7 +76,7 @@ flowable:
   cmmn:
     enabled: false
   dmn:
-    enabled: false
+    enabled: true
 
 management:
   endpoints:

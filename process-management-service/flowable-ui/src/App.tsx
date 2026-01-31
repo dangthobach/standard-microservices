@@ -113,6 +113,7 @@ const App: React.FC = () => {
             <Route path="/" element={<OperationsDashboard />} />
             <Route path="/process-management/dashboard" element={<OperationsDashboard />} />
             <Route path="/process-management/monitor" element={<ProcessMonitor />} />
+            <Route path="/process-management/monitor/:processInstanceId" element={<ProcessMonitor />} />
             <Route path="/process-management/deployments" element={<DeploymentCenter />} />
             <Route path="/process-management/deployments/:processDefinitionId/diff" element={<VersionDiff />} />
             <Route path="/tasks" element={<TaskInbox />} />

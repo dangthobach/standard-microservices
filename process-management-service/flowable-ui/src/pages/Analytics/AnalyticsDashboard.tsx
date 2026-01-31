@@ -1,6 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { analyticsApi } from '../../services/flowableApi';
 
 const AnalyticsDashboard = () => {
+    const [heatmap, setHeatmap] = useState<any[]>([]);
+    const [bottlenecks, setBottlenecks] = useState<any[]>([]);
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const hm = await analyticsApi.getDmnHeatmap();
+                setHeatmap(hm);
+                const bn = await analyticsApi.getBottlenecks();
+                setBottlenecks(bn);
+            } catch (e) {
+                console.error("Failed to load analytics", e);
+            }
+        };
+        loadData();
+    }, []);
+
+    const getHeatmapColor = (hits: number) => {
+        if (hits > 1000) return 'bg-primary/90';
+        if (hits > 500) return 'bg-primary/60';
+        if (hits > 200) return 'bg-primary/30';
+        if (hits > 50) return 'bg-primary/10';
+        return 'bg-primary/5';
+    };
+
     return (
         <div className="flex-1 flex flex-col h-full bg-surface-highlight overflow-hidden font-body relative text-text-main">
             <header className="h-16 border-b border-border-light bg-surface/80 backdrop-blur-md sticky top-0 z-10 px-8 flex items-center justify-between flex-shrink-0">
@@ -160,18 +186,13 @@ const AnalyticsDashboard = () => {
                             </div>
                         </div>
                         <div className="grid grid-cols-10 gap-1.5">
-                            {/* Heatmap Cells - Mocks */}
-                            {[...Array(40)].map((_, i) => (
+                            {heatmap.length > 0 ? heatmap.map((cell, i) => (
                                 <div
                                     key={i}
-                                    className={`aspect-square rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help
-                                        ${i % 7 === 0 ? 'bg-primary/90' :
-                                            i % 5 === 0 ? 'bg-primary/60' :
-                                                i % 3 === 0 ? 'bg-primary/30' :
-                                                    i % 2 === 0 ? 'bg-primary/10' : 'bg-primary/5'}`}
-                                    title={`Rule ${100 + i}: ${Math.floor(Math.random() * 1000)} Hits`}
+                                    className={`aspect-square rounded-[2px] border border-primary/10 hover:border-primary transition-all cursor-help ${getHeatmapColor(cell.hits)}`}
+                                    title={`${cell.ruleId}: ${cell.hits} Hits`}
                                 ></div>
-                            ))}
+                            )) : <p className="col-span-10 text-xs text-center p-4">Loading Data...</p>}
                         </div>
                         <div className="mt-4 flex justify-between">
                             <button className="text-[11px] font-bold text-primary hover:underline">Download Heatmap PDF</button>
@@ -196,12 +217,7 @@ const AnalyticsDashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="text-sm">
-                                    {[
-                                        { id: 'Order-V2-Main', node: 'Credit Check', time: '14.2 min', dev: '+4.1m', color: 'text-red-600' },
-                                        { id: 'Claims-Handling', node: 'Validation', time: '2.5 min', dev: '-0.8m', color: 'text-green-600' },
-                                        { id: 'User-Onboarding', node: 'Doc Sync', time: '45.0 sec', dev: '+12s', color: 'text-red-600' },
-                                        { id: 'Inventory-Sync', node: 'Update ERP', time: '8.4 sec', dev: 'Stable', color: 'text-text-secondary' },
-                                    ].map((row, i) => (
+                                    {bottlenecks.map((row, i) => (
                                         <tr key={i} className="border-b border-surface-highlight hover:bg-surface-highlight transition-colors">
                                             <td className="py-3 px-2 font-medium text-text-main">{row.id}</td>
                                             <td className="py-3 px-2 text-text-secondary">{row.node}</td>
@@ -209,6 +225,9 @@ const AnalyticsDashboard = () => {
                                             <td className={`py-3 px-2 font-bold ${row.color}`}>{row.dev}</td>
                                         </tr>
                                     ))}
+                                    {bottlenecks.length === 0 && (
+                                        <tr><td colSpan={4} className="py-4 text-center text-xs text-text-light">No bottlenecks found.</td></tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -223,3 +242,4 @@ const AnalyticsDashboard = () => {
 };
 
 export default AnalyticsDashboard;
+

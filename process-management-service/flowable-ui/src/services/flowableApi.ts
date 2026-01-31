@@ -309,3 +309,30 @@ export const dashboardApi = {
     return response.data;
   }
 };
+
+// Integration API
+export const integrationApi = {
+  getConnectors: async (): Promise<any[]> => {
+    const response = await api.get('/connectors');
+    return response.data;
+  },
+  saveConnector: async (connector: any): Promise<any> => {
+    const response = await api.post('/connectors', connector);
+    return response.data;
+  },
+  deleteConnector: async (id: string): Promise<void> => {
+    await api.delete(`/connectors/${id}`);
+  }
+};
+
+// Analytics API
+export const analyticsApi = {
+  getDmnHeatmap: async (): Promise<any[]> => {
+    const response = await api.get('/analytics/dmn-heatmap');
+    return response.data;
+  },
+  getBottlenecks: async (): Promise<any[]> => {
+    const response = await api.get('/analytics/bottlenecks');
+    return response.data;
+  }
+};
