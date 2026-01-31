@@ -1,0 +1,120 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Detecting the operating system and CPU architecture
+[INFO] ------------------------------------------------------------------------
+[INFO] os.detected.name: windows
+[INFO] os.detected.arch: x86_64
+[INFO] os.detected.bitness: 64
+[INFO] os.detected.version: 10.0
+[INFO] os.detected.version.major: 10
+[INFO] os.detected.version.minor: 0
+[INFO] os.detected.classifier: windows-x86_64
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] Enterprise Microservices Platform                                  [pom]
+[INFO] Common Library                                                     [jar]
+[INFO] Business Service                                                   [jar]
+[INFO] 
+[INFO] ----------------< com.enterprise:microservices-parent >-----------------
+[INFO] Building Enterprise Microservices Platform 1.0.0-SNAPSHOT          [1/3]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ microservices-parent ---
+[INFO] 
+[INFO] ---------------------< com.enterprise:common-lib >----------------------
+[INFO] Building Common Library 1.0.0-SNAPSHOT                             [2/3]
+[INFO]   from common-lib\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ common-lib ---
+[INFO] Deleting D:\project\standard-microservices\common-lib\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ common-lib ---
+[INFO] skip non existing resourceDirectory D:\project\standard-microservices\common-lib\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ common-lib ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 29 source files with javac [debug target 21] to target\classes
+[WARNING] No processor claimed any of these annotations: /org.springframework.boot.autoconfigure.condition.ConditionalOnProperty,/org.springframework.boot.context.properties.ConfigurationProperties,/org.springframework.boot.autoconfigure.condition.ConditionalOnClass,/com.fasterxml.jackson.annotation.JsonInclude,/jakarta.persistence.GeneratedValue,/jakarta.persistence.PreUpdate,/org.springframework.beans.factory.annotation.Value,/org.springframework.stereotype.Component,/org.springframework.boot.context.properties.EnableConfigurationProperties,/org.springframework.data.annotation.LastModifiedDate,/org.springframework.transaction.annotation.Transactional,/jakarta.persistence.EntityListeners,/jakarta.persistence.PrePersist,/io.swagger.v3.oas.annotations.media.Schema,/org.springframework.context.annotation.Bean,/jakarta.persistence.Column,/jakarta.persistence.Enumerated,/jakarta.persistence.Version,/org.springframework.data.jpa.repository.config.EnableJpaAuditing,/org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean,/org.springframework.data.annotation.CreatedDate,/org.springframework.data.annotation.LastModifiedBy,/org.springframework.context.annotation.Configuration,/org.springframework.web.bind.annotation.ExceptionHandler,/jakarta.persistence.Transient,/jakarta.annotation.PostConstruct,/org.springframework.web.bind.annotation.RestControllerAdvice,/jakarta.persistence.MappedSuperclass,/org.springframework.beans.factory.annotation.Autowired,/jakarta.persistence.Id,/org.springframework.scheduling.annotation.Scheduled,/org.springframework.data.annotation.CreatedBy
+[WARNING] /D:/project/standard-microservices/common-lib/src/main/java/com/enterprise/common/exception/BusinessException.java:[10,26] non-transient instance field of a serializable class declared with a non-serializable type
+[INFO] /D:/project/standard-microservices/common-lib/src/main/java/com/enterprise/common/feign/FeignClientConfiguration.java: D:\project\standard-microservices\common-lib\src\main\java\com\enterprise\common\feign\FeignClientConfiguration.java uses or overrides a deprecated API.
+[INFO] /D:/project/standard-microservices/common-lib/src/main/java/com/enterprise/common/feign/FeignClientConfiguration.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] ------------------< com.enterprise:business-service >-------------------
+[INFO] Building Business Service 1.0.0-SNAPSHOT                           [3/3]
+[INFO]   from business-service\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ business-service ---
+[INFO] Deleting D:\project\standard-microservices\business-service\target
+[INFO] 
+[INFO] --- protobuf:0.6.1:compile (default) @ business-service ---
+[INFO] Compiling 2 proto file(s) to D:\project\standard-microservices\business-service\target\generated-sources\protobuf
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ business-service ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 2 resources from src\main\proto to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ business-service ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 45 source files with javac [debug target 21] to target\classes
+[INFO] /D:/project/standard-microservices/business-service/src/main/java/com/enterprise/business/dto/CreateProductRequest.java: Some input files use or override a deprecated API.
+[INFO] /D:/project/standard-microservices/business-service/src/main/java/com/enterprise/business/dto/CreateProductRequest.java: Recompile with -Xlint:deprecation for details.
+[INFO] -------------------------------------------------------------
+[WARNING] COMPILATION WARNING : 
+[INFO] -------------------------------------------------------------
+[WARNING] Cannot find annotation method 'value()' in type 'edu.umd.cs.findbugs.annotations.SuppressFBWarnings': class file for edu.umd.cs.findbugs.annotations.SuppressFBWarnings not found
+[WARNING] Cannot find annotation method 'justification()' in type 'edu.umd.cs.findbugs.annotations.SuppressFBWarnings'
+[WARNING] No processor claimed any of these annotations: /org.springframework.context.annotation.Primary,/jakarta.validation.constraints.NotNull,/org.springframework.cloud.openfeign.EnableFeignClients,/jakarta.persistence.Entity,/jakarta.persistence.GeneratedValue,/io.swagger.v3.oas.annotations.tags.Tag,/org.springframework.beans.factory.annotation.Value,/org.springframework.stereotype.Component,/jakarta.validation.constraints.DecimalMin,/org.springframework.cache.annotation.CachePut,/org.springframework.transaction.annotation.Transactional,/jakarta.persistence.EntityListeners,/io.swagger.v3.oas.annotations.media.Schema,/org.springframework.web.bind.annotation.GetMapping,/org.hibernate.annotations.GenericGenerator,/org.springframework.context.annotation.Bean,/jakarta.persistence.Column,/org.springframework.web.bind.annotation.RestController,/org.springframework.context.annotation.Import,/jakarta.validation.constraints.NotBlank,/org.springframework.cache.annotation.EnableCaching,/org.springframework.beans.factory.annotation.Qualifier,/org.springframework.web.bind.annotation.PathVariable,/org.springframework.web.bind.annotation.RequestParam,/org.springframework.stereotype.Service,/jakarta.validation.constraints.Size,/org.springframework.context.annotation.Configuration,/jakarta.validation.constraints.Min,/jakarta.annotation.PostConstruct,/org.springframework.cache.annotation.Cacheable,/jakarta.persistence.Id,/org.springframework.boot.autoconfigure.condition.ConditionalOnProperty,/jakarta.persistence.Table,/org.springframework.stereotype.Repository,/org.springframework.cache.annotation.CacheEvict,/org.springframework.boot.autoconfigure.SpringBootApplication,/org.springframework.web.bind.annotation.DeleteMapping,/org.springframework.web.bind.annotation.PostMapping,/org.springframework.web.bind.annotation.PutMapping,/org.springframework.security.config.annotation.web.configuration.EnableWebSecurity,/org.springframework.cloud.openfeign.FeignClient,/io.swagger.v3.oas.annotations.Operation,/org.springframework.web.bind.annotation.RequestBody,/org.springframework.data.annotation.CreatedDate,/org.springframework.security.access.prepost.PreAuthorize,/org.springframework.amqp.rabbit.annotation.RabbitListener,/org.springframework.web.bind.annotation.RequestMapping
+[WARNING] Cannot find annotation method 'value()' in type 'edu.umd.cs.findbugs.annotations.SuppressFBWarnings': class file for edu.umd.cs.findbugs.annotations.SuppressFBWarnings not found
+[WARNING] Cannot find annotation method 'justification()' in type 'edu.umd.cs.findbugs.annotations.SuppressFBWarnings'
+[WARNING] Cannot find annotation method 'value()' in type 'edu.umd.cs.findbugs.annotations.SuppressFBWarnings': class file for edu.umd.cs.findbugs.annotations.SuppressFBWarnings not found
+[WARNING] Cannot find annotation method 'justification()' in type 'edu.umd.cs.findbugs.annotations.SuppressFBWarnings'
+[WARNING] Cannot find annotation method 'value()' in type 'edu.umd.cs.findbugs.annotations.SuppressFBWarnings': class file for edu.umd.cs.findbugs.annotations.SuppressFBWarnings not found
+[WARNING] Cannot find annotation method 'justification()' in type 'edu.umd.cs.findbugs.annotations.SuppressFBWarnings'
+[WARNING] Cannot find annotation method 'value()' in type 'edu.umd.cs.findbugs.annotations.SuppressFBWarnings': class file for edu.umd.cs.findbugs.annotations.SuppressFBWarnings not found
+[WARNING] Cannot find annotation method 'justification()' in type 'edu.umd.cs.findbugs.annotations.SuppressFBWarnings'
+[WARNING] /D:/project/standard-microservices/business-service/src/main/java/com/enterprise/business/entity/Product.java:[23,8] serializable class com.enterprise.business.entity.Product has no definition of serialVersionUID
+[WARNING] /D:/project/standard-microservices/business-service/src/main/java/com/enterprise/business/service/UserRoleClientService.java:[48,85] unchecked cast
+  required: java.util.List<java.lang.String>
+  found:    java.lang.Object
+[WARNING] /D:/project/standard-microservices/business-service/src/main/java/com/enterprise/business/dto/ProcessRequestMessage.java:[48,33] non-transient instance field of a serializable class declared with a non-serializable type
+[INFO] 14 warnings 
+[INFO] -------------------------------------------------------------
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /D:/project/standard-microservices/business-service/src/main/java/com/enterprise/business/command/CreateProductCommandHandler.java:[83,30] cannot find symbol
+  symbol:   method existsBySkuAndDeletedFalse(@jakarta.validation.constraints.NotBlank(message="SKU is required"),@jakarta.validation.constraints.Size(min=1, max=50, message="SKU must be between 1 and 50 characters") java.lang.String)
+  location: variable productRepository of type com.enterprise.business.repository.ProductRepository
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for Enterprise Microservices Platform 1.0.0-SNAPSHOT:
+[INFO] 
+[INFO] Enterprise Microservices Platform .................. SUCCESS [  0.067 s]
+[INFO] Common Library ..................................... SUCCESS [  2.934 s]
+[INFO] Business Service ................................... FAILURE [  2.690 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.120 s
+[INFO] Finished at: 2026-01-29T21:07:30+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project business-service: Compilation failure
+[ERROR] /D:/project/standard-microservices/business-service/src/main/java/com/enterprise/business/command/CreateProductCommandHandler.java:[83,30] cannot find symbol
+[ERROR]   symbol:   method existsBySkuAndDeletedFalse(@jakarta.validation.constraints.NotBlank(message="SKU is required"),@jakarta.validation.constraints.Size(min=1, max=50, message="SKU must be between 1 and 50 characters") java.lang.String)
+[ERROR]   location: variable productRepository of type com.enterprise.business.repository.ProductRepository
+[ERROR] 
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :business-service

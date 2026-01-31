@@ -35,7 +35,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:business_db}
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 100
@@ -90,7 +90,7 @@ spring:
 spring.data.redis:
   host: ${REDIS_HOST:localhost}
   port: ${REDIS_PORT:6379}
-  password: ${REDIS_PASSWORD:}
+  password: ${REDIS_PASSWORD}
   database: 2
   lettuce:
     pool:
@@ -104,6 +104,21 @@ spring.cache:
   type: redis
   redis:
     time-to-live: 300000  # 5 minutes
+
+# RabbitMQ Configuration
+spring.rabbitmq:
+  host: ${RABBITMQ_HOST:localhost}
+  port: ${RABBITMQ_PORT:5672}
+  username: ${RABBITMQ_USER:guest}
+  password: ${RABBITMQ_PASSWORD:guest}
+  virtual-host: /
+  # Connection settings
+  connection-timeout: 10000
+  # Publisher confirms (for reliable delivery)
+  publisher-confirm-type: correlated
+  publisher-returns: true
+  template:
+    mandatory: true
 
 # Management and Monitoring
 management:
@@ -151,6 +166,6 @@ feign:
 # MinIO (SeaweedFS S3) Configuration
 minio:
   url: ${MINIO_URL:http://localhost:8333}
-  access-key: ${MINIO_ACCESS_KEY:any} # SeaweedFS default allows any key unless configured
-  secret-key: ${MINIO_SECRET_KEY:any}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
   bucket: ${MINIO_BUCKET:product-files}

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package com.enterprise.business.proto;
+
+option java_package = "com.enterprise.business.proto";
+option java_outer_classname = "ProcessRequestProto";
+option java_multiple_files = false;
+
+/**
+ * Message for Process Request - sent from Business Service to Process Management Service.
+ */
+message ProcessRequest {
+    // Unique ID for this request (UUID string)
+    string request_id = 1;
+
+    // The process definition key (e.g., "expense-approval-process")
+    string process_definition_key = 2;
+
+    // The user who initiated the request
+    string initiator_user_id = 3;
+
+    // Business key for correlation (e.g., Order ID, Invoice Number)
+    string business_key = 4;
+
+    // Variables to pass to the process instance
+    map<string, string> variables = 5;
+
+    // Timestamp when the request was created (ISO-8601 string)
+    string created_at = 6;
+
+    // Priority (1 = Low, 5 = Normal, 10 = High)
+    int32 priority = 7;
+}

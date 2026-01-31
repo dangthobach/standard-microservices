@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <process id="product-creation-process" name="Product Creation Process" isExecutable="true">
+
+        <!-- Start Event -->
+        <startEvent id="startEvent" name="Request Created" flowable:initiator="initiatorUserId"></startEvent>
+        <sequenceFlow sourceRef="startEvent" targetRef="updateStatusPendingApproval"></sequenceFlow>
+
+        <!-- Service Task: Update Status to PENDING_APPROVAL -->
+        <serviceTask id="updateStatusPendingApproval" name="Set Status Pending Approval"
+                     flowable:delegateExpression="${productStatusDelegate}">
+            <extensionElements>
+                <flowable:field name="status">
+                    <flowable:string><![CDATA[PENDING_APPROVAL]]></flowable:string>
+                </flowable:field>
+            </extensionElements>
+        </serviceTask>
+        <sequenceFlow sourceRef="updateStatusPendingApproval" targetRef="checkerApprovalTask"></sequenceFlow>
+
+        <!-- User Task 1: Checker Approval -->
+        <userTask id="checkerApprovalTask" name="Checker Approval" flowable:candidateGroups="ROLE_CHECKER">
+            <documentation>
+                Checker reviews the product creation request.
+            </documentation>
+        </userTask>
+        <sequenceFlow sourceRef="checkerApprovalTask" targetRef="checkerDecisionGateway"></sequenceFlow>
+
+        <!-- Exclusive Gateway: Checker Decision -->
+        <exclusiveGateway id="checkerDecisionGateway" name="Approved?"></exclusiveGateway>
+        <sequenceFlow sourceRef="checkerDecisionGateway" targetRef="updateStatusPendingConfirmation">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == true}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow sourceRef="checkerDecisionGateway" targetRef="updateStatusRejectedByChecker">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == false}]]></conditionExpression>
+        </sequenceFlow>
+
+        <!-- Service Task: Update Status to PENDING_CONFIRMATION -->
+        <serviceTask id="updateStatusPendingConfirmation" name="Set Status Pending Confirmation"
+                     flowable:delegateExpression="${productStatusDelegate}">
+            <extensionElements>
+                <flowable:field name="status">
+                    <flowable:string><![CDATA[PENDING_CONFIRMATION]]></flowable:string>
+                </flowable:field>
+            </extensionElements>
+        </serviceTask>
+        <sequenceFlow sourceRef="updateStatusPendingConfirmation" targetRef="confirmerApprovalTask"></sequenceFlow>
+
+        <!-- User Task 2: Confirmer Approval -->
+        <userTask id="confirmerApprovalTask" name="Confirmer Approval" flowable:candidateGroups="ROLE_CONFIRMER">
+            <documentation>
+                Confirmer performs final check and activation.
+            </documentation>
+        </userTask>
+        <sequenceFlow sourceRef="confirmerApprovalTask" targetRef="confirmerDecisionGateway"></sequenceFlow>
+
+        <!-- Exclusive Gateway: Confirmer Decision -->
+        <exclusiveGateway id="confirmerDecisionGateway" name="Confirmed?"></exclusiveGateway>
+        <sequenceFlow sourceRef="confirmerDecisionGateway" targetRef="updateStatusActive">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${confirmed == true}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow sourceRef="confirmerDecisionGateway" targetRef="updateStatusRejectedByConfirmer">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${confirmed == false}]]></conditionExpression>
+        </sequenceFlow>
+
+        <!-- Service Task: Update Status to ACTIVE -->
+        <serviceTask id="updateStatusActive" name="Set Status Active"
+                     flowable:delegateExpression="${productStatusDelegate}">
+            <extensionElements>
+                <flowable:field name="status">
+                    <flowable:string><![CDATA[ACTIVE]]></flowable:string>
+                </flowable:field>
+            </extensionElements>
+        </serviceTask>
+        <sequenceFlow sourceRef="updateStatusActive" targetRef="endEventApproved"></sequenceFlow>
+
+        <!-- End Event: Approved & Active -->
+        <endEvent id="endEventApproved" name="Process Completed (Active)"></endEvent>
+
+        <!-- Service Task: Update Status to REJECTED (Checker) -->
+        <serviceTask id="updateStatusRejectedByChecker" name="Set Status Rejected (Checker)"
+                     flowable:delegateExpression="${productStatusDelegate}">
+            <extensionElements>
+                <flowable:field name="status">
+                    <flowable:string><![CDATA[REJECTED_BY_CHECKER]]></flowable:string>
+                </flowable:field>
+            </extensionElements>
+        </serviceTask>
+        <sequenceFlow sourceRef="updateStatusRejectedByChecker" targetRef="endEventRejected"></sequenceFlow>
+
+        <!-- Service Task: Update Status to REJECTED (Confirmer) -->
+        <serviceTask id="updateStatusRejectedByConfirmer" name="Set Status Rejected (Confirmer)"
+                     flowable:delegateExpression="${productStatusDelegate}">
+            <extensionElements>
+                <flowable:field name="status">
+                    <flowable:string><![CDATA[REJECTED_BY_CONFIRMER]]></flowable:string>
+                </flowable:field>
+            </extensionElements>
+        </serviceTask>
+         <sequenceFlow sourceRef="updateStatusRejectedByConfirmer" targetRef="endEventRejected"></sequenceFlow>
+
+        <!-- End Event: Rejected -->
+        <endEvent id="endEventRejected" name="Process Ended (Rejected)"></endEvent>
+
+    </process>
+
+</definitions>

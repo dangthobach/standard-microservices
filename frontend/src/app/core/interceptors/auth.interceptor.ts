@@ -28,36 +28,38 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Use OAuthStorage to get token without injecting OAuthService/AuthService
   const authStorage = inject(OAuthStorage);
 
-  // Skip auth header for certain requests
-  if (shouldSkipAuth(req.url)) {
-    return next(req);
+  // Headers object to be populated
+  const headers: { [key: string]: string } = {};
+
+  // 1. Trace ID - Always add for internal requests (Zipkin B3 propagation)
+  if (!req.url.startsWith('http')) {
+    headers['X-Trace-Id'] = generateTraceId();
   }
 
-  // Get tokens directly from storage
-  const accessToken = authStorage.getItem('access_token');
-  const sessionId = localStorage.getItem('SESSION_ID');
+  // 2. Authentication - Add if not skipped
+  if (!shouldSkipAuth(req.url)) {
+    // Get tokens directly from storage
+    const accessToken = authStorage.getItem('access_token');
+    const sessionId = localStorage.getItem('SESSION_ID');
 
-  // Clone request and add auth headers
-  let authReq = req;
-
-  if (accessToken || sessionId) {
-    const headers: { [key: string]: string } = {};
-
-    // Add Bearer token
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
-    // Add Session ID
     if (sessionId) {
       headers['X-Session-Id'] = sessionId;
     }
-
-    authReq = req.clone({
-      setHeaders: headers,
-      withCredentials: true  // Send cookies (SESSION_ID cookie)
-    });
   }
+
+  // 3. Clone request with headers
+  // Only set withCredentials if we are sending Auth headers (internal API)
+  // or if we strictly mean to send cookies. Original logic implied withCredentials for Auth.
+  // We'll keep it simple: if we modified headers, we clone.
+  // For internal requests, we usually want cookies (session), so withCredentials=true is generally good.
+  const authReq = req.clone({
+    setHeaders: headers,
+    withCredentials: !req.url.startsWith('http') // Send cookies for internal requests
+  });
 
   // Handle response
   return next(authReq).pipe(
@@ -104,4 +106,16 @@ function shouldSkipAuth(url: string): boolean {
   ];
 
   return skipPatterns.some(pattern => url.includes(pattern));
+}
+
+/**
+ * Generate a random 16-character hex string for Zipkin Trace ID
+ */
+function generateTraceId(): string {
+  const chars = '0123456789abcdef';
+  let traceId = '';
+  for (let i = 0; i < 16; i++) {
+    traceId += chars[Math.floor(Math.random() * 16)];
+  }
+  return traceId;
 }
