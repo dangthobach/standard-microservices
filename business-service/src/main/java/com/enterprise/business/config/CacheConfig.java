@@ -29,17 +29,51 @@ public class CacheConfig {
     /**
      * Primary Cache Manager (Redis L2)
      * Used by @Cacheable by default
+     * 
+     * Configured with multiple cache regions:
+     * - products: 10 min TTL (frequently accessed, moderate change rate)
+     * - productBySku: 15 min TTL (rarely changes after creation)
+     * - productStatus: 2 min TTL (changes frequently during workflow)
+     * - categories: 1 hour TTL (rarely changes)
+     * - productCounts: 5 min TTL (for dashboard metrics)
      */
     @Bean
     @Primary
     public RedisCacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(1))
+        // Default cache configuration
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(5))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new GenericJackson2JsonRedisSerializer()));
+                        .fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                .disableCachingNullValues();
+
+        // Custom cache configurations with different TTLs
+        java.util.Map<String, RedisCacheConfiguration> cacheConfigurations = new java.util.HashMap<>();
+        
+        // Products cache - 10 minutes
+        cacheConfigurations.put("products", 
+                defaultConfig.entryTtl(Duration.ofMinutes(10)));
+        
+        // Product by SKU - 15 minutes (rarely changes)
+        cacheConfigurations.put("productBySku", 
+                defaultConfig.entryTtl(Duration.ofMinutes(15)));
+        
+        // Product status - 2 minutes (changes during workflow)
+        cacheConfigurations.put("productStatus", 
+                defaultConfig.entryTtl(Duration.ofMinutes(2)));
+        
+        // Category list - 1 hour (rarely changes)
+        cacheConfigurations.put("categories", 
+                defaultConfig.entryTtl(Duration.ofHours(1)));
+        
+        // Product counts - 5 minutes (for dashboards)
+        cacheConfigurations.put("productCounts", 
+                defaultConfig.entryTtl(Duration.ofMinutes(5)));
 
         return RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(config)
+                .cacheDefaults(defaultConfig)
+                .withInitialCacheConfigurations(cacheConfigurations)
+                .transactionAware()
                 .build();
     }
 

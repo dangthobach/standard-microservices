@@ -1,0 +1,160 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: product-mgmt-ingress
+  namespace: product-mgmt-prod
+  annotations:
+    # Nginx Ingress Controller annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.example.com"
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    # SSL/TLS
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - app.example.com
+    - api.example.com
+    secretName: product-mgmt-tls
+  rules:
+  # API Gateway - Main entry point
+  - host: api.example.com
+    http:
+      paths:
+      - path: /api(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: gateway-service
+            port:
+              number: 8080
+      
+      # Health check endpoint
+      - path: /actuator/health
+        pathType: Exact
+        backend:
+          service:
+            name: gateway-service
+            port:
+              number: 8080
+  
+  # Direct service access (for debugging/admin)
+  - host: api.example.com
+    http:
+      paths:
+      # Business Service direct access
+      - path: /business(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: business-service
+            port:
+              number: 8081
+      
+      # IAM Service direct access
+      - path: /iam(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: iam-service
+            port:
+              number: 8082
+      
+      # Process Service direct access
+      - path: /process(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: process-service
+            port:
+              number: 8083
+  
+  # Frontend application
+  - host: app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: flowable-ui-service
+            port:
+              number: 80
+  
+  # Monitoring endpoints (restrict in production)
+  - host: monitoring.example.com
+    http:
+      paths:
+      - path: /prometheus
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-service
+            port:
+              number: 9090
+      
+      - path: /grafana
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-service
+            port:
+              number: 3000
+---
+# Network Policy to restrict traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-gateway
+  namespace: product-mgmt-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: gateway-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadataـی:
+  name: allow-gateway-to-services
+  namespace: product-mgmt-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: business-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: gateway-service
+    ports:
+    - protocol: TCP
+      port: 8081

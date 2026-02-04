@@ -1,0 +1,60 @@
+### Test User Management APIs
+
+# Get all users
+GET http://localhost:8082/api/users
+
+###
+
+# Get user by email - Checker 1
+GET http://localhost:8082/api/users/email/checker1@test.com
+
+###
+
+# Get user by email - Confirmer 1
+GET http://localhost:8082/api/users/email/confirmer1@test.com
+
+###
+
+# Get user by email - Admin Workflow
+GET http://localhost:8082/api/users/email/admin.workflow@test.com
+
+###
+
+# Get user roles - Checker 1
+GET http://localhost:8082/api/users/{{userId}}/roles
+
+###
+
+# Get users by role - ROLE_CHECKER
+GET http://localhost:8082/api/roles/ROLE_CHECKER/users
+
+###
+
+# Get users by role - ROLE_CONFIRMER
+GET http://localhost:8082/api/roles/ROLE_CONFIRMER/users
+
+###
+
+# Verify user permissions
+GET http://localhost:8082/api/users/{{userId}}/permissions
+
+###
+
+# Direct SQL query to verify (if you have DB access)
+# SELECT u.email, u.first_name, u.last_name, r.name as role_name
+# FROM users u
+# JOIN user_roles ur ON u.id = ur.user_id
+# JOIN roles r ON ur.role_id = r.id
+# WHERE r.name IN ('ROLE_CHECKER', 'ROLE_CONFIRMER')
+# ORDER BY r.name, u.email;
+
+### Expected Results:
+# ROLE_CHECKER:
+# - checker1@test.com (Alice Checker)
+# - checker2@test.com (Bob Checker)
+# - admin.workflow@test.com (Admin Workflow)
+#
+# ROLE_CONFIRMER:
+# - confirmer1@test.com (Charlie Confirmer)
+# - confirmer2@test.com (Diana Confirmer) 
+# - admin.workflow@test.com (Admin Workflow)

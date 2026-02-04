@@ -72,4 +72,42 @@ public class DeploymentService {
                 .orderByProcessDefinitionVersion().desc()
                 .list();
     }
+
+    /**
+     * Get all latest process definitions (one per key)
+     */
+    public List<ProcessDefinition> getAllLatestProcessDefinitions() {
+        return repositoryService.createProcessDefinitionQuery()
+                .latestVersion()
+                .orderByProcessDefinitionKey().asc()
+                .list();
+    }
+
+    /**
+     * Deploy BPMN process from classpath resources
+     * Used for automatic deployment on startup
+     */
+    public Deployment deployFromClasspath(String resourcePath, String deploymentName, String category) {
+        log.info("Deploying process from classpath: {}", resourcePath);
+        try {
+            return repositoryService.createDeployment()
+                    .name(deploymentName)
+                    .category(category)
+                    .addClasspathResource(resourcePath)
+                    .deploy();
+        } catch (Exception e) {
+            log.error("Failed to deploy process from classpath: {}", resourcePath, e);
+            throw new RuntimeException("Failed to deploy process from classpath", e);
+        }
+    }
+
+    /**
+     * Check if a process definition exists by key
+     */
+    public boolean processDefinitionExists(String processDefinitionKey) {
+        long count = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionKey(processDefinitionKey)
+                .count();
+        return count > 0;
+    }
 }

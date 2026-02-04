@@ -30,8 +30,8 @@ public class ProcessDefinitionController {
         if (key != null) {
             definitions = deploymentService.getProcessDefinitionHistory(key);
         } else {
-            // Default to latest versions or list all (simplified)
-            definitions = java.util.Collections.emptyList();
+            // Get all latest versions
+            definitions = deploymentService.getAllLatestProcessDefinitions();
         }
 
         List<ProcessDefinitionDTO> dtos = definitions.stream()

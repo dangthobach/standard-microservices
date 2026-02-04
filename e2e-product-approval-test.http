@@ -1,0 +1,390 @@
+# Product Approval Workflow - End-to-End Test
+
+# This comprehensive test covers the complete product approval workflow:
+# 1. Create product → triggers workflow
+# 2. Product status → PENDING_APPROVAL
+# 3. Checker approves → status → PENDING_CONFIRMATION
+# 4. Confirmer confirms → status → ACTIVE
+
+### Prerequisites:
+# 1. All services running (business-service:8081, iam-service:8082, process-service:8083)
+# 2. RabbitMQ running (localhost:5672)
+# 3. PostgreSQL databases for all services
+# 4. Flyway migrations applied (V6 for roles, V7 for test users)
+# 5. BPMN process deployed (auto-deployed via ProcessDeploymentRunner)
+
+###############################################################################
+# SCENARIO 1: HAPPY PATH - Full Approval Flow
+###############################################################################
+
+### Step 1: Create Product (Triggers Workflow)
+POST http://localhost:8081/api/products
+Content-Type: application/json
+
+{
+  "name": "Test Laptop Pro",
+  "sku": "LAP-TEST-E2E-001",
+  "description": "End-to-end test product",
+  "price": 1299.99,
+  "category": "Electronics",
+  "stockQuantity": 100
+}
+
+> {%
+  client.global.set("productId", response.body.data);
+  client.log("✅ Product created: " + response.body.data);
+  client.test("Product created successfully", function() {
+    client.assert(response.status === 200, "Status should be 200");
+    client.assert(response.body.data !== null, "Product ID should be returned");
+  });
+%}
+
+###
+
+### Step 2: Wait 2 seconds for workflow to initialize
+### (RabbitMQ message → Process Service → Start Process Instance → Update Status)
+
+###
+
+### Step 3: Verify Product Status = PENDING_APPROVAL
+GET http://localhost:8081/api/products/{{productId}}
+
+> {%
+  client.global.set("processInstanceId", response.body.data.processInstanceId);
+  client.log("📋 Product Status: " + response.body.data.status);
+  client.log("🔄 Process Instance ID: " + response.body.data.processInstanceId);
+  client.test("Product status is PENDING_APPROVAL", function() {
+    client.assert(response.body.data.status === "PENDING_APPROVAL", 
+      "Status should be PENDING_APPROVAL but was " + response.body.data.status);
+    client.assert(response.body.data.processInstanceId !== null, 
+      "Process instance ID should be set");
+  });
+%}
+
+###
+
+### Step 4: Get Checker Tasks (candidateGroup: ROLE_CHECKER)
+GET http://localhost:8083/api/flow/tasks?candidateGroup=ROLE_CHECKER
+
+> {%
+  if (response.body.length > 0) {
+    // Find the task for our product
+    const task = response.body.find(t => t.businessKey === client.global.get("productId"));
+    if (task) {
+      client.global.set("checkerTaskId", task.id);
+      client.log("✅ Checker Task ID: " + task.id);
+      client.log("📝 Task Name: " + task.name);
+    } else {
+      client.log("⚠️  No task found for product: " + client.global.get("productId"));
+    }
+  } else {
+    client.log("⚠️  No checker tasks available");
+  }
+%}
+
+###
+
+### Step 5: Checker Approves the Product
+POST http://localhost:8083/api/flow/tasks/{{checkerTaskId}}/complete
+Content-Type: application/json
+
+{
+  "approved": true,
+  "checkerNotes": "Product details verified and approved"
+}
+
+> {%
+  client.log("✅ Checker approved the task");
+  client.test("Checker approval successful", function() {
+    client.assert(response.status === 200, "Should return 200");
+  });
+%}
+
+###
+
+### Step 6: Wait 2 seconds for status update
+
+###
+
+### Step 7: Verify Product Status = PENDING_CONFIRMATION
+GET http://localhost:8081/api/products/{{productId}}
+
+> {%
+  client.log("📋 Product Status: " + response.body.data.status);
+  client.test("Product status is PENDING_CONFIRMATION", function() {
+    client.assert(response.body.data.status === "PENDING_CONFIRMATION",
+      "Status should be PENDING_CONFIRMATION but was " + response.body.data.status);
+  });
+%}
+
+###
+
+### Step 8: Get Confirmer Tasks (candidateGroup: ROLE_CONFIRMER)
+GET http://localhost:8083/api/flow/tasks?candidateGroup=ROLE_CONFIRMER
+
+> {%
+  if (response.body.length > 0) {
+    const task = response.body.find(t => t.businessKey === client.global.get("productId"));
+    if (task) {
+      client.global.set("confirmerTaskId", task.id);
+      client.log("✅ Confirmer Task ID: " + task.id);
+      client.log("📝 Task Name: " + task.name);
+    } else {
+      client.log("⚠️  No task found for product: " + client.global.get("productId"));
+    }
+  } else {
+    client.log("⚠️  No confirmer tasks available");
+  }
+%}
+
+###
+
+### Step 9: Confirmer Confirms the Product
+POST http://localhost:8083/api/flow/tasks/{{confirmerTaskId}}/complete
+Content-Type: application/json
+
+{
+  "confirmed": true,
+  "confirmerNotes": "Final approval granted, activating product"
+}
+
+> {%
+  client.log("✅ Confirmer confirmed the task");
+  client.test("Confirmer confirmation successful", function() {
+    client.assert(response.status === 200, "Should return 200");
+  });
+%}
+
+###
+
+### Step 10: Wait 2 seconds for final status update
+
+###
+
+### Step 11: Verify Product Status = ACTIVE & active = true
+GET http://localhost:8081/api/products/{{productId}}
+
+> {%
+  client.log("📋 Product Status: " + response.body.data.status);
+  client.log("🟢 Product Active: " + response.body.data.active);
+  client.test("Product is ACTIVE", function() {
+    client.assert(response.body.data.status === "ACTIVE",
+      "Status should be ACTIVE but was " + response.body.data.status);
+    client.assert(response.body.data.active === true,
+      "Active flag should be true");
+  });
+  client.log("🎉 HAPPY PATH TEST COMPLETED SUCCESSFULLY!");
+%}
+
+###
+
+###############################################################################
+# SCENARIO 2: CHECKER REJECTION - Product Rejected at First Level
+###############################################################################
+
+### Step 1: Create Another Product
+POST http://localhost:8081/api/products
+Content-Type: application/json
+
+{
+  "name": "Test Product - Will Reject",
+  "sku": "TEST-REJECT-CHECKER-001",
+  "description": "This product will be rejected by checker",
+  "price": 99.99,
+  "category": "Test",
+  "stockQuantity": 10
+}
+
+> {%
+  client.global.set("rejectProductId", response.body.data);
+  client.log("✅ Product created for rejection test: " + response.body.data);
+%}
+
+###
+
+### Step 2: Wait for workflow & Get Checker Tasks
+GET http://localhost:8083/api/flow/tasks?candidateGroup=ROLE_CHECKER
+
+> {%
+  const task = response.body.find(t => t.businessKey === client.global.get("rejectProductId"));
+  if (task) {
+    client.global.set("rejectCheckerTaskId", task.id);
+    client.log("✅ Checker Task for rejection: " + task.id);
+  }
+%}
+
+###
+
+### Step 3: Checker REJECTS the Product
+POST http://localhost:8083/api/flow/tasks/{{rejectCheckerTaskId}}/complete
+Content-Type: application/json
+
+{
+  "approved": false,
+  "checkerNotes": "Product details do not meet requirements"
+}
+
+> {%
+  client.log("❌ Checker rejected the task");
+%}
+
+###
+
+### Step 4: Wait & Verify Status = REJECTED_BY_CHECKER
+GET http://localhost:8081/api/products/{{rejectProductId}}
+
+> {%
+  client.log("📋 Product Status: " + response.body.data.status);
+  client.test("Product rejected by checker", function() {
+    client.assert(response.body.data.status === "REJECTED_BY_CHECKER",
+      "Status should be REJECTED_BY_CHECKER");
+  });
+  client.log("✅ CHECKER REJECTION TEST COMPLETED");
+%}
+
+###
+
+###############################################################################
+# SCENARIO 3: CONFIRMER REJECTION - Product Rejected at Second Level
+###############################################################################
+
+### Step 1: Create Product for Confirmer Rejection
+POST http://localhost:8081/api/products
+Content-Type: application/json
+
+{
+  "name": "Test Product - Confirmer Reject",
+  "sku": "TEST-REJECT-CONFIRMER-001",
+  "description": "This will be rejected by confirmer",
+  "price": 199.99,
+  "category": "Test",
+  "stockQuantity": 20
+}
+
+> {%
+  client.global.set("confirmRejectProductId", response.body.data);
+  client.log("✅ Product created: " + response.body.data);
+%}
+
+###
+
+### Step 2: Wait & Get Checker Tasks
+GET http://localhost:8083/api/flow/tasks?candidateGroup=ROLE_CHECKER
+
+> {%
+  const task = response.body.find(t => t.businessKey === client.global.get("confirmRejectProductId"));
+  if (task) {
+    client.global.set("confirmRejectCheckerTaskId", task.id);
+  }
+%}
+
+###
+
+### Step 3: Checker APPROVES
+POST http://localhost:8083/api/flow/tasks/{{confirmRejectCheckerTaskId}}/complete
+Content-Type: application/json
+
+{
+  "approved": true,
+  "checkerNotes": "Looks good to me"
+}
+
+> {%
+  client.log("✅ Checker approved");
+%}
+
+###
+
+### Step 4: Wait & Get Confirmer Tasks
+GET http://localhost:8083/api/flow/tasks?candidateGroup=ROLE_CONFIRMER
+
+> {%
+  const task = response.body.find(t => t.businessKey === client.global.get("confirmRejectProductId"));
+  if (task) {
+    client.global.set("confirmRejectTaskId", task.id);
+  }
+%}
+
+###
+
+### Step 5: Confirmer REJECTS
+POST http://localhost:8083/api/flow/tasks/{{confirmRejectTaskId}}/complete
+Content-Type: application/json
+
+{
+  "confirmed": false,
+  "confirmerNotes": "Quality issues found during final inspection"
+}
+
+> {%
+  client.log("❌ Confirmer rejected");
+%}
+
+###
+
+### Step 6: Verify Status = REJECTED_BY_CONFIRMER
+GET http://localhost:8081/api/products/{{confirmRejectProductId}}
+
+> {%
+  client.log("📋 Product Status: " + response.body.data.status);
+  client.test("Product rejected by confirmer", function() {
+    client.assert(response.body.data.status === "REJECTED_BY_CONFIRMER",
+      "Status should be REJECTED_BY_CONFIRMER");
+  });
+  client.log("✅ CONFIRMER REJECTION TEST COMPLETED");
+%}
+
+###
+
+###############################################################################
+# UTILITY ENDPOINTS - For Debugging
+###############################################################################
+
+### Get all process instances
+GET http://localhost:8083/api/flow/monitor/instances?processDefinitionKey=product-approval-process
+
+###
+
+### Get process instance history
+GET http://localhost:8083/api/history/instances/{{processInstanceId}}
+
+###
+
+### Get all products
+GET http://localhost:8081/api/products
+
+###
+
+### Get a specific product
+GET http://localhost:8081/api/products/{{productId}}
+
+###
+
+### Delete test product (cleanup)
+DELETE http://localhost:8081/api/products/{{productId}}
+
+###
+
+###############################################################################
+# VERIFICATION QUERIES
+###############################################################################
+
+### Check RabbitMQ Queues (if monitoring endpoint exists)
+GET http://localhost:8081/api/admin/rabbitmq/queues
+
+###
+
+### List all deployments
+GET http://localhost:8083/api/deployments
+
+###
+
+### List all process definitions
+GET http://localhost:8083/api/process-definitions
+
+###
+
+### Get product-approval-process versions
+GET http://localhost:8083/api/process-definitions?key=product-approval-process
+
+###

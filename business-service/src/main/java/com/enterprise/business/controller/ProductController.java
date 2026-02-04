@@ -153,7 +153,7 @@ public class ProductController {
             UUID requestId = requestProducer.sendProcessRequest(
                 "product-approval-process",
                 "system", // TODO: Get from SecurityContext
-                request.getSku(),
+                productId.toString(), // Use productId as business key
                 variables,
                 5 // Normal priority
             );

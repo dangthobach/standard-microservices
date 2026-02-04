@@ -1,0 +1,172 @@
+# Create Test Users in Keycloak for Product Approval Workflow
+# This script uses Keycloak Admin API
+# Requires: Admin token from Keycloak
+
+### 1. Get Admin Access Token
+POST http://localhost:8180/realms/master/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=admin-cli&username=admin&password=admin
+
+> {%
+  client.global.set("admin_token", response.body.access_token);
+%}
+
+###
+
+### 2. Create Checker User 1
+POST http://localhost:8180/admin/realms/enterprise/users
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "username": "checker1",
+  "email": "checker1@test.com",
+  "firstName": "Alice",
+  "lastName": "Checker",
+  "enabled": true,
+  "emailVerified": true,
+  "credentials": [{
+    "type": "password",
+    "value": "Checker123!",
+    "temporary": false
+  }]
+}
+
+###
+
+### 3. Create Checker User 2
+POST http://localhost:8180/admin/realms/enterprise/users
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "username": "checker2",
+  "email": "checker2@test.com",
+  "firstName": "Bob",
+  "lastName": "Checker",
+  "enabled": true,
+  "emailVerified": true,
+  "credentials": [{
+    "type": "password",
+    "value": "Checker123!",
+    "temporary": false
+  }]
+}
+
+###
+
+### 4. Create Confirmer User 1
+POST http://localhost:8180/admin/realms/enterprise/users
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "username": "confirmer1",
+  "email": "confirmer1@test.com",
+  "firstName": "Charlie",
+  "lastName": "Confirmer",
+  "enabled": true,
+  "emailVerified": true,
+  "credentials": [{
+    "type": "password",
+    "value": "Confirmer123!",
+    "temporary": false
+  }]
+}
+
+###
+
+### 5. Create Confirmer User 2
+POST http://localhost:8180/admin/realms/enterprise/users
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "username": "confirmer2",
+  "email": "confirmer2@test.com",
+  "firstName": "Diana",
+  "lastName": "Confirmer",
+  "enabled": true,
+  "emailVerified": true,
+  "credentials": [{
+    "type": "password",
+    "value": "Confirmer123!",
+    "temporary": false
+  }]
+}
+
+###
+
+### 6. Create Admin Workflow User
+POST http://localhost:8180/admin/realms/enterprise/users
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "username": "admin.workflow",
+  "email": "admin.workflow@test.com",
+  "firstName": "Admin",
+  "lastName": "Workflow",
+  "enabled": true,
+  "emailVerified": true,
+  "credentials": [{
+    "type": "password",
+    "value": "AdminWorkflow123!",
+    "temporary": false
+  }]
+}
+
+###
+
+### 7. Get User IDs (to assign roles)
+GET http://localhost:8180/admin/realms/enterprise/users?email=checker1@test.com
+Authorization: Bearer {{admin_token}}
+
+> {%
+  client.global.set("checker1_id", response.body[0].id);
+%}
+
+###
+
+### 8. Assign ROLE_CHECKER to checker1
+# Note: You need to create realm roles in Keycloak first:
+# - ROLE_CHECKER
+# - ROLE_CONFIRMER
+
+# Get ROLE_CHECKER role
+GET http://localhost:8180/admin/realms/enterprise/roles/ROLE_CHECKER
+Authorization: Bearer {{admin_token}}
+
+> {%
+  client.global.set("checker_role_id", response.body.id);
+  client.global.set("checker_role_name", response.body.name);
+%}
+
+###
+
+# Assign role to user
+POST http://localhost:8180/admin/realms/enterprise/users/{{checker1_id}}/role-mappings/realm
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+[
+  {
+    "id": "{{checker_role_id}}",
+    "name": "{{checker_role_name}}"
+  }
+]
+
+###
+
+### Summary of Test Users:
+
+# Credentials for login:
+# 1. checker1@test.com / Checker123!
+# 2. checker2@test.com / Checker123!
+# 3. confirmer1@test.com / Confirmer123!
+# 4. confirmer2@test.com / Confirmer123!
+# 5. admin.workflow@test.com / AdminWorkflow123!
+
+# After creation through Keycloak, they will automatically sync to IAM service
+# when they first login through the gateway OAuth2 flow.

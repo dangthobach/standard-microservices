@@ -1,0 +1,34 @@
+### Test Deployment APIs
+
+# Get all deployments
+GET http://localhost:8083/api/deployments
+
+###
+
+# Get all latest process definitions
+GET http://localhost:8083/api/process-definitions
+
+###
+
+# Get all versions of product-approval-process
+GET http://localhost:8083/api/process-definitions?key=product-approval-process
+
+###
+
+# Get process definition XML
+GET http://localhost:8083/api/process-definitions/{{processDefinitionId}}/xml
+
+###
+
+# Deploy new BPMN file (use file upload in Postman/Insomnia)
+POST http://localhost:8083/api/deployments
+Content-Type: multipart/form-data
+
+name: Product Approval Process v2
+category: product-management
+file: [select .bpmn20.xml file]
+
+###
+
+# Delete deployment
+DELETE http://localhost:8083/api/deployments/{{deploymentId}}

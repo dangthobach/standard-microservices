@@ -1,0 +1,60 @@
+# Prometheus Configuration for Workflow Monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'workflow-dev'
+    environment: 'development'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Business Service metrics
+  - job_name: 'business-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8081']
+        labels:
+          service: 'business-service'
+          app: 'product-management'
+
+  # IAM Service metrics
+  - job_name: 'iam-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8082']
+        labels:
+          service: 'iam-service'
+          app: 'product-management'
+
+  # Process Management Service metrics
+  - job_name: 'process-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8083']
+        labels:
+          service: 'process-service'
+          app: 'product-management'
+
+  # RabbitMQ metrics (if exporter is configured)
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq-workflow:15692']
+        labels:
+          service: 'rabbitmq'
+
+  # PostgreSQL metrics (if exporter is configured)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: 'postgres'
+
+# Alerting rules (optional)
+rule_files:
+  # - 'alerts/*.yml'

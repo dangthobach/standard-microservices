@@ -6,7 +6,7 @@
              expressionLanguage="http://www.w3.org/1999/XPath"
              targetNamespace="http://www.flowable.org/processdef">
 
-    <process id="product-creation-process" name="Product Creation Process" isExecutable="true">
+    <process id="product-approval-process" name="Product Approval Process" isExecutable="true">
 
         <!-- Start Event -->
         <startEvent id="startEvent" name="Request Created" flowable:initiator="initiatorUserId"></startEvent>

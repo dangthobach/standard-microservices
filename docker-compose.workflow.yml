@@ -1,0 +1,110 @@
+# Docker Compose for Product Approval Workflow Testing
+# Simplified stack focused on workflow components only
+
+version: '3.8'
+
+services:
+  # PostgreSQL for all databases
+  postgres-workflow:
+    image: postgres:15-alpine
+    container_name: postgres-workflow
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "54 32:5432"
+    volumes:
+      - postgres_workflow_data:/var/lib/postgresql/data
+      - ./scripts/init-workflow-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - workflow-network
+
+  # RabbitMQ
+  rabbitmq-workflow:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq-workflow
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_workflow_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - workflow-network
+
+  # Redis for caching
+  redis-workflow:
+    image: redis:7-alpine
+    container_name: redis-workflow
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_workflow_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - workflow-network
+
+  # Prometheus for monitoring
+  prometheus-workflow:
+    image: prom/prometheus:latest
+    container_name: prometheus-workflow
+    volumes:
+      - ./monitoring/prometheus-workflow.yml:/etc/prometheus/prometheus.yml
+      - prometheus_workflow_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - workflow-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Grafana for dashboards
+  grafana-workflow:
+    image: grafana/grafana:latest
+    container_name: grafana-workflow
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_workflow_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus-workflow
+    networks:
+      - workflow-network
+
+networks:
+  workflow-network:
+    driver: bridge
+
+volumes:
+  postgres_workflow_data:
+  rabbitmq_workflow_data:
+  redis_workflow_data:
+  prometheus_workflow_data:
+  grafana_workflow_data:
