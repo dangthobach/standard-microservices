@@ -115,6 +115,39 @@ export class TaskListComponent implements OnInit {
         });
     }
 
+    delegateTask(task: Task): void {
+        const userId = prompt('Enter the user ID to delegate this task to:');
+        if (!userId || userId.trim() === '') {
+            return;
+        }
+
+        const comment = prompt('Add a comment (optional):') || '';
+
+        this.workflowService.delegateTask(task.id, { delegateUserId: userId.trim(), comment }).subscribe({
+            next: () => {
+                this.snackBar.open(`Task "${task.name}" delegated to ${userId}`, 'Close', { duration: 3000 });
+                this.loadTasks();
+            },
+            error: (err) => {
+                console.error('Error delegating task:', err);
+                this.snackBar.open('Failed to delegate task', 'Close', { duration: 3000 });
+            }
+        });
+    }
+
+    unclaimTask(task: Task): void {
+        this.workflowService.unclaimTask(task.id).subscribe({
+            next: () => {
+                this.snackBar.open(`Task "${task.name}" released`, 'Close', { duration: 3000 });
+                this.loadTasks();
+            },
+            error: (err) => {
+                console.error('Error unclaiming task:', err);
+                this.snackBar.open('Failed to release task', 'Close', { duration: 3000 });
+            }
+        });
+    }
+
     getPriorityColor(priority: number): string {
         if (priority >= 75) return 'priority-high';
         if (priority >= 50) return 'priority-medium';

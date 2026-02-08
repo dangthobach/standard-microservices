@@ -98,6 +98,14 @@ export class WorkflowService {
         return this.http.post<void>(`${this.flowApiUrl}/tasks/${taskId}/delegate`, request);
     }
 
+    unclaimTask(taskId: string): Observable<void> {
+        return this.http.post<void>(`${this.flowApiUrl}/tasks/${taskId}/unclaim`, {});
+    }
+
+    resolveTask(taskId: string): Observable<void> {
+        return this.http.post<void>(`${this.flowApiUrl}/tasks/${taskId}/resolve`, {});
+    }
+
     // ==================== History ====================
 
     getProcessHistory(processInstanceId: string): Observable<HistoricTask[]> {

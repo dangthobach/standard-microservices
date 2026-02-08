@@ -77,11 +77,23 @@ pipeline {
         }
 
         stage('Build & Test Frontend') {
-            steps {
-                dir('frontend') {
-                    sh 'npm ci --legacy-peer-deps'
-                    sh 'npm run build -- --configuration production'
-                    // sh 'npm test -- --watch=false --browsers=ChromeHeadless'
+            parallel {
+                stage('Enterprise Frontend') {
+                    steps {
+                        dir('frontend') {
+                            sh 'npm ci --legacy-peer-deps'
+                            sh 'npm run build -- --configuration production'
+                        }
+                    }
+                }
+
+                stage('Admin UI') {
+                    steps {
+                        dir('admin-ui') {
+                            sh 'npm ci --legacy-peer-deps'
+                            sh 'npm run build'
+                        }
+                    }
                 }
             }
         }
@@ -171,6 +183,16 @@ pipeline {
                         }
                     }
                 }
+
+                stage('Admin UI Image') {
+                    steps {
+                        dir('admin-ui') {
+                            script {
+                                docker.build("${DOCKER_REGISTRY}/admin-ui:${IMAGE_TAG}")
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -179,7 +201,7 @@ pipeline {
                 stage('Trivy Scan') {
                     steps {
                         script {
-                            def services = ['gateway-service', 'iam-service', 'business-service', 'frontend']
+                            def services = ['gateway-service', 'iam-service', 'business-service', 'frontend', 'admin-ui']
                             services.each { service ->
                                 sh """
                                     trivy image --severity HIGH,CRITICAL \
@@ -197,7 +219,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS) {
-                        def services = ['gateway-service', 'iam-service', 'business-service', 'frontend']
+                        def services = ['gateway-service', 'iam-service', 'business-service', 'frontend', 'admin-ui']
                         services.each { service ->
                             docker.image("${DOCKER_REGISTRY}/${service}:${IMAGE_TAG}").push()
 

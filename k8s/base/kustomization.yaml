@@ -14,6 +14,7 @@ resources:
   - iam-deployment.yaml
   - business-deployment.yaml
   - frontend-deployment.yaml
+  - admin-ui-deployment.yaml
 
   # Configuration
   - configmap.yaml
@@ -38,3 +39,6 @@ images:
     newTag: latest
   - name: enterprise/frontend
     newTag: latest
+  - name: enterprise/admin-ui
+    newTag: latest
+

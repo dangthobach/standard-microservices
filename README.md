@@ -152,17 +152,41 @@ standard-microservice/
 ├── business-service/           # Core business logic
 ├── process-management-service/ # Workflow orchestration
 ├── integration-service/        # Third-party integrations
-├── frontend/                   # Angular 21 application
+├── frontend/                   # Enterprise Frontend (Angular) - Business Users
+├── admin-ui/                   # Admin UI (React) - IT Admins
 ├── infrastructure/
 │   ├── prometheus/             # Prometheus configuration
 │   └── grafana/                # Grafana dashboards
 ├── k8s/
 │   ├── base/                   # Kubernetes base manifests
 │   └── overlays/               # Environment-specific overlays
+├── docs/                       # Documentation
+│   └── SPA_ARCHITECTURE.md     # 2-SPA architecture details
 ├── docker-compose.yml          # Local development environment
-├── ARCHITECTURE.md             # Architecture documentation
-└── DEPLOYMENT.md               # Deployment guide
+└── README.md                   
 ```
+
+## Frontend Architecture
+
+This project uses **2 Single Page Applications (SPAs)** with clear separation:
+
+| SPA | Technology | Port | Target Users |
+|-----|------------|------|--------------|
+| **Enterprise Frontend** | Angular 18 | 80/4200 | Business Users, Product Managers |
+| **Admin UI** | React + Ant Design | 3001/3000 | IT Admins, DevOps |
+
+See [SPA_ARCHITECTURE.md](docs/SPA_ARCHITECTURE.md) for detailed architecture documentation.
+
+### Running Both SPAs
+
+```bash
+# Enterprise Frontend (Angular)
+cd frontend && npm start    # http://localhost:4200
+
+# Admin UI (React)
+cd admin-ui && npm start    # http://localhost:3000
+```
+
 
 ## Documentation
 

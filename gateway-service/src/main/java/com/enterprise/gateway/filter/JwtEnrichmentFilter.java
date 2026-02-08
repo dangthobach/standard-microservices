@@ -84,10 +84,12 @@ public class JwtEnrichmentFilter implements GlobalFilter, Ordered {
         // Lookup session (to get userId for CCU tracking)
         return sessionService.getSession(sessionId)
                 .flatMap(session -> {
-                    // Mutate request to add Authorization header
+                    // Mutate request to add Authorization header and user context headers
                     ServerHttpRequest mutatedRequest = exchange.getRequest()
                             .mutate()
                             .header(AUTHORIZATION_HEADER, BEARER_PREFIX + session.getAccessToken())
+                            .header("X-User-Id", session.getUserId())
+                            .header("X-User-Name", session.getUsername() != null ? session.getUsername() : "")
                             .build();
 
                     log.debug("Enriched request with JWT for session: {} -> {}", sessionId, path);

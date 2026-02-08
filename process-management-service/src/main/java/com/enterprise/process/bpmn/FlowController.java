@@ -200,6 +200,70 @@ public class FlowController {
                     map.put("processInstanceId", t.getProcessInstanceId());
                     map.put("taskDefinitionKey", t.getTaskDefinitionKey());
                     map.put("formKey", t.getFormKey());
+                    map.put("priority", t.getPriority());
+                    return map;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get tasks for the current authenticated user.
+     * Returns tasks that are either:
+     * - Assigned to the user
+     * - In candidate groups the user belongs to
+     * - Unassigned but claimable
+     */
+    @GetMapping("/tasks/my")
+    public List<Map<String, Object>> getMyTasks(
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
+        
+        List<Task> tasks = new ArrayList<>();
+        
+        // If userId is provided, get assigned tasks
+        if (userId != null && !userId.isEmpty()) {
+            tasks.addAll(taskService.createTaskQuery()
+                    .taskAssignee(userId)
+                    .list());
+            
+            // Also get candidate tasks (unassigned but claimable)
+            tasks.addAll(taskService.createTaskQuery()
+                    .taskCandidateUser(userId)
+                    .list());
+        }
+        
+        // If roles are provided, get candidate group tasks
+        if (userRoles != null && !userRoles.isEmpty()) {
+            List<String> roles = Arrays.asList(userRoles.split(","));
+            for (String role : roles) {
+                tasks.addAll(taskService.createTaskQuery()
+                        .taskCandidateGroup(role.trim())
+                        .list());
+            }
+        }
+        
+        // Remove duplicates by taskId
+        Map<String, Task> uniqueTasks = new LinkedHashMap<>();
+        for (Task task : tasks) {
+            uniqueTasks.putIfAbsent(task.getId(), task);
+        }
+        
+        return uniqueTasks.values().stream()
+                .map(t -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", t.getId());
+                    map.put("name", t.getName());
+                    map.put("description", t.getDescription());
+                    map.put("assignee", t.getAssignee());
+                    map.put("createTime", t.getCreateTime());
+                    map.put("dueDate", t.getDueDate());
+                    map.put("processInstanceId", t.getProcessInstanceId());
+                    map.put("processDefinitionId", t.getProcessDefinitionId());
+                    map.put("taskDefinitionKey", t.getTaskDefinitionKey());
+                    map.put("formKey", t.getFormKey());
+                    map.put("priority", t.getPriority());
+                    map.put("owner", t.getOwner());
+                    map.put("delegationState", t.getDelegationState());
                     return map;
                 })
                 .collect(Collectors.toList());
@@ -222,6 +286,9 @@ public class FlowController {
         map.put("processDefinitionId", task.getProcessDefinitionId());
         map.put("taskDefinitionKey", task.getTaskDefinitionKey());
         map.put("formKey", task.getFormKey());
+        map.put("priority", task.getPriority());
+        map.put("owner", task.getOwner());
+        map.put("delegationState", task.getDelegationState());
         return map;
     }
 
@@ -254,6 +321,60 @@ public class FlowController {
         }
 
         return Map.of("status", "claimed", "taskId", id, "userId", userId);
+    }
+
+    @PostMapping("/tasks/{id}/unclaim")
+    public Map<String, String> unclaimTask(@PathVariable("id") String id) {
+        taskService.unclaim(id);
+        return Map.of("status", "unclaimed", "taskId", id);
+    }
+
+    @PostMapping("/tasks/{id}/delegate")
+    public Map<String, String> delegateTask(@PathVariable("id") String id, @RequestBody Map<String, String> request) {
+        String delegateUserId = request.get("userId");
+        String comment = request.get("comment");
+        
+        Task task = taskService.createTaskQuery().taskId(id).singleResult();
+        if (task == null) {
+            throw new RuntimeException("Task not found");
+        }
+        
+        // Add comment if provided
+        if (comment != null && !comment.isEmpty()) {
+            taskService.addComment(id, task.getProcessInstanceId(), "delegation", 
+                    "Delegated to " + delegateUserId + ": " + comment);
+        }
+        
+        // Delegate the task
+        taskService.delegateTask(id, delegateUserId);
+        
+        // Send notification
+        try {
+            ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
+                    .processDefinitionId(task.getProcessDefinitionId())
+                    .singleResult();
+            String processName = processDefinition != null ? processDefinition.getName() : "Unknown Process";
+
+            notificationService.sendTaskAssignedNotification(
+                    delegateUserId,
+                    id,
+                    task.getName(),
+                    processName);
+
+            notificationService.sendGlobalNotification(
+                    String.format("Task '%s' has been delegated to %s", task.getName(), delegateUserId),
+                    "info");
+        } catch (Exception e) {
+            System.err.println("Failed to send notification: " + e.getMessage());
+        }
+
+        return Map.of("status", "delegated", "taskId", id, "delegatedTo", delegateUserId);
+    }
+
+    @PostMapping("/tasks/{id}/resolve")
+    public Map<String, String> resolveTask(@PathVariable("id") String id) {
+        taskService.resolveTask(id);
+        return Map.of("status", "resolved", "taskId", id);
     }
 
     @PostMapping("/tasks/{id}/complete")
