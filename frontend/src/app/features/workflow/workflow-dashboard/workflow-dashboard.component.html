@@ -1,0 +1,106 @@
+<div class="my-tasks-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">
+                <mat-icon>assignment</mat-icon>
+                My Tasks
+            </h1>
+            <p class="page-subtitle">Tasks assigned to you for review and approval</p>
+        </div>
+        <button mat-raised-button color="primary" (click)="refresh()">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row">
+        <mat-card class="stat-card">
+            <div class="stat-content">
+                <div class="stat-icon pending">
+                    <mat-icon>pending_actions</mat-icon>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ pendingCount() }}</span>
+                    <span class="stat-label">Pending Tasks</span>
+                </div>
+            </div>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <div class="stat-content">
+                <div class="stat-icon urgent">
+                    <mat-icon>priority_high</mat-icon>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value warning">{{ highPriorityCount() }}</span>
+                    <span class="stat-label">High Priority</span>
+                </div>
+            </div>
+        </mat-card>
+    </div>
+
+    <!-- Loading -->
+    @if (loading()) {
+    <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading your tasks...</p>
+    </div>
+    }
+
+    <!-- Error -->
+    @if (error()) {
+    <mat-card class="error-card">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ error() }}</span>
+        <button mat-button color="primary" (click)="refresh()">Retry</button>
+    </mat-card>
+    }
+
+    <!-- Empty State -->
+    @if (!loading() && !error() && myTasks().length === 0) {
+    <mat-card class="empty-card">
+        <mat-icon>check_circle</mat-icon>
+        <h3>All caught up!</h3>
+        <p>You have no pending tasks at the moment.</p>
+    </mat-card>
+    }
+
+    <!-- Task List -->
+    @if (!loading() && !error() && myTasks().length > 0) {
+    <div class="tasks-grid">
+        @for (task of myTasks(); track task.id) {
+        <mat-card class="task-card" [routerLink]="['/workflow/tasks', task.id]">
+            <div class="task-header">
+                <div class="task-icon">
+                    <mat-icon>task</mat-icon>
+                </div>
+                <mat-chip [class]="getPriorityColor(task.priority)">
+                    {{ getPriorityLabel(task.priority) }}
+                </mat-chip>
+            </div>
+
+            <h3 class="task-name">{{ task.name }}</h3>
+            <p class="task-key">{{ task.taskDefinitionKey }}</p>
+
+            <div class="task-footer">
+                <span class="task-time">
+                    <mat-icon>schedule</mat-icon>
+                    {{ getTimeAgo(task.createTime) }}
+                </span>
+                <mat-icon class="chevron">chevron_right</mat-icon>
+            </div>
+        </mat-card>
+        }
+    </div>
+    }
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <button mat-raised-button color="primary" routerLink="/workflow/tasks">
+            <mat-icon>list</mat-icon>
+            View All Tasks
+        </button>
+    </div>
+</div>

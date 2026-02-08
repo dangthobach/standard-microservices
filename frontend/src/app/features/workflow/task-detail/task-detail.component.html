@@ -1,0 +1,165 @@
+<div class="task-detail-container">
+    <!-- Back Button -->
+    <button mat-button class="back-button" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Back to Tasks
+    </button>
+
+    <!-- Loading State -->
+    @if (loading()) {
+    <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading task details...</p>
+    </div>
+    }
+
+    <!-- Error State -->
+    @if (error()) {
+    <mat-card class="error-card">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ error() }}</span>
+        <button mat-button color="primary" (click)="goBack()">Go Back</button>
+    </mat-card>
+    }
+
+    <!-- Task Content -->
+    @if (!loading() && !error() && task()) {
+    <div class="task-content">
+        <!-- Main Info Card -->
+        <mat-card class="info-card">
+            <div class="card-header">
+                <div class="task-title-section">
+                    <h1 class="task-title">{{ task()!.name }}</h1>
+                    <div class="task-badges">
+                        <mat-chip [class]="getPriorityColor(task()!.priority)">
+                            Priority: {{ task()!.priority }}
+                        </mat-chip>
+                        @if (task()!.assignee) {
+                        <mat-chip class="assignee-chip">
+                            <mat-icon>person</mat-icon>
+                            {{ task()!.assignee }}
+                        </mat-chip>
+                        } @else {
+                        <mat-chip class="unassigned-chip">Unassigned</mat-chip>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div class="task-info-grid">
+                <div class="info-item">
+                    <span class="info-label">Task ID</span>
+                    <span class="info-value monospace">{{ task()!.id }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Task Definition Key</span>
+                    <span class="info-value monospace">{{ task()!.taskDefinitionKey }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Process Instance</span>
+                    <a [routerLink]="['/workflow/processes', task()!.processInstanceId]"
+                        class="info-value link monospace">
+                        {{ task()!.processInstanceId }}
+                    </a>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Created</span>
+                    <span class="info-value">{{ formatDate(task()!.createTime) }}</span>
+                </div>
+                @if (task()!.dueDate) {
+                <div class="info-item">
+                    <span class="info-label">Due Date</span>
+                    <span class="info-value">{{ formatDate(task()!.dueDate!) }}</span>
+                </div>
+                }
+            </div>
+        </mat-card>
+
+        <!-- Variables Card -->
+        @if (getVariableKeys().length > 0) {
+        <mat-card class="variables-card">
+            <h2 class="section-title">
+                <mat-icon>data_object</mat-icon>
+                Task Variables
+            </h2>
+            <div class="variables-grid">
+                @for (key of getVariableKeys(); track key) {
+                <div class="variable-item">
+                    <span class="variable-key">{{ key }}</span>
+                    <span class="variable-value">{{ taskVariables()[key] | json }}</span>
+                </div>
+                }
+            </div>
+        </mat-card>
+        }
+
+        <!-- Action Card -->
+        <mat-card class="action-card">
+            <h2 class="section-title">
+                <mat-icon>gavel</mat-icon>
+                Take Action
+            </h2>
+
+            <form [formGroup]="actionForm" class="action-form">
+                <mat-form-field appearance="outline" class="comment-field">
+                    <mat-label>Comment / Reason</mat-label>
+                    <textarea matInput formControlName="comment" rows="3"
+                        placeholder="Enter your comment or reason..."></textarea>
+                </mat-form-field>
+
+                <div class="action-buttons">
+                    @if (!task()!.assignee) {
+                    <button mat-raised-button color="primary" (click)="claimTask()">
+                        <mat-icon>assignment_ind</mat-icon>
+                        Claim Task
+                    </button>
+                    }
+                    <button mat-raised-button color="accent" (click)="approveTask()">
+                        <mat-icon>check_circle</mat-icon>
+                        Approve
+                    </button>
+                    <button mat-raised-button color="warn" (click)="rejectTask()">
+                        <mat-icon>cancel</mat-icon>
+                        Reject
+                    </button>
+                </div>
+            </form>
+        </mat-card>
+
+        <!-- History Card -->
+        @if (taskHistory().length > 0) {
+        <mat-card class="history-card">
+            <h2 class="section-title">
+                <mat-icon>history</mat-icon>
+                Task History
+            </h2>
+            <div class="history-timeline">
+                @for (item of taskHistory(); track item.id) {
+                <div class="history-item">
+                    <div class="timeline-dot"></div>
+                    <div class="history-content">
+                        <span class="history-name">{{ item.name }}</span>
+                        <span class="history-assignee">
+                            @if (item.assignee) {
+                            Completed by {{ item.assignee }}
+                            } @else {
+                            Unassigned
+                            }
+                        </span>
+                        <span class="history-time">
+                            {{ formatDate(item.startTime) }}
+                            @if (item.endTime) {
+                            → {{ formatDate(item.endTime) }}
+                            }
+                        </span>
+                    </div>
+                </div>
+                }
+            </div>
+        </mat-card>
+        }
+    </div>
+    }
+</div>

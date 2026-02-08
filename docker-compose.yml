@@ -417,7 +417,7 @@ services:
       retries: 5
       start_period: 60s
 
-  # Frontend Application
+  # Frontend Application (Business Users)
   frontend:
     build:
       context: ./frontend
@@ -436,6 +436,25 @@ services:
       timeout: 10s
       retries: 3
 
+  # Admin UI (IT/Operations)
+  admin-ui:
+    build:
+      context: ./admin-ui
+      dockerfile: Dockerfile
+    container_name: admin-ui
+    ports:
+      - "3001:80"
+    depends_on:
+      gateway-service:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 networks:
   microservices-network:
     driver: bridge
@@ -446,3 +465,4 @@ volumes:
   prometheus-data:
   grafana-data:
   seaweedfs-data:
+

@@ -87,6 +87,31 @@ export const routes: Routes = [
     title: 'Product Details - Enterprise Microservices'
   },
 
+  // Workflow routes (Business User tasks only)
+  {
+    path: 'workflow',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        redirectTo: 'tasks',
+        pathMatch: 'full'
+      },
+      {
+        path: 'tasks',
+        loadComponent: () => import('./features/workflow/task-list/task-list.component')
+          .then(m => m.TaskListComponent),
+        title: 'My Tasks - Enterprise Microservices'
+      },
+      {
+        path: 'tasks/:id',
+        loadComponent: () => import('./features/workflow/task-detail/task-detail.component')
+          .then(m => m.TaskDetailComponent),
+        title: 'Task Details - Enterprise Microservices'
+      }
+    ]
+  },
+
   {
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.component')

@@ -1,0 +1,187 @@
+<div class="task-list-container">
+    <!-- Header -->
+    <div class="task-list-header">
+        <div class="header-content">
+            <h1 class="page-title">
+                <mat-icon>assignment</mat-icon>
+                Pending Tasks
+            </h1>
+            <p class="page-subtitle">Manage and process workflow tasks</p>
+        </div>
+        <button mat-raised-button color="primary" (click)="loadTasks()">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <mat-card class="stat-card">
+            <div class="stat-content">
+                <mat-icon class="stat-icon total">list_alt</mat-icon>
+                <div class="stat-info">
+                    <span class="stat-value">{{ totalTasks() }}</span>
+                    <span class="stat-label">Total Tasks</span>
+                </div>
+            </div>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <div class="stat-content">
+                <mat-icon class="stat-icon high">priority_high</mat-icon>
+                <div class="stat-info">
+                    <span class="stat-value warning">{{ highPriorityTasks() }}</span>
+                    <span class="stat-label">High Priority</span>
+                </div>
+            </div>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <div class="stat-content">
+                <mat-icon class="stat-icon unassigned">person_off</mat-icon>
+                <div class="stat-info">
+                    <span class="stat-value">{{ unassignedTasks() }}</span>
+                    <span class="stat-label">Unassigned</span>
+                </div>
+            </div>
+        </mat-card>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+        <div class="loading-container">
+            <mat-spinner diameter="50"></mat-spinner>
+            <p>Loading tasks...</p>
+        </div>
+    }
+
+    <!-- Error State -->
+    @if (error()) {
+        <mat-card class="error-card">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ error() }}</span>
+            <button mat-button color="primary" (click)="loadTasks()">Retry</button>
+        </mat-card>
+    }
+
+    <!-- Empty State -->
+    @if (!loading() && !error() && tasks().length === 0) {
+        <mat-card class="empty-card">
+            <mat-icon>check_circle</mat-icon>
+            <h3>No pending tasks</h3>
+            <p>All tasks have been processed. Check back later for new tasks.</p>
+        </mat-card>
+    }
+
+    <!-- Task List -->
+    @if (!loading() && !error() && tasks().length > 0) {
+        <mat-card class="table-card">
+            <table mat-table [dataSource]="tasks()" class="task-table">
+                <!-- Task Name Column -->
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Task</th>
+                    <td mat-cell *matCellDef="let task">
+                        <div class="task-name-cell">
+                            <span class="task-name">{{ task.name }}</span>
+                            <span class="task-key">{{ task.taskDefinitionKey }}</span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Process Column -->
+                <ng-container matColumnDef="processDefinitionId">
+                    <th mat-header-cell *matHeaderCellDef>Process</th>
+                    <td mat-cell *matCellDef="let task">
+                        <a [routerLink]="['/workflow/processes', task.processInstanceId]" class="process-link">
+                            {{ task.processInstanceId | slice:0:8 }}...
+                        </a>
+                    </td>
+                </ng-container>
+
+                <!-- Assignee Column -->
+                <ng-container matColumnDef="assignee">
+                    <th mat-header-cell *matHeaderCellDef>Assignee</th>
+                    <td mat-cell *matCellDef="let task">
+                        @if (task.assignee) {
+                            <mat-chip class="assignee-chip">
+                                <mat-icon>person</mat-icon>
+                                {{ task.assignee }}
+                            </mat-chip>
+                        } @else {
+                            <mat-chip class="unassigned-chip">
+                                <mat-icon>person_off</mat-icon>
+                                Unassigned
+                            </mat-chip>
+                        }
+                    </td>
+                </ng-container>
+
+                <!-- Priority Column -->
+                <ng-container matColumnDef="priority">
+                    <th mat-header-cell *matHeaderCellDef>Priority</th>
+                    <td mat-cell *matCellDef="let task">
+                        <mat-chip [class]="getPriorityColor(task.priority)">
+                            {{ getPriorityLabel(task.priority) }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <!-- Created Column -->
+                <ng-container matColumnDef="createTime">
+                    <th mat-header-cell *matHeaderCellDef>Created</th>
+                    <td mat-cell *matCellDef="let task">
+                        <span [matTooltip]="formatDate(task.createTime)">
+                            {{ getTimeAgo(task.createTime) }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Actions</th>
+                    <td mat-cell *matCellDef="let task">
+                        <div class="action-buttons">
+                            @if (!task.assignee) {
+                                <button mat-icon-button color="primary" 
+                                        matTooltip="Claim Task"
+                                        (click)="claimTask(task)">
+                                    <mat-icon>assignment_ind</mat-icon>
+                                </button>
+                            }
+                            <button mat-icon-button color="accent" 
+                                    matTooltip="Approve"
+                                    (click)="approveTask(task)">
+                                <mat-icon>check_circle</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" 
+                                    matTooltip="Reject"
+                                    (click)="rejectTask(task)">
+                                <mat-icon>cancel</mat-icon>
+                            </button>
+                            <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="More Actions">
+                                <mat-icon>more_vert</mat-icon>
+                            </button>
+                            <mat-menu #menu="matMenu">
+                                <button mat-menu-item [routerLink]="['/workflow/tasks', task.id]">
+                                    <mat-icon>visibility</mat-icon>
+                                    <span>View Details</span>
+                                </button>
+                                <button mat-menu-item>
+                                    <mat-icon>person_add</mat-icon>
+                                    <span>Delegate</span>
+                                </button>
+                                <button mat-menu-item>
+                                    <mat-icon>comment</mat-icon>
+                                    <span>Add Comment</span>
+                                </button>
+                            </mat-menu>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="task-row"></tr>
+            </table>
+        </mat-card>
+    }
+</div>

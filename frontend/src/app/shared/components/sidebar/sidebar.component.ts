@@ -32,6 +32,7 @@ export class SidebarComponent {
   menuItems: MenuItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard' },
     { icon: 'inventory_2', label: 'Products', route: '/products' },
+    { icon: 'assignment', label: 'My Tasks', route: '/workflow/tasks' },
     { icon: 'people', label: 'Customers', route: '/customers', badge: 50 },
     { icon: 'business', label: 'Organizations', route: '/organizations' },
     { icon: 'person', label: 'Users', route: '/users' },

@@ -1,0 +1,251 @@
+.task-list-container {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Header */
+.task-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0;
+    color: #1e293b;
+}
+
+.page-title mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #3b82f6;
+}
+
+.page-subtitle {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    padding: 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+}
+
+.stat-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stat-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.stat-icon.total {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+
+.stat-icon.high {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.stat-icon.unassigned {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.stat-value.warning {
+    color: #f59e0b;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* Loading State */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    gap: 16px;
+    color: #64748b;
+}
+
+/* Error State */
+.error-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+}
+
+.error-card mat-icon {
+    color: #ef4444;
+}
+
+/* Empty State */
+.empty-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    text-align: center;
+}
+
+.empty-card mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #22c55e;
+    margin-bottom: 16px;
+}
+
+.empty-card h3 {
+    margin: 0 0 8px;
+    color: #1e293b;
+}
+
+.empty-card p {
+    margin: 0;
+    color: #64748b;
+}
+
+/* Table Card */
+.table-card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.task-table {
+    width: 100%;
+}
+
+.task-name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.task-name {
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.task-key {
+    font-size: 12px;
+    color: #94a3b8;
+    font-family: monospace;
+}
+
+.process-link {
+    color: #3b82f6;
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.process-link:hover {
+    text-decoration: underline;
+}
+
+.assignee-chip {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+}
+
+.unassigned-chip {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+}
+
+/* Priority Colors */
+.priority-high {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: white !important;
+}
+
+.priority-medium {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: white !important;
+}
+
+.priority-low {
+    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+    color: white !important;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.task-row:hover {
+    background: #f8fafc;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .task-list-container {
+        padding: 16px;
+    }
+
+    .task-list-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
