@@ -1,5 +1,6 @@
 package com.enterprise.process.cmmn;
 
+import com.enterprise.common.constant.ApiConstants;
 import org.flowable.cmmn.api.CmmnRuntimeService;
 import org.flowable.cmmn.api.CmmnRepositoryService;
 import org.flowable.cmmn.api.CmmnTaskService;
@@ -21,7 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/cmmn")
+@RequestMapping(ApiConstants.API_V1 + "/cmmn")
 @CrossOrigin(origins = "http://localhost:3000")
 public class CaseController {
 
@@ -65,7 +66,7 @@ public class CaseController {
                 .caseDefinitionKey(key)
                 .latestVersion()
                 .singleResult();
-        
+
         if (cd == null) {
             throw new RuntimeException("Case definition not found");
         }
@@ -85,15 +86,16 @@ public class CaseController {
     // Case Instances
     @PostMapping("/cases/{key}/start")
     public Map<String, Object> startCase(@PathVariable("key") String key,
-                                        @RequestBody(required = false) Map<String, Object> variables) {
-        if (variables == null) variables = new HashMap<>();
-        
+            @RequestBody(required = false) Map<String, Object> variables) {
+        if (variables == null)
+            variables = new HashMap<>();
+
         CaseInstanceBuilder builder = cmmnRuntimeService.createCaseInstanceBuilder()
                 .caseDefinitionKey(key)
                 .variables(variables);
-        
+
         CaseInstance caseInstance = builder.start();
-        
+
         Map<String, Object> result = new HashMap<>();
         result.put("caseInstanceId", caseInstance.getId());
         result.put("caseDefinitionId", caseInstance.getCaseDefinitionId());
@@ -124,7 +126,7 @@ public class CaseController {
         CaseInstance ci = cmmnRuntimeService.createCaseInstanceQuery()
                 .caseInstanceId(id)
                 .singleResult();
-        
+
         if (ci == null) {
             throw new RuntimeException("Case instance not found");
         }
@@ -205,7 +207,7 @@ public class CaseController {
         Task task = cmmnTaskService.createTaskQuery()
                 .taskId(id)
                 .singleResult();
-        
+
         if (task == null) {
             throw new RuntimeException("Task not found");
         }
@@ -225,7 +227,7 @@ public class CaseController {
 
     @PostMapping("/tasks/{id}/claim")
     public Map<String, Object> claimCaseTask(@PathVariable("id") String id,
-                                            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> request) {
         String userId = request.get("userId");
         cmmnTaskService.claim(id, userId);
         return Map.of("message", "Task claimed successfully");
@@ -233,8 +235,9 @@ public class CaseController {
 
     @PostMapping("/tasks/{id}/complete")
     public Map<String, Object> completeCaseTask(@PathVariable("id") String id,
-                                               @RequestBody(required = false) Map<String, Object> variables) {
-        if (variables == null) variables = new HashMap<>();
+            @RequestBody(required = false) Map<String, Object> variables) {
+        if (variables == null)
+            variables = new HashMap<>();
         cmmnTaskService.complete(id, variables);
         return Map.of("message", "Task completed successfully");
     }
@@ -246,7 +249,7 @@ public class CaseController {
 
     @PostMapping("/tasks/{id}/variables")
     public Map<String, Object> setCaseTaskVariables(@PathVariable("id") String id,
-                                                   @RequestBody Map<String, Object> variables) {
+            @RequestBody Map<String, Object> variables) {
         cmmnTaskService.setVariables(id, variables);
         return Map.of("message", "Variables set successfully");
     }
@@ -266,7 +269,8 @@ public class CaseController {
                     instance.put("startTime", hci.getStartTime());
                     instance.put("endTime", hci.getEndTime());
                     instance.put("startUserId", hci.getStartUserId());
-                    instance.put("durationInMillis", 0L); // HistoricCaseInstance doesn't have getDurationInMillis method
+                    instance.put("durationInMillis", 0L); // HistoricCaseInstance doesn't have getDurationInMillis
+                                                          // method
                     return instance;
                 })
                 .collect(Collectors.toList());
@@ -277,7 +281,7 @@ public class CaseController {
         HistoricCaseInstance hci = cmmnHistoryService.createHistoricCaseInstanceQuery()
                 .caseInstanceId(id)
                 .singleResult();
-        
+
         if (hci == null) {
             throw new RuntimeException("Historic case instance not found");
         }
@@ -295,9 +299,8 @@ public class CaseController {
                 .list()
                 .stream()
                 .collect(Collectors.toMap(
-                    hvi -> hvi.getVariableName(),
-                    hvi -> hvi.getValue()
-                )));
+                        hvi -> hvi.getVariableName(),
+                        hvi -> hvi.getValue())));
         return instance;
     }
 
@@ -321,4 +324,3 @@ public class CaseController {
                 .collect(Collectors.toList());
     }
 }
-

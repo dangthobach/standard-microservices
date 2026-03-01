@@ -1,5 +1,6 @@
 package com.enterprise.process.bpmn;
 
+import com.enterprise.common.constant.ApiConstants;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.TaskService;
 import org.flowable.engine.RepositoryService;
@@ -18,7 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/flow")
+@RequestMapping(ApiConstants.API_V1 + "/flow")
 public class FlowController {
 
     private final RuntimeService runtimeService;
@@ -217,21 +218,21 @@ public class FlowController {
     public List<Map<String, Object>> getMyTasks(
             @RequestHeader(value = "X-User-Id", required = false) String userId,
             @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
-        
+
         List<Task> tasks = new ArrayList<>();
-        
+
         // If userId is provided, get assigned tasks
         if (userId != null && !userId.isEmpty()) {
             tasks.addAll(taskService.createTaskQuery()
                     .taskAssignee(userId)
                     .list());
-            
+
             // Also get candidate tasks (unassigned but claimable)
             tasks.addAll(taskService.createTaskQuery()
                     .taskCandidateUser(userId)
                     .list());
         }
-        
+
         // If roles are provided, get candidate group tasks
         if (userRoles != null && !userRoles.isEmpty()) {
             List<String> roles = Arrays.asList(userRoles.split(","));
@@ -241,13 +242,13 @@ public class FlowController {
                         .list());
             }
         }
-        
+
         // Remove duplicates by taskId
         Map<String, Task> uniqueTasks = new LinkedHashMap<>();
         for (Task task : tasks) {
             uniqueTasks.putIfAbsent(task.getId(), task);
         }
-        
+
         return uniqueTasks.values().stream()
                 .map(t -> {
                     Map<String, Object> map = new HashMap<>();
@@ -333,21 +334,21 @@ public class FlowController {
     public Map<String, String> delegateTask(@PathVariable("id") String id, @RequestBody Map<String, String> request) {
         String delegateUserId = request.get("userId");
         String comment = request.get("comment");
-        
+
         Task task = taskService.createTaskQuery().taskId(id).singleResult();
         if (task == null) {
             throw new RuntimeException("Task not found");
         }
-        
+
         // Add comment if provided
         if (comment != null && !comment.isEmpty()) {
-            taskService.addComment(id, task.getProcessInstanceId(), "delegation", 
+            taskService.addComment(id, task.getProcessInstanceId(), "delegation",
                     "Delegated to " + delegateUserId + ": " + comment);
         }
-        
+
         // Delegate the task
         taskService.delegateTask(id, delegateUserId);
-        
+
         // Send notification
         try {
             ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()

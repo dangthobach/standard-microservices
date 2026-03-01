@@ -1,5 +1,6 @@
 package com.enterprise.integration.controller;
 
+import com.enterprise.common.constant.ApiConstants;
 import com.enterprise.common.dto.ApiResponse;
 import com.enterprise.integration.service.ThirdPartyIntegrationService;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/integration")
+@RequestMapping(ApiConstants.API_V1 + "/integration")
 @RequiredArgsConstructor
 public class IntegrationController {
 
@@ -18,16 +19,14 @@ public class IntegrationController {
     @GetMapping("/provider-a")
     public ResponseEntity<ApiResponse<String>> getProviderAData() {
         return ResponseEntity.ok(ApiResponse.success(
-            "Data retrieved from Provider A",
-            integrationService.getProviderAData()
-        ));
+                "Data retrieved from Provider A",
+                integrationService.getProviderAData()));
     }
 
     @GetMapping("/public-key")
     public ResponseEntity<ApiResponse<String>> getPublicKey() {
         return ResponseEntity.ok(ApiResponse.success(
-            "Public Key retrieved from IAM",
-            integrationService.verifyPublicKeyFlow()
-        ));
+                "Public Key retrieved from IAM",
+                integrationService.verifyPublicKeyFlow()));
     }
 }

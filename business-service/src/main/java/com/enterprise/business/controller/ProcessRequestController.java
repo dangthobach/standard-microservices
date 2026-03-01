@@ -1,5 +1,6 @@
 package com.enterprise.business.controller;
 
+import com.enterprise.common.constant.ApiConstants;
 import com.enterprise.business.service.RequestProducer;
 import com.enterprise.common.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,8 +17,10 @@ import java.util.UUID;
 /**
  * Process Request Controller
  * <p>
- * Allows triggering workflow processes manually for testing and ad-hoc scenarios.
- * In production, processes are typically triggered automatically by business events
+ * Allows triggering workflow processes manually for testing and ad-hoc
+ * scenarios.
+ * In production, processes are typically triggered automatically by business
+ * events
  * (e.g., product creation, order submission).
  * <p>
  * This controller demonstrates:
@@ -30,7 +33,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/process-requests")
+@RequestMapping(ApiConstants.API_V1 + "/process-requests")
 @RequiredArgsConstructor
 @Tag(name = "Process Request Management", description = "Trigger and manage workflow processes")
 public class ProcessRequestController {
@@ -41,6 +44,7 @@ public class ProcessRequestController {
      * Create a new process request
      * <p>
      * Example: POST /api/process-requests
+     * 
      * <pre>
      * {
      *   "processDefinitionKey": "product-approval-process",
@@ -60,27 +64,22 @@ public class ProcessRequestController {
      */
     @PostMapping
     @PreAuthorize("hasAuthority('process:create')")
-    @Operation(
-        summary = "Create process request",
-        description = "Trigger a new workflow process by sending a request to Process Management Service"
-    )
+    @Operation(summary = "Create process request", description = "Trigger a new workflow process by sending a request to Process Management Service")
     public ResponseEntity<ApiResponse<UUID>> createProcessRequest(@RequestBody ProcessRequestDTO request) {
-        log.info("REST request to create process: key={}, businessKey={}", 
-            request.getProcessDefinitionKey(), request.getBusinessKey());
+        log.info("REST request to create process: key={}, businessKey={}",
+                request.getProcessDefinitionKey(), request.getBusinessKey());
 
         UUID requestId = requestProducer.sendProcessRequest(
-            request.getProcessDefinitionKey(),
-            request.getInitiatorUserId(),
-            request.getBusinessKey(),
-            request.getVariables(),
-            request.getPriority() != null ? request.getPriority() : 5
-        );
+                request.getProcessDefinitionKey(),
+                request.getInitiatorUserId(),
+                request.getBusinessKey(),
+                request.getVariables(),
+                request.getPriority() != null ? request.getPriority() : 5);
 
         log.info("Process request sent successfully: requestId={}", requestId);
 
         return ResponseEntity.ok(
-            ApiResponse.success("Process request created and sent to Process Management Service", requestId)
-        );
+                ApiResponse.success("Process request created and sent to Process Management Service", requestId));
     }
 
     /**

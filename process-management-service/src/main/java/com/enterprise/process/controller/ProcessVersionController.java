@@ -1,5 +1,6 @@
 package com.enterprise.process.controller;
 
+import com.enterprise.common.constant.ApiConstants;
 import com.enterprise.process.service.DeploymentService;
 import com.enterprise.process.service.ProcessVersionService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/process-versions")
+@RequestMapping(ApiConstants.API_V1 + "/process-versions")
 @RequiredArgsConstructor
 public class ProcessVersionController {
 
@@ -31,9 +32,9 @@ public class ProcessVersionController {
     @GetMapping("/{processKey}/versions")
     public ResponseEntity<List<ProcessVersionDTO>> getProcessVersions(@PathVariable String processKey) {
         log.info("Fetching all versions for process: {}", processKey);
-        
+
         List<ProcessDefinition> definitions = deploymentService.getProcessDefinitionHistory(processKey);
-        
+
         List<ProcessVersionDTO> versions = definitions.stream()
                 .map(pd -> new ProcessVersionDTO(
                         pd.getId(),
@@ -42,10 +43,9 @@ public class ProcessVersionController {
                         pd.getVersion(),
                         pd.getDeploymentId(),
                         pd.getCategory(),
-                        versionService.isActiveVersion(pd.getKey(), pd.getVersion())
-                ))
+                        versionService.isActiveVersion(pd.getKey(), pd.getVersion())))
                 .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(versions);
     }
 
@@ -57,7 +57,7 @@ public class ProcessVersionController {
             @RequestParam String v1,
             @RequestParam String v2) {
         log.info("Comparing process versions: {} vs {}", v1, v2);
-        
+
         VersionComparisonDTO comparison = versionService.compareVersions(v1, v2);
         return ResponseEntity.ok(comparison);
     }
@@ -68,7 +68,7 @@ public class ProcessVersionController {
     @GetMapping("/{processDefinitionId}/metadata")
     public ResponseEntity<Map<String, Object>> getProcessMetadata(@PathVariable String processDefinitionId) {
         log.info("Fetching metadata for process: {}", processDefinitionId);
-        
+
         Map<String, Object> metadata = versionService.getProcessMetadata(processDefinitionId);
         return ResponseEntity.ok(metadata);
     }
@@ -81,9 +81,9 @@ public class ProcessVersionController {
             @PathVariable String processKey,
             @RequestBody RollbackRequest request) {
         log.info("Rolling back process {} to version {}", processKey, request.getTargetVersion());
-        
+
         ProcessDefinition newVersion = versionService.rollbackToVersion(processKey, request.getTargetVersion());
-        
+
         ProcessVersionDTO dto = new ProcessVersionDTO(
                 newVersion.getId(),
                 newVersion.getKey(),
@@ -91,9 +91,8 @@ public class ProcessVersionController {
                 newVersion.getVersion(),
                 newVersion.getDeploymentId(),
                 newVersion.getCategory(),
-                true
-        );
-        
+                true);
+
         return ResponseEntity.ok(dto);
     }
 
@@ -103,12 +102,12 @@ public class ProcessVersionController {
     @GetMapping("/{processKey}/active")
     public ResponseEntity<ProcessVersionDTO> getActiveVersion(@PathVariable String processKey) {
         log.info("Fetching active version for process: {}", processKey);
-        
+
         List<ProcessDefinition> definitions = deploymentService.getProcessDefinitionHistory(processKey);
         if (definitions.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         ProcessDefinition latest = definitions.get(0); // Latest version
         ProcessVersionDTO dto = new ProcessVersionDTO(
                 latest.getId(),
@@ -117,9 +116,8 @@ public class ProcessVersionController {
                 latest.getVersion(),
                 latest.getDeploymentId(),
                 latest.getCategory(),
-                true
-        );
-        
+                true);
+
         return ResponseEntity.ok(dto);
     }
 

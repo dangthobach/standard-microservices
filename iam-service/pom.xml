@@ -249,6 +249,29 @@
             <version>${mapstruct.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- ===== Test Dependencies ===== -->
+
+        <!-- Spring Boot Test (JUnit 5, Mockito, AssertJ, Spring Test) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- H2 In-Memory Database for JPA tests -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Security Test -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

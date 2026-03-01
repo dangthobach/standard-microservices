@@ -11,8 +11,8 @@ spring:
       host: ${CONSUL_HOST:localhost}
       port: ${CONSUL_PORT:8500}
       discovery:
-        enabled: true
-        register: true
+        enabled: false
+        register: false
         instance-id: ${spring.application.name}:${random.value}
         service-name: ${spring.application.name}
         prefer-ip-address: true
@@ -21,6 +21,7 @@ spring:
         tags:
           - process
           - workflow
+      enabled: false
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:process_db}?currentSchema=flowable

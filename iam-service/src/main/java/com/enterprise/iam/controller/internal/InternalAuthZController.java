@@ -1,5 +1,6 @@
 package com.enterprise.iam.controller.internal;
 
+import com.enterprise.common.constant.ApiConstants;
 import com.enterprise.common.dto.ApiResponse;
 import com.enterprise.iam.entity.EndpointProtection;
 import com.enterprise.iam.repository.EndpointProtectionRepository;
@@ -22,7 +23,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/internal")
+@RequestMapping(ApiConstants.INTERNAL)
 @RequiredArgsConstructor
 @Tag(name = "Internal AuthZ API", description = "Internal APIs for Gateway Synchronization")
 public class InternalAuthZController {

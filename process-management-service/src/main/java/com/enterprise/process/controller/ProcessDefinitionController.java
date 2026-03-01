@@ -1,5 +1,6 @@
 package com.enterprise.process.controller;
 
+import com.enterprise.common.constant.ApiConstants;
 import com.enterprise.process.service.DeploymentService;
 import lombok.RequiredArgsConstructor;
 import org.flowable.bpmn.model.BpmnModel;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/process-definitions")
+@RequestMapping(ApiConstants.API_V1 + "/process-definitions")
 @RequiredArgsConstructor
 public class ProcessDefinitionController {
 

@@ -1,5 +1,6 @@
 package com.enterprise.process.controller;
 
+import com.enterprise.common.constant.ApiConstants;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.ManagementService;
 import org.flowable.engine.RuntimeService;
@@ -17,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping(ApiConstants.API_V1 + "/dashboard")
 @CrossOrigin(origins = "http://localhost:3000")
 public class DashboardController {
 

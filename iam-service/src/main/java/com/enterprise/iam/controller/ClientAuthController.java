@@ -1,5 +1,6 @@
 package com.enterprise.iam.controller;
 
+import com.enterprise.common.constant.ApiConstants;
 import com.enterprise.common.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping(ApiConstants.API_V1 + "/auth")
 @RequiredArgsConstructor
 public class ClientAuthController {
 

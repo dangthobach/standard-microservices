@@ -1,18 +1,20 @@
 package com.enterprise.process.integration;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.enterprise.common.constant.ApiConstants;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/connectors")
+@RequestMapping(ApiConstants.API_V1 + "/connectors")
+@RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
 public class IntegrationController {
 
-    @Autowired
-    private ConnectorService service;
+    private final ConnectorService service;
 
     @GetMapping
     public List<ConnectorDefinition> getAll() {
@@ -20,7 +22,7 @@ public class IntegrationController {
     }
 
     @GetMapping("/{id}")
-    public ConnectorDefinition getOne(@PathVariable String id) {
+    public ConnectorDefinition getOne(@PathVariable UUID id) {
         return service.getConnector(id);
     }
 
@@ -30,8 +32,8 @@ public class IntegrationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.deleteConnector(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

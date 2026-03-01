@@ -1,5 +1,6 @@
 package com.enterprise.business.controller;
 
+import com.enterprise.common.constant.ApiConstants;
 import com.enterprise.business.dto.QueueStatsDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,7 @@ import java.util.Properties;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/rabbitmq")
+@RequestMapping(ApiConstants.API_V1 + "/admin/rabbitmq")
 @RequiredArgsConstructor
 public class RabbitMQMonitoringController {
 
@@ -32,16 +33,16 @@ public class RabbitMQMonitoringController {
     @GetMapping("/queues")
     public ResponseEntity<List<QueueStatsDTO>> getQueueStats() {
         log.info("Fetching RabbitMQ queue statistics");
-        
+
         List<QueueStatsDTO> stats = new ArrayList<>();
-        
+
         // List of queues to monitor
         String[] queues = {
-            "product.status.queue",
-            "process.request.queue",
-            "process.request.dlq"
+                "product.status.queue",
+                "process.request.queue",
+                "process.request.dlq"
         };
-        
+
         for (String queueName : queues) {
             try {
                 QueueInformation info = amqpAdmin.getQueueInfo(queueName);
@@ -51,12 +52,12 @@ public class RabbitMQMonitoringController {
                     dto.setMessageCount(info.getMessageCount());
                     dto.setConsumerCount(info.getConsumerCount());
                     dto.setState("running");
-                    
+
                     // Additional properties if available
                     if (info.getMessageCount() > 0) {
                         dto.setMessagesReady(info.getMessageCount());
                     }
-                    
+
                     stats.add(dto);
                 } else {
                     // Queue doesn't exist
@@ -75,7 +76,7 @@ public class RabbitMQMonitoringController {
                 stats.add(dto);
             }
         }
-        
+
         return ResponseEntity.ok(stats);
     }
 
@@ -85,7 +86,7 @@ public class RabbitMQMonitoringController {
     @GetMapping("/queue/product-status")
     public ResponseEntity<QueueStatsDTO> getProductStatusQueueInfo() {
         String queueName = "product.status.queue";
-        
+
         try {
             QueueInformation info = amqpAdmin.getQueueInfo(queueName);
             if (info != null) {
@@ -95,7 +96,7 @@ public class RabbitMQMonitoringController {
                 dto.setConsumerCount(info.getConsumerCount());
                 dto.setState("running");
                 dto.setMessagesReady(info.getMessageCount());
-                
+
                 return ResponseEntity.ok(dto);
             } else {
                 return ResponseEntity.notFound().build();

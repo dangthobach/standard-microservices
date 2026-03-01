@@ -24,6 +24,20 @@ const api = axios.create({
   },
 });
 
+// Add request interceptor to inject the token
+api.interceptors.request.use(
+  async (config) => {
+    const token = await import('./authService').then(m => m.default.getAccessToken());
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export const taskApi = {
   getTasks: async (): Promise<Task[]> => {
     const response = await api.get('/flow/tasks');

@@ -1,5 +1,6 @@
 package com.enterprise.process.dmn;
 
+import com.enterprise.common.constant.ApiConstants;
 import org.flowable.dmn.api.DmnDecisionService;
 import org.flowable.dmn.api.DmnRepositoryService;
 import org.flowable.dmn.api.DmnHistoryService;
@@ -12,7 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/dmn")
+@RequestMapping(ApiConstants.API_V1 + "/dmn")
 @CrossOrigin(origins = "http://localhost:3000")
 public class DecisionController {
 

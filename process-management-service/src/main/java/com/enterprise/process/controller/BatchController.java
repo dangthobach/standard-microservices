@@ -1,5 +1,6 @@
 package com.enterprise.process.controller;
 
+import com.enterprise.common.constant.ApiConstants;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.TaskService;
 import org.flowable.engine.RepositoryService;
@@ -12,7 +13,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/batch")
+@RequestMapping(ApiConstants.API_V1 + "/batch")
 @CrossOrigin(origins = "http://localhost:3000")
 public class BatchController {
 
@@ -107,10 +108,9 @@ public class BatchController {
         for (BatchProcessStartRequest.ProcessStart processStart : request.getProcesses()) {
             try {
                 var processInstance = runtimeService.startProcessInstanceByKey(
-                    processStart.getProcessKey(),
-                    processStart.getBusinessKey(),
-                    processStart.getVariables()
-                );
+                        processStart.getProcessKey(),
+                        processStart.getBusinessKey(),
+                        processStart.getVariables());
                 successfulInstanceIds.add(processInstance.getId());
             } catch (Exception e) {
                 failedProcessKeys.add(processStart.getProcessKey());
@@ -249,7 +249,8 @@ public class BatchController {
                 query = "asc".equals(sortOrder) ? query.orderByTaskName().asc() : query.orderByTaskName().desc();
                 break;
             case "created":
-                query = "asc".equals(sortOrder) ? query.orderByTaskCreateTime().asc() : query.orderByTaskCreateTime().desc();
+                query = "asc".equals(sortOrder) ? query.orderByTaskCreateTime().asc()
+                        : query.orderByTaskCreateTime().desc();
                 break;
             case "due":
                 query = "asc".equals(sortOrder) ? query.orderByTaskDueDate().asc() : query.orderByTaskDueDate().desc();
@@ -297,10 +298,21 @@ public class BatchController {
         private String userId;
 
         // Getters and setters
-        public List<String> getTaskIds() { return taskIds; }
-        public void setTaskIds(List<String> taskIds) { this.taskIds = taskIds; }
-        public String getUserId() { return userId; }
-        public void setUserId(String userId) { this.userId = userId; }
+        public List<String> getTaskIds() {
+            return taskIds;
+        }
+
+        public void setTaskIds(List<String> taskIds) {
+            this.taskIds = taskIds;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public void setUserId(String userId) {
+            this.userId = userId;
+        }
     }
 
     public static class BatchTaskCompleteRequest {
@@ -308,61 +320,119 @@ public class BatchController {
         private Map<String, Object> variables = new HashMap<>();
 
         // Getters and setters
-        public List<String> getTaskIds() { return taskIds; }
-        public void setTaskIds(List<String> taskIds) { this.taskIds = taskIds; }
-        public Map<String, Object> getVariables() { return variables; }
-        public void setVariables(Map<String, Object> variables) { this.variables = variables; }
+        public List<String> getTaskIds() {
+            return taskIds;
+        }
+
+        public void setTaskIds(List<String> taskIds) {
+            this.taskIds = taskIds;
+        }
+
+        public Map<String, Object> getVariables() {
+            return variables;
+        }
+
+        public void setVariables(Map<String, Object> variables) {
+            this.variables = variables;
+        }
     }
 
     public static class BatchTaskAssignRequest {
         private List<TaskAssignment> assignments;
 
-        public List<TaskAssignment> getAssignments() { return assignments; }
-        public void setAssignments(List<TaskAssignment> assignments) { this.assignments = assignments; }
+        public List<TaskAssignment> getAssignments() {
+            return assignments;
+        }
+
+        public void setAssignments(List<TaskAssignment> assignments) {
+            this.assignments = assignments;
+        }
 
         public static class TaskAssignment {
             private String taskId;
             private String assignee;
 
-            public String getTaskId() { return taskId; }
-            public void setTaskId(String taskId) { this.taskId = taskId; }
-            public String getAssignee() { return assignee; }
-            public void setAssignee(String assignee) { this.assignee = assignee; }
+            public String getTaskId() {
+                return taskId;
+            }
+
+            public void setTaskId(String taskId) {
+                this.taskId = taskId;
+            }
+
+            public String getAssignee() {
+                return assignee;
+            }
+
+            public void setAssignee(String assignee) {
+                this.assignee = assignee;
+            }
         }
     }
 
     public static class BatchProcessRequest {
         private List<String> processInstanceIds;
 
-        public List<String> getProcessInstanceIds() { return processInstanceIds; }
-        public void setProcessInstanceIds(List<String> processInstanceIds) { this.processInstanceIds = processInstanceIds; }
+        public List<String> getProcessInstanceIds() {
+            return processInstanceIds;
+        }
+
+        public void setProcessInstanceIds(List<String> processInstanceIds) {
+            this.processInstanceIds = processInstanceIds;
+        }
     }
 
     public static class BatchProcessDeleteRequest extends BatchProcessRequest {
         private String deleteReason;
 
-        public String getDeleteReason() { return deleteReason; }
-        public void setDeleteReason(String deleteReason) { this.deleteReason = deleteReason; }
+        public String getDeleteReason() {
+            return deleteReason;
+        }
+
+        public void setDeleteReason(String deleteReason) {
+            this.deleteReason = deleteReason;
+        }
     }
 
     public static class BatchProcessStartRequest {
         private List<ProcessStart> processes;
 
-        public List<ProcessStart> getProcesses() { return processes; }
-        public void setProcesses(List<ProcessStart> processes) { this.processes = processes; }
+        public List<ProcessStart> getProcesses() {
+            return processes;
+        }
+
+        public void setProcesses(List<ProcessStart> processes) {
+            this.processes = processes;
+        }
 
         public static class ProcessStart {
             private String processKey;
             private String businessKey;
             private Map<String, Object> variables = new HashMap<>();
 
-            public String getProcessKey() { return processKey; }
-            public void setProcessKey(String processKey) { this.processKey = processKey; }
-            public String getBusinessKey() { return businessKey; }
-            public void setBusinessKey(String businessKey) { this.businessKey = businessKey; }
-            public Map<String, Object> getVariables() { return variables; }
-            public void setVariables(Map<String, Object> variables) { this.variables = variables; }
+            public String getProcessKey() {
+                return processKey;
+            }
+
+            public void setProcessKey(String processKey) {
+                this.processKey = processKey;
+            }
+
+            public String getBusinessKey() {
+                return businessKey;
+            }
+
+            public void setBusinessKey(String businessKey) {
+                this.businessKey = businessKey;
+            }
+
+            public Map<String, Object> getVariables() {
+                return variables;
+            }
+
+            public void setVariables(Map<String, Object> variables) {
+                this.variables = variables;
+            }
         }
     }
 }
-

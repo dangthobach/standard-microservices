@@ -4,6 +4,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -13,17 +16,24 @@ import java.time.Instant;
  *
  * Features:
  * - Soft delete instead of hard delete
+ * - Automatic filtering via @SQLRestriction (non-deleted records only)
  * - Track who deleted and when
  * - Can be restored
  *
+ * Important:
+ * - All JPA queries automatically exclude soft-deleted records
+ * - To query deleted records, use native queries or enable the "includeDeleted"
+ * filter
+ *
  * Usage:
+ * 
  * <pre>
  * @Entity
  * public class Organization extends SoftDeletableEntity<Long> {
  *     // Your fields here
  * }
  *
- * // In service:
+ * // Soft delete:
  * organization.softDelete("admin");
  * repository.save(organization);
  *
@@ -31,13 +41,16 @@ import java.time.Instant;
  * organization.restore();
  * repository.save(organization);
  *
- * // Query non-deleted only:
- * repository.findAll(where(isNotDeleted()));
+ * // All standard JPA queries automatically filter deleted records:
+ * repository.findAll(); // Only returns non-deleted
+ * repository.findById(id); // Returns empty if soft-deleted
  * </pre>
  */
 @MappedSuperclass
 @Getter
 @Setter
+@SQLRestriction("deleted = false")
+@FilterDef(name = "includeDeleted", parameters = @ParamDef(name = "isDeleted", type = Boolean.class))
 public abstract class SoftDeletableEntity<ID extends Serializable> extends AuditableEntity<ID> {
     private static final long serialVersionUID = 1L;
 
@@ -96,6 +109,6 @@ public abstract class SoftDeletableEntity<ID extends Serializable> extends Audit
     @Override
     public String toString() {
         return String.format("%s[id=%s, deleted=%s, deletedBy=%s, deletedAt=%s]",
-            getClass().getSimpleName(), getId(), deleted, deletedBy, deletedAt);
+                getClass().getSimpleName(), getId(), deleted, deletedBy, deletedAt);
     }
 }

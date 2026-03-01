@@ -1,5 +1,6 @@
 package com.enterprise.business.controller;
 
+import com.enterprise.common.constant.ApiConstants;
 import com.enterprise.business.command.CreateProductCommand;
 import com.enterprise.business.command.DeleteProductCommand;
 import com.enterprise.business.command.UpdateProductCommand;
@@ -22,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +34,8 @@ import java.util.UUID;
  * Product Management Controller
  * <p>
  * Demonstrates CQRS pattern implementation:
- * - Commands (Write): CreateProductCommand, UpdateProductCommand, DeleteProductCommand
+ * - Commands (Write): CreateProductCommand, UpdateProductCommand,
+ * DeleteProductCommand
  * - Queries (Read): GetProductByIdQuery, ListProductsQuery
  * - Uses CommandBus and QueryBus for decoupled business logic
  * <p>
@@ -46,190 +50,184 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping(ApiConstants.API_V1 + "/products")
 @RequiredArgsConstructor
 @Tag(name = "Product Management", description = "Product CRUD operations using CQRS pattern")
 public class ProductController {
 
-    private final CommandBus commandBus;
-    private final QueryBus queryBus;
-    private final RequestProducer requestProducer;
+        private final CommandBus commandBus;
+        private final QueryBus queryBus;
+        private final RequestProducer requestProducer;
 
-    /**
-     * Get all products with pagination
-     * <p>
-     * Example: GET /api/products?page=0&size=20
-     *
-     * @param page Page number (0-based, default: 0)
-     * @param size Page size (default: 20)
-     * @return Paginated list of products wrapped in ApiResponse
-     */
-    @GetMapping
-    @Operation(summary = "Get all products", description = "Retrieve paginated list of active products")
-    public ResponseEntity<ApiResponse<List<ProductDTO>>> getProducts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        log.info("REST request to get Products: page={}, size={}", page, size);
+        /**
+         * Get all products with pagination
+         * <p>
+         * Example: GET /api/products?page=0&size=20
+         *
+         * @param page Page number (0-based, default: 0)
+         * @param size Page size (default: 20)
+         * @return Paginated list of products wrapped in ApiResponse
+         */
+        @GetMapping
+        @Operation(summary = "Get all products", description = "Retrieve paginated list of active products")
+        public ResponseEntity<ApiResponse<List<ProductDTO>>> getProducts(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size) {
+                log.info("REST request to get Products: page={}, size={}", page, size);
 
-        ListProductsQuery query = new ListProductsQuery(page, size);
-        List<ProductDTO> products = queryBus.dispatch(query);
+                ListProductsQuery query = new ListProductsQuery(page, size);
+                List<ProductDTO> products = queryBus.dispatch(query);
 
-        return ResponseEntity.ok(
-                ApiResponse.success("Products retrieved successfully", products)
-        );
-    }
-
-    /**
-     * Get product by ID
-     * <p>
-     * Example: GET /api/products/550e8400-e29b-41d4-a716-446655440000
-     *
-     * @param id Product ID
-     * @return Product details wrapped in ApiResponse
-     */
-    @GetMapping("/{id}")
-    @Operation(summary = "Get product by ID", description = "Retrieve product details by ID")
-    public ResponseEntity<ApiResponse<ProductDTO>> getProduct(@PathVariable UUID id) {
-        log.info("REST request to get Product: {}", id);
-
-        GetProductByIdQuery query = new GetProductByIdQuery(id);
-        ProductDTO product = queryBus.dispatch(query);
-
-        return ResponseEntity.ok(
-                ApiResponse.success("Product retrieved successfully", product)
-        );
-    }
-
-    /**
-     * Create a new product and trigger workflow process
-     * <p>
-     * Example: POST /api/products
-     * <pre>
-     * {
-     *   "name": "Laptop Pro 15",
-     *   "sku": "LAP-PRO-15-001",
-     *   "price": 1299.99,
-     *   "stockQuantity": 50
-     * }
-     * </pre>
-     * <p>
-     * Workflow: After product creation, automatically triggers "product-approval-process"
-     * which will handle approval flow and status updates.
-     *
-     * @param request Create product request
-     * @return Created product ID wrapped in ApiResponse
-     */
-    @PostMapping
-    @PreAuthorize("hasAuthority('product:create')")
-    @Operation(
-        summary = "Create product", 
-        description = "Create a new product and trigger approval workflow"
-    )
-    public ResponseEntity<ApiResponse<UUID>> createProduct(@RequestBody CreateProductRequest request) {
-        log.info("REST request to create Product: sku={}", request.getSku());
-
-        CreateProductCommand command = CreateProductCommand.builder()
-                .name(request.getName())
-                .sku(request.getSku())
-                .description(request.getDescription())
-                .price(request.getPrice())
-                .category(request.getCategory())
-                .stockQuantity(request.getStockQuantity())
-                .build();
-
-        UUID productId = commandBus.dispatch(command);
-        log.info("Product created successfully: productId={}", productId);
-
-        // Trigger workflow process
-        try {
-            Map<String, Object> variables = new HashMap<>();
-            variables.put("productId", productId.toString());
-            variables.put("productName", request.getName());
-            variables.put("sku", request.getSku());
-            variables.put("price", request.getPrice().toString());
-            variables.put("category", request.getCategory() != null ? request.getCategory() : "");
-
-            UUID requestId = requestProducer.sendProcessRequest(
-                "product-approval-process",
-                "system", // TODO: Get from SecurityContext
-                productId.toString(), // Use productId as business key
-                variables,
-                5 // Normal priority
-            );
-            
-            log.info("Product approval workflow triggered: productId={}, requestId={}", productId, requestId);
-        } catch (Exception e) {
-            log.error("Failed to trigger workflow for product {}: {}", productId, e.getMessage(), e);
-            // Don't fail the request - product is already created
+                return ResponseEntity.ok(
+                                ApiResponse.success("Products retrieved successfully", products));
         }
 
-        return ResponseEntity.ok(
-                ApiResponse.success("Product created and approval workflow initiated", productId)
-        );
-    }
+        /**
+         * Get product by ID
+         * <p>
+         * Example: GET /api/products/550e8400-e29b-41d4-a716-446655440000
+         *
+         * @param id Product ID
+         * @return Product details wrapped in ApiResponse
+         */
+        @GetMapping("/{id}")
+        @Operation(summary = "Get product by ID", description = "Retrieve product details by ID")
+        public ResponseEntity<ApiResponse<ProductDTO>> getProduct(@PathVariable UUID id) {
+                log.info("REST request to get Product: {}", id);
 
-    /**
-     * Update an existing product
-     * <p>
-     * Example: PUT /api/products/550e8400-e29b-41d4-a716-446655440000
-     * <pre>
-     * {
-     *   "name": "Laptop Pro 15 Updated",
-     *   "price": 1199.99,
-     *   "stockQuantity": 45
-     * }
-     * </pre>
-     *
-     * @param id      Product ID
-     * @param request Update product request (all fields optional)
-     * @return Updated product ID wrapped in ApiResponse
-     */
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('product:write')")
-    @Operation(summary = "Update product", description = "Update an existing product")
-    public ResponseEntity<ApiResponse<UUID>> updateProduct(
-            @PathVariable UUID id,
-            @RequestBody UpdateProductRequest request
-    ) {
-        log.info("REST request to update Product: {}", id);
+                GetProductByIdQuery query = new GetProductByIdQuery(id);
+                ProductDTO product = queryBus.dispatch(query);
 
-        UpdateProductCommand command = UpdateProductCommand.builder()
-                .productId(id)
-                .name(request.getName())
-                .description(request.getDescription())
-                .price(request.getPrice())
-                .category(request.getCategory())
-                .stockQuantity(request.getStockQuantity())
-                .active(request.getActive())
-                .build();
+                return ResponseEntity.ok(
+                                ApiResponse.success("Product retrieved successfully", product));
+        }
 
-        UUID productId = commandBus.dispatch(command);
+        /**
+         * Create a new product and trigger workflow process
+         * <p>
+         * Example: POST /api/products
+         * 
+         * <pre>
+         * {
+         *   "name": "Laptop Pro 15",
+         *   "sku": "LAP-PRO-15-001",
+         *   "price": 1299.99,
+         *   "stockQuantity": 50
+         * }
+         * </pre>
+         * <p>
+         * Workflow: After product creation, automatically triggers
+         * "product-approval-process"
+         * which will handle approval flow and status updates.
+         *
+         * @param request Create product request
+         * @return Created product ID wrapped in ApiResponse
+         */
+        @PostMapping
+        @PreAuthorize("hasAuthority('product:create')")
+        @Operation(summary = "Create product", description = "Create a new product and trigger approval workflow")
+        public ResponseEntity<ApiResponse<UUID>> createProduct(@Valid @RequestBody CreateProductRequest request) {
+                log.info("REST request to create Product: sku={}", request.getSku());
 
-        return ResponseEntity.ok(
-                ApiResponse.success("Product updated successfully", productId)
-        );
-    }
+                CreateProductCommand command = CreateProductCommand.builder()
+                                .name(request.getName())
+                                .sku(request.getSku())
+                                .description(request.getDescription())
+                                .price(request.getPrice())
+                                .category(request.getCategory())
+                                .stockQuantity(request.getStockQuantity())
+                                .build();
 
-    /**
-     * Delete a product (soft delete)
-     * <p>
-     * Example: DELETE /api/products/550e8400-e29b-41d4-a716-446655440000
-     *
-     * @param id Product ID
-     * @return Success response
-     */
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('product:delete')")
-    @Operation(summary = "Delete product", description = "Soft delete a product")
-    public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable UUID id) {
-        log.info("REST request to delete Product: {}", id);
+                UUID productId = commandBus.dispatch(command);
+                log.info("Product created successfully: productId={}", productId);
 
-        DeleteProductCommand command = new DeleteProductCommand(id);
-        commandBus.dispatch(command);
+                // Trigger workflow process
+                try {
+                        Map<String, Object> variables = new HashMap<>();
+                        variables.put("productId", productId.toString());
+                        variables.put("productName", request.getName());
+                        variables.put("sku", request.getSku());
+                        variables.put("price", request.getPrice().toString());
+                        variables.put("category", request.getCategory() != null ? request.getCategory() : "");
 
-        return ResponseEntity.ok(
-                ApiResponse.success("Product deleted successfully")
-        );
-    }
+                        UUID requestId = requestProducer.sendProcessRequest(
+                                        "product-approval-process",
+                                        "system", // TODO: Get from SecurityContext
+                                        productId.toString(), // Use productId as business key
+                                        variables,
+                                        5 // Normal priority
+                        );
+
+                        log.info("Product approval workflow triggered: productId={}, requestId={}", productId,
+                                        requestId);
+                } catch (Exception e) {
+                        log.error("Failed to trigger workflow for product {}: {}", productId, e.getMessage(), e);
+                        // Don't fail the request - product is already created
+                }
+
+                return ResponseEntity.ok(
+                                ApiResponse.success("Product created and approval workflow initiated", productId));
+        }
+
+        /**
+         * Update an existing product
+         * <p>
+         * Example: PUT /api/products/550e8400-e29b-41d4-a716-446655440000
+         * 
+         * <pre>
+         * {
+         *   "name": "Laptop Pro 15 Updated",
+         *   "price": 1199.99,
+         *   "stockQuantity": 45
+         * }
+         * </pre>
+         *
+         * @param id      Product ID
+         * @param request Update product request (all fields optional)
+         * @return Updated product ID wrapped in ApiResponse
+         */
+        @PutMapping("/{id}")
+        @PreAuthorize("hasAuthority('product:write')")
+        @Operation(summary = "Update product", description = "Update an existing product")
+        public ResponseEntity<ApiResponse<UUID>> updateProduct(
+                        @PathVariable UUID id,
+                        @Valid @RequestBody UpdateProductRequest request) {
+                log.info("REST request to update Product: {}", id);
+
+                UpdateProductCommand command = UpdateProductCommand.builder()
+                                .productId(id)
+                                .name(request.getName())
+                                .description(request.getDescription())
+                                .price(request.getPrice())
+                                .category(request.getCategory())
+                                .stockQuantity(request.getStockQuantity())
+                                .active(request.getActive())
+                                .build();
+
+                UUID productId = commandBus.dispatch(command);
+
+                return ResponseEntity.ok(
+                                ApiResponse.success("Product updated successfully", productId));
+        }
+
+        /**
+         * Delete a product (soft delete)
+         * <p>
+         * Example: DELETE /api/products/550e8400-e29b-41d4-a716-446655440000
+         *
+         * @param id Product ID
+         * @return Success response
+         */
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasAuthority('product:delete')")
+        @Operation(summary = "Delete product", description = "Soft delete a product")
+        public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable UUID id) {
+                log.info("REST request to delete Product: {}", id);
+
+                DeleteProductCommand command = new DeleteProductCommand(id);
+                commandBus.dispatch(command);
+
+                return ResponseEntity.ok(
+                                ApiResponse.success("Product deleted successfully"));
+        }
 }

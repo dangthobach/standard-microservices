@@ -1,29 +1,34 @@
 package com.enterprise.business.entity;
 
+import com.enterprise.common.entity.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Product Attachment Entity
+ *
+ * Extends AuditableEntity which provides:
+ * - id (UUID), version (optimistic locking)
+ * - createdBy, createdAt (auto-populated from JWT on INSERT)
+ * - updatedBy, updatedAt (auto-populated on UPDATE)
+ *
+ * Tracks file attachments associated with products.
+ */
 @Entity
-@Table(name = "product_attachments")
+@Table(name = "product_attachments", indexes = {
+        @Index(name = "idx_attachment_product", columnList = "product_id"),
+        @Index(name = "idx_attachment_created", columnList = "created_at")
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EntityListeners(AuditingEntityListener.class)
-public class ProductAttachment {
-
-    @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(updatable = false, nullable = false)
-    private UUID id;
+public class ProductAttachment extends AuditableEntity<UUID> {
+    private static final long serialVersionUID = 1L;
 
     @Column(name = "product_id", nullable = false)
     private UUID productId;
@@ -31,7 +36,7 @@ public class ProductAttachment {
     @Column(name = "file_name", nullable = false)
     private String fileName;
 
-    @Column(name = "file_type", nullable = false)
+    @Column(name = "file_type", nullable = false, length = 100)
     private String fileType;
 
     @Column(name = "file_size", nullable = false)
@@ -39,8 +44,4 @@ public class ProductAttachment {
 
     @Column(name = "storage_key", nullable = false)
     private String storageKey;
-
-    @CreatedDate
-    @Column(name = "upload_date", nullable = false, updatable = false)
-    private LocalDateTime uploadDate;
 }
