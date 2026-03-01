@@ -35,6 +35,8 @@ import lombok.Setter;
 @MappedSuperclass
 public abstract class StatefulEntity<S extends Enum<S>, H extends HistoryEntity> extends SoftDeleteEntity {
 
+    private static final long serialVersionUID = 1L;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
     private S status;

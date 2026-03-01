@@ -31,6 +31,8 @@ import java.util.UUID;
 @EntityListeners(AuditingEntityListener.class)
 public abstract class AuditEntity implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")

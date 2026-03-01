@@ -27,6 +27,8 @@ import java.util.UUID;
 @org.hibernate.annotations.Immutable
 public abstract class HistoryEntity implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")

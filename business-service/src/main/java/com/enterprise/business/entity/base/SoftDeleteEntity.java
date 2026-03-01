@@ -23,6 +23,8 @@ import java.time.Instant;
 @SQLRestriction("deleted = false")
 public abstract class SoftDeleteEntity extends AuditEntity {
 
+    private static final long serialVersionUID = 1L;
+
     @Column(name = "deleted", nullable = false, columnDefinition = "boolean not null default false")
     private Boolean deleted = false;
 
