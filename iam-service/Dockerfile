@@ -8,6 +8,8 @@ COPY common-lib/pom.xml ./common-lib/pom.xml
 COPY gateway-service/pom.xml ./gateway-service/pom.xml
 COPY iam-service/pom.xml ./iam-service/pom.xml
 COPY business-service/pom.xml ./business-service/pom.xml
+COPY process-management-service/pom.xml ./process-management-service/pom.xml
+COPY integration-service/pom.xml ./integration-service/pom.xml
 
 # Step 2: Download dependencies (skipped for speed optimization)
 # RUN for i in 1 2 3; do \

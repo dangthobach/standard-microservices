@@ -11,7 +11,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(
-    async (config) => {
+    async (config: any) => {
         const token = await authService.getAccessToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -34,22 +34,22 @@ export interface User {
 export const iamApi = {
     getUsers: async (params?: any): Promise<User[]> => {
         const response = await api.get('/users', { params });
-        return response.data;
+        return response.data as any;
     },
 
     getUser: async (id: string): Promise<User> => {
         const response = await api.get(`/users/${id}`);
-        return response.data;
+        return response.data as any;
     },
 
     createUser: async (user: Partial<User>): Promise<User> => {
         const response = await api.post('/users', user);
-        return response.data;
+        return response.data as any;
     },
 
     updateUser: async (id: string, user: Partial<User>): Promise<User> => {
         const response = await api.put(`/users/${id}`, user);
-        return response.data;
+        return response.data as any;
     },
 
     deleteUser: async (id: string): Promise<void> => {

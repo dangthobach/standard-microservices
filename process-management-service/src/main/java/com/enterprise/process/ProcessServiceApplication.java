@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.enterprise.process", "com.enterprise.common"})
 @org.springframework.cloud.client.discovery.EnableDiscoveryClient
 public class ProcessServiceApplication {
 

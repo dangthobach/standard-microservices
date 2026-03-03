@@ -2,7 +2,6 @@ package com.enterprise.business.config;
 
 import com.enterprise.business.repository.base.SoftDeleteRepositoryImpl;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -21,19 +20,7 @@ import java.util.Optional;
  */
 @Configuration
 @EnableTransactionManagement
-@EnableJpaAuditing
 @EnableJpaRepositories(basePackageClasses = {
         RepositoryPackageMarker.class }, repositoryBaseClass = SoftDeleteRepositoryImpl.class)
 public class JpaConfig {
-
-    @Bean
-    public AuditorAware<String> auditorProvider() {
-        return () -> {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-                return Optional.of("system");
-            }
-            return Optional.of(auth.getName());
-        };
-    }
 }

@@ -57,7 +57,7 @@ public class RabbitMQPerformanceConfig {
      * RabbitTemplate with performance optimizations
      */
     @Bean
-    public RabbitTemplate rabbitTemplate(
+    public RabbitTemplate performanceRabbitTemplate(
             ConnectionFactory connectionFactory,
             Jackson2JsonMessageConverter messageConverter) {
         
