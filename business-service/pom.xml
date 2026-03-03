@@ -130,6 +130,12 @@
             <artifactId>protobuf-java</artifactId>
             <version>3.25.1</version>
         </dependency>
+
+        <!-- OpenAPI / Swagger UI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

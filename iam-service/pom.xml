@@ -250,6 +250,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- OpenAPI / Swagger UI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+
         <!-- ===== Test Dependencies ===== -->
 
         <!-- Spring Boot Test (JUnit 5, Mockito, AssertJ, Spring Test) -->
