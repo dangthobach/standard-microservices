@@ -132,7 +132,7 @@ services:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://host.docker.internal:5432/enterprise_db?currentSchema=iam
+      KC_DB_URL: jdbc:postgresql://host.docker.internal:5432/enterprise_db?currentSchema=keycloak
       KC_DB_USERNAME: ${POSTGRES_USER:-postgres}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       KC_HEALTH_ENABLED: "true"
@@ -275,9 +275,9 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       CONSUL_HOST: consul
       CONSUL_PORT: 8500
-      DB_HOST: postgres
+      DB_HOST: host.docker.internal
       DB_PORT: 5432
-      DB_NAME: enterprise_db?currentSchema=iam
+      DB_NAME: enterprise_db?currentSchema=iam_schema
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       KEYCLOAK_SERVER_URL: http://keycloak:8080
@@ -314,9 +314,9 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       CONSUL_HOST: consul
       CONSUL_PORT: 8500
-      DB_HOST: postgres
+      DB_HOST: host.docker.internal
       DB_PORT: 5432
-      DB_NAME: enterprise_db?currentSchema=business
+      DB_NAME: enterprise_db?currentSchema=business_schema
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -360,9 +360,9 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       CONSUL_HOST: consul
       CONSUL_PORT: 8500
-      DB_HOST: postgres
+      DB_HOST: host.docker.internal
       DB_PORT: 5432
-      DB_NAME: enterprise_db?currentSchema=flowable
+      DB_NAME: process_db
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092

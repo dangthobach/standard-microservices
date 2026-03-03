@@ -10,6 +10,8 @@ COPY iam-service/pom.xml ./iam-service/pom.xml
 COPY business-service/pom.xml ./business-service/pom.xml
 COPY process-management-service/pom.xml ./process-management-service/pom.xml
 COPY integration-service/pom.xml ./integration-service/pom.xml
+COPY process-management-service/pom.xml ./process-management-service/pom.xml
+COPY integration-service/pom.xml ./integration-service/pom.xml
 
 # Step 2: Download dependencies
 RUN for i in 1 2 3; do \
@@ -24,8 +26,8 @@ RUN for i in 1 2 3; do \
 COPY common-lib/src ./common-lib/src
 COPY integration-service/src ./integration-service/src
 
-# Step 4: Build
-RUN mvn clean package -DskipTests -o -pl integration-service -am
+# Step 4: Build with offline mode (dependencies already cached)
+RUN mvn clean package -DskipTests -pl integration-service -am
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

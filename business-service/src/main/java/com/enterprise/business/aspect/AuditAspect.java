@@ -29,7 +29,7 @@ import java.util.UUID;
  * Intercepts methods annotated with @Audited
  */
 @Aspect
-@Component
+@Component("businessAuditAspect")
 @RequiredArgsConstructor
 @Slf4j
 public class AuditAspect {

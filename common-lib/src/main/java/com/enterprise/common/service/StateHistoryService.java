@@ -34,6 +34,7 @@ import java.util.List;
 @Slf4j
 @Transactional
 @org.springframework.boot.autoconfigure.condition.ConditionalOnClass(name = "org.springframework.data.jpa.repository.JpaRepository")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "enterprise.state-history.enabled", havingValue = "true", matchIfMissing = false)
 public class StateHistoryService {
 
         private final StateHistoryRepository stateHistoryRepository;

@@ -26,7 +26,7 @@ const api = axios.create({
 
 // Add request interceptor to inject the token
 api.interceptors.request.use(
-  async (config) => {
+  async (config: any) => {
     const token = await import('./authService').then(m => m.default.getAccessToken());
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
