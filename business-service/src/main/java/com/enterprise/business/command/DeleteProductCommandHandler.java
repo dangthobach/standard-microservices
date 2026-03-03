@@ -2,6 +2,7 @@ package com.enterprise.business.command;
 
 import com.enterprise.business.entity.Product;
 import com.enterprise.business.repository.ProductRepository;
+import com.enterprise.business.service.ProductStateService;
 import com.enterprise.common.cqrs.CommandHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DeleteProductCommandHandler implements CommandHandler<DeleteProductCommand, Void> {
 
     private final ProductRepository productRepository;
+    private final ProductStateService productStateService;
 
     /**
      * Handle DeleteProductCommand
@@ -51,12 +53,10 @@ public class DeleteProductCommandHandler implements CommandHandler<DeleteProduct
         Product product = productRepository.findById(command.productId())
                 .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Product not found: " + command.productId()
-                ));
+                        "Product not found: " + command.productId()));
 
-        // Step 2: Soft delete
-        product.setDeleted(true);
-        productRepository.save(product);
+        // Step 2: Soft delete using StateService
+        productStateService.softDelete(product, "DELETE-CMD");
 
         log.info("✅ Product deleted (soft): id={}, sku={}", product.getId(), product.getSku());
 

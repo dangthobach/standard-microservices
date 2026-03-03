@@ -63,7 +63,132 @@ public interface ProductRepository extends SoftDeleteRepository<Product, UUID> {
 }
 ```
 
-## 3. Implementing Complex Relationships (Many-to-Many)
+## 3. Creating a Stateful Entity with History Tracking
+
+When an entity requires state transitions (e.g., DRAFT -> PENDING -> APPROVED) and history tracking (audit logging of all changes), use the provided state machine pattern. This pattern uses `business-service` components to persist history records along with the main entity in a single transaction.
+
+### 3.1 History Entity Definition
+
+First, create a history entity extending `HistoryEntity` to store the snapshots:
+
+```java
+import com.enterprise.business.entity.base.HistoryEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.util.UUID;
+
+@Entity
+@Table(name = "product_history")
+@Getter
+@Setter
+@NoArgsConstructor
+public class ProductHistory extends HistoryEntity {
+    
+    @Builder
+    public ProductHistory(UUID entityId, String action, String snapshot, String diff,
+                          String changedBy, String correlationId, String previousStatus,
+                          String currentStatus, String ipAddress) {
+        super(entityId, "PRODUCT", action, snapshot, diff, changedBy, correlationId, previousStatus, currentStatus, ipAddress);
+    }
+}
+```
+
+Provide a JPA repository for it:
+
+```java
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.UUID;
+
+public interface ProductHistoryRepository extends JpaRepository<ProductHistory, UUID> {
+}
+```
+
+### 3.2 Main Entity Definition
+
+Next, extend `com.enterprise.business.entity.base.StatefulEntity` (NOT the `common-lib` version), specifying the status enum and history entity class. You MUST override `canTransitionTo()` to define valid state transitions and `createHistorySnapshot()` to generate history records.
+
+```java
+import com.enterprise.business.entity.base.StatefulEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+// ... other imports
+
+@Entity
+@Table(name = "products")
+public class Product extends StatefulEntity<ProductStatus, ProductHistory> {
+
+    private String name;
+    
+    @Override
+    public boolean canTransitionTo(ProductStatus newStatus) {
+        if (getStatus() == null) return newStatus == ProductStatus.DRAFT;
+        
+        return switch (getStatus()) {
+            case DRAFT -> newStatus == ProductStatus.APPROVED;
+            case APPROVED -> newStatus == ProductStatus.DRAFT;
+            default -> false;
+        };
+    }
+
+    @Override
+    public ProductHistory createHistorySnapshot(
+            String action, ProductStatus previousStatus, String changedBy,
+            String snapshot, String diff, String correlationId) {
+        
+        return ProductHistory.builder()
+                .entityId(this.getId())
+                .action(action)
+                .snapshot(snapshot)
+                .diff(diff)
+                .changedBy(changedBy)
+                .correlationId(correlationId)
+                .previousStatus(previousStatus != null ? previousStatus.name() : null)
+                .currentStatus(this.getStatus() != null ? this.getStatus().name() : null)
+                .build();
+    }
+}
+```
+
+### 3.3 State Service Implementation
+
+To save `StatefulEntity` instances with history, **do not** call `repository.save()` directly. Instead, create a service extending `BaseStatefulService`:
+
+```java
+import com.enterprise.business.service.base.BaseStatefulService;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ProductStateService extends BaseStatefulService<Product, ProductHistory, ProductStatus, ProductRepository> {
+
+    public ProductStateService(ProductRepository repository,
+                               ProductHistoryRepository historyRepository,
+                               ObjectMapper objectMapper,
+                               JsonDiffUtil jsonDiffUtil) {
+        super(repository, historyRepository, objectMapper, jsonDiffUtil);
+    }
+
+    @Override
+    protected ProductStatus getInitialStatus() {
+        return ProductStatus.DRAFT;
+    }
+}
+```
+
+### 3.4 Performing Operations
+
+Inject and use `ProductStateService` in your command handlers or higher-level business logic:
+
+- **Create**: `productStateService.create(entity, correlationId)`
+- **Update values**: `productStateService.saveWithHistory(entity, "UPDATE", correlationId)`
+- **Change state**: `productStateService.transitionTo(entity, newStatus, correlationId)`
+- **Soft delete**: `productStateService.softDelete(entity, correlationId)`
+- **Restore**: `productStateService.restore(entity, correlationId)`
+
+## 4. Implementing Complex Relationships (Many-to-Many)
 
 When dealing with Many-to-Many (`@ManyToMany`) relationships, care must be taken to ensure performance, avoid lazy loading exceptions, and maintain clean database schemas.
 

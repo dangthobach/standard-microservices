@@ -2,6 +2,7 @@ package com.enterprise.business.command;
 
 import com.enterprise.business.entity.Product;
 import com.enterprise.business.repository.ProductRepository;
+import com.enterprise.business.service.ProductStateService;
 import com.enterprise.common.cqrs.CommandHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ import java.util.UUID;
 public class UpdateProductCommandHandler implements CommandHandler<UpdateProductCommand, UUID> {
 
     private final ProductRepository productRepository;
+    private final ProductStateService productStateService;
 
     /**
      * Handle UpdateProductCommand
@@ -56,8 +58,7 @@ public class UpdateProductCommandHandler implements CommandHandler<UpdateProduct
         Product product = productRepository.findById(command.productId())
                 .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Product not found: " + command.productId()
-                ));
+                        "Product not found: " + command.productId()));
 
         // Step 2: Update fields (only non-null fields)
         if (command.name() != null) {
@@ -79,8 +80,8 @@ public class UpdateProductCommandHandler implements CommandHandler<UpdateProduct
             product.setActive(command.active());
         }
 
-        // Step 3: Persist changes
-        product = productRepository.save(product);
+        // Step 3: Persist changes using StateService
+        product = productStateService.saveWithHistory(product, "UPDATE", "UPDATE-CMD");
 
         log.info("✅ Product updated: id={}, sku={}", product.getId(), product.getSku());
 

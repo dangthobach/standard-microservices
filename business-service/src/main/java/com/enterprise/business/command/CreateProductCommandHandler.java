@@ -2,6 +2,7 @@ package com.enterprise.business.command;
 
 import com.enterprise.business.entity.Product;
 import com.enterprise.business.repository.ProductRepository;
+import com.enterprise.business.service.ProductStateService;
 import com.enterprise.common.cqrs.CommandHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ import java.util.UUID;
 public class CreateProductCommandHandler implements CommandHandler<CreateProductCommand, UUID> {
 
     private final ProductRepository productRepository;
+    private final ProductStateService productStateService;
 
     /**
      * Handle CreateProductCommand
@@ -65,8 +67,10 @@ public class CreateProductCommandHandler implements CommandHandler<CreateProduct
                 .active(true)
                 .build();
 
-        // Step 3: Persist to database
-        product = productRepository.save(product);
+        // Step 3: Persist to database using StateService to track history
+        // correlationId can be added later if available in the command context, using
+        // "CREATE-CMD" for now
+        product = productStateService.create(product, "CREATE-CMD");
 
         log.info("✅ Product created: id={}, sku={}", product.getId(), product.getSku());
 
@@ -82,8 +86,7 @@ public class CreateProductCommandHandler implements CommandHandler<CreateProduct
     private void validateUniqueness(CreateProductCommand command) {
         if (productRepository.existsBySkuAndDeletedFalse(command.sku())) {
             throw new IllegalArgumentException(
-                    "Product with SKU '" + command.sku() + "' already exists"
-            );
+                    "Product with SKU '" + command.sku() + "' already exists");
         }
     }
 }

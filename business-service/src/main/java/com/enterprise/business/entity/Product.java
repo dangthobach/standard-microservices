@@ -1,6 +1,6 @@
 package com.enterprise.business.entity;
 
-import com.enterprise.common.entity.StatefulEntity;
+import com.enterprise.business.entity.base.StatefulEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,7 +36,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Product extends StatefulEntity<UUID, ProductStatus> {
+public class Product extends StatefulEntity<ProductStatus, ProductHistory> {
     private static final long serialVersionUID = 1L;
 
     @Column(nullable = false, length = 100)
@@ -81,7 +81,7 @@ public class Product extends StatefulEntity<UUID, ProductStatus> {
      * State transition validation
      */
     @Override
-    protected boolean canTransitionTo(ProductStatus newStatus) {
+    public boolean canTransitionTo(ProductStatus newStatus) {
         if (getStatus() == null) {
             return newStatus == ProductStatus.DRAFT;
         }
@@ -95,6 +95,28 @@ public class Product extends StatefulEntity<UUID, ProductStatus> {
             case ACTIVE -> newStatus == ProductStatus.INACTIVE;
             case INACTIVE -> newStatus == ProductStatus.ACTIVE;
         };
+    }
+
+    @Override
+    public ProductHistory createHistorySnapshot(
+            String action,
+            ProductStatus previousStatus,
+            String changedBy,
+            String snapshot,
+            String diff,
+            String correlationId) {
+
+        return ProductHistory.builder()
+                .entityId(this.getId())
+                .action(action)
+                .snapshot(snapshot)
+                .diff(diff)
+                .changedBy(changedBy)
+                .correlationId(correlationId)
+                .previousStatus(previousStatus != null ? previousStatus.name() : null)
+                .currentStatus(this.getStatus() != null ? this.getStatus().name() : null)
+                // Note: ipAddress might not be available at entity level, can be set in service
+                .build();
     }
 
     @Builder

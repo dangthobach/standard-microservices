@@ -1,16 +1,16 @@
 package com.enterprise.business.repository;
 
 import com.enterprise.business.entity.Product;
+import com.enterprise.business.repository.base.SoftDeleteRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, UUID> {
+public interface ProductRepository extends SoftDeleteRepository<Product, UUID> {
 
     Optional<Product> findBySku(String sku);
 

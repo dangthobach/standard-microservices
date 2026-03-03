@@ -5,6 +5,7 @@ import com.enterprise.business.entity.Product;
 import com.enterprise.business.entity.ProductStatus;
 import com.enterprise.business.proto.ProductStatusProto;
 import com.enterprise.business.repository.ProductRepository;
+import com.enterprise.business.service.ProductStateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -23,6 +24,7 @@ import java.util.UUID;
 public class ProductStatusConsumer {
 
     private final ProductRepository productRepository;
+    private final ProductStateService productStateService;
 
     @RabbitListener(queues = RabbitMQConfig.QUEUE_PRODUCT_STATUS)
     @Transactional
@@ -37,14 +39,15 @@ public class ProductStatusConsumer {
 
             // Convert String from protobuf to ProductStatus enum
             ProductStatus newStatus = ProductStatus.valueOf(event.getNewStatus());
-            product.changeStatus(newStatus, "process-service", "Status updated via workflow");
-            product.setProcessInstanceId(event.getProcessInstanceId());
 
+            // Update fields
+            product.setProcessInstanceId(event.getProcessInstanceId());
             if (newStatus == ProductStatus.ACTIVE) {
                 product.setActive(true);
             }
 
-            productRepository.save(product);
+            // Save with history state transition
+            productStateService.transitionTo(product, newStatus, "process-service", event.getProcessInstanceId());
             log.info("Updated product status in DB successfully.");
 
         } catch (IllegalArgumentException e) {
