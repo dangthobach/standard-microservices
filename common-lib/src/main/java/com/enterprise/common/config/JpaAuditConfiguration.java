@@ -1,14 +1,15 @@
 package com.enterprise.common.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-<<<<<<< HEAD
-=======
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
->>>>>>> 020fef45ac3df722878d8fb63bf20adbb95dd5e3
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.util.Optional;
 
@@ -22,9 +23,10 @@ import java.util.Optional;
  * - updatedAt: Timestamp on UPDATE
  *
  * How it works:
- * 1. Checks if Spring Security is present in classpath
- * 2. If present, delegates to SpringSecurityAuditorAware to extract username from JWT
- * 3. If absent, uses a default auditor returning "system"
+ * 1. Extracts JWT token from Spring Security context
+ * 2. Reads "preferred_username" claim (Keycloak standard)
+ * 3. Falls back to "sub" (subject) if preferred_username not found
+ * 4. Uses "system" for background tasks without authentication
  *
  * Usage:
  * 
@@ -32,9 +34,9 @@ import java.util.Optional;
  * @Entity
  * public class User extends AuditableEntity<UUID> {
  *     // Your fields here
+ *     // createdBy, updatedBy auto-populated from JWT
  * }
  * </pre>
-<<<<<<< HEAD
  *
  * Example JWT Claims:
  * 
@@ -48,15 +50,12 @@ import java.util.Optional;
  * </pre>
  *
  * Extracted auditor: "john.doe@example.com"
-=======
->>>>>>> 020fef45ac3df722878d8fb63bf20adbb95dd5e3
  */
 @Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
 @ConditionalOnClass(name = "org.springframework.data.jpa.repository.JpaRepository")
 public class JpaAuditConfiguration {
 
-<<<<<<< HEAD
     /**
      * Provides the current auditor (username) from JWT token
      *
@@ -75,17 +74,41 @@ public class JpaAuditConfiguration {
                 .filter(Authentication::isAuthenticated)
                 .map(this::extractUsername)
                 .or(() -> Optional.of("system")); // Fallback for background tasks
-=======
-    @Bean(name = "auditorProvider")
-    @ConditionalOnClass(name = "org.springframework.security.core.Authentication")
-    public AuditorAware<String> securityAuditorProvider() {
-        return new SpringSecurityAuditorAware();
->>>>>>> 020fef45ac3df722878d8fb63bf20adbb95dd5e3
     }
 
-    @Bean(name = "auditorProvider")
-    @ConditionalOnMissingClass("org.springframework.security.core.Authentication")
-    public AuditorAware<String> defaultAuditorProvider() {
-        return () -> Optional.of("system");
+    /**
+     * Extract username from Authentication object
+     *
+     * Supports:
+     * - JwtAuthenticationToken (OAuth2 Resource Server)
+     * - UsernamePasswordAuthenticationToken
+     * - Other authentication types
+     *
+     * @param authentication Spring Security authentication
+     * @return Username extracted from JWT or authentication name
+     */
+    private String extractUsername(Authentication authentication) {
+        // If JWT token authentication
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+            Jwt jwt = jwtAuth.getToken();
+
+            // Try preferred_username (Keycloak standard)
+            String preferredUsername = jwt.getClaimAsString("preferred_username");
+            if (preferredUsername != null && !preferredUsername.isBlank()) {
+                return preferredUsername;
+            }
+
+            // Try email
+            String email = jwt.getClaimAsString("email");
+            if (email != null && !email.isBlank()) {
+                return email;
+            }
+
+            // Fallback to subject (user ID)
+            return jwt.getSubject();
+        }
+
+        // Fallback to authentication name
+        return authentication.getName();
     }
 }
