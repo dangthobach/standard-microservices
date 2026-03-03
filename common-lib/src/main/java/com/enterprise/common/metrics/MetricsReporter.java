@@ -5,7 +5,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -22,7 +25,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Automatic metrics reporter for microservices
- * Reports CPU, memory, database, and request metrics to Redis for dashboard consumption
+ * Reports CPU, memory, database, and request metrics to Redis for dashboard
+ * consumption
  *
  * Database Monitoring:
  * - Auto-detects DataSource bean (HikariCP)
@@ -32,9 +36,16 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 @Component
 @ConditionalOnProperty(prefix = "metrics.reporter", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnClass(name = "org.springframework.data.redis.core.StringRedisTemplate")
+@ConditionalOnBean(ObjectMapper.class)
 public class MetricsReporter {
 
-    private final StringRedisTemplate redisTemplate;
+    @Autowired(required = false)
+    private StringRedisTemplate redisTemplate;
+
+    @Autowired(required = false)
+    private ReactiveStringRedisTemplate reactiveStringRedisTemplate;
+
     private final ObjectMapper objectMapper;
 
     // Optional: DataSource and MeterRegistry for database metrics
@@ -53,14 +64,13 @@ public class MetricsReporter {
 
     /**
      * Constructor with optional DataSource and MeterRegistry
-     * DataSource and MeterRegistry are optional - services without DB won't have them
+     * DataSource and MeterRegistry are optional - services without DB won't have
+     * them
      */
     public MetricsReporter(
-            StringRedisTemplate redisTemplate,
             ObjectMapper objectMapper,
             @Autowired(required = false) DataSource dataSource,
             @Autowired(required = false) MeterRegistry meterRegistry) {
-        this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.dataSource = dataSource;
         this.meterRegistry = meterRegistry;
@@ -75,6 +85,7 @@ public class MetricsReporter {
 
     /**
      * Record a request with its latency
+     * 
      * @param latencyMs Request latency in milliseconds
      */
     public void recordRequest(long latencyMs) {
@@ -104,21 +115,24 @@ public class MetricsReporter {
         try {
             String key = "dashboard:service:" + serviceName + ":health";
 
+            double cpu = getCpuUsage();
+            double memory = getMemoryUsage();
+
             Map<String, Object> healthData = new HashMap<>();
             healthData.put("name", serviceName);
-            healthData.put("cpu", getCpuUsage());
-            healthData.put("memory", getMemoryUsage());
+            healthData.put("cpu", cpu);
+            healthData.put("memory", memory);
             healthData.put("uptime", getUptime());
             healthData.put("requests", requestCount.get());
             healthData.put("errors", errorCount.get());
-            healthData.put("status", determineStatus(getCpuUsage(), getMemoryUsage()));
+            healthData.put("status", determineStatus(cpu, memory));
             healthData.put("lastHeartbeat", Instant.now().toString());
 
             String json = objectMapper.writeValueAsString(healthData);
-            redisTemplate.opsForValue().set(key, json, Duration.ofSeconds(30)); // 30s TTL
+            setValueWithTtl(key, json, Duration.ofSeconds(30)); // 30s TTL
 
             log.debug("Reported health metrics for {}: CPU={}%, Memory={}%",
-                serviceName, healthData.get("cpu"), healthData.get("memory"));
+                    serviceName, healthData.get("cpu"), healthData.get("memory"));
         } catch (Exception e) {
             log.error("Failed to report health metrics: {}", e.getMessage(), e);
         }
@@ -171,10 +185,10 @@ public class MetricsReporter {
             dbData.put("cacheHitRate", 0.0);
 
             String json = objectMapper.writeValueAsString(dbData);
-            redisTemplate.opsForValue().set(key, json, Duration.ofSeconds(30)); // 30s TTL
+            setValueWithTtl(key, json, Duration.ofSeconds(30)); // 30s TTL
 
             log.debug("Reported database metrics for {}: connections={}/{}, poolUsage={}%",
-                serviceName, totalConnections, maxConnections, String.format("%.1f", poolUsage));
+                    serviceName, totalConnections, maxConnections, String.format("%.1f", poolUsage));
 
         } catch (Exception e) {
             log.warn("Failed to report database metrics for {}: {}", serviceName, e.getMessage());
@@ -269,6 +283,36 @@ public class MetricsReporter {
      * Update exponential moving average in Redis
      */
     private void updateExponentialMovingAverage(String key, double newValue, double alpha) {
+        if (reactiveStringRedisTemplate != null) {
+            reactiveStringRedisTemplate.opsForValue()
+                    .get(key)
+                    .defaultIfEmpty(String.valueOf(newValue))
+                    .map(currentValueStr -> {
+                        double currentValue;
+                        try {
+                            currentValue = Double.parseDouble(currentValueStr);
+                        } catch (NumberFormatException e) {
+                            currentValue = newValue;
+                        }
+                        double ema = alpha * newValue + (1 - alpha) * currentValue;
+                        return String.valueOf(ema);
+                    })
+                    .flatMap(ema -> reactiveStringRedisTemplate.opsForValue()
+                            .set(key, ema, Duration.ofMinutes(5)))
+                    .doOnError(e -> log.debug("Failed to update EMA for key {}: {}", key, e.getMessage()))
+                    .subscribe(
+                            unused -> {
+                            },
+                            error -> log.warn("Redis EMA update failed for key {}: {}", key, error.getMessage())
+                    );
+            return;
+        }
+
+        if (redisTemplate == null) {
+            // No Redis template available, skip
+            return;
+        }
+
         try {
             String currentValueStr = redisTemplate.opsForValue().get(key);
             double currentValue = currentValueStr != null ? Double.parseDouble(currentValueStr) : newValue;
@@ -277,6 +321,31 @@ public class MetricsReporter {
         } catch (Exception e) {
             // Initialize with new value if error
             redisTemplate.opsForValue().set(key, String.valueOf(newValue), Duration.ofMinutes(5));
+        }
+    }
+
+    private void setValueWithTtl(String key, String value, Duration ttl) {
+        if (reactiveStringRedisTemplate != null) {
+            reactiveStringRedisTemplate.opsForValue()
+                    .set(key, value, ttl)
+                    .doOnError(e -> log.debug("Failed to write key {} to Redis (reactive): {}", key, e.getMessage()))
+                    .subscribe(
+                            unused -> {
+                            },
+                            error -> log.warn("Reactive Redis write failed for key {}: {}", key, error.getMessage())
+                    );
+            return;
+        }
+
+        if (redisTemplate == null) {
+            log.debug("Skipping Redis write for key {} because no Redis template is available", key);
+            return;
+        }
+
+        try {
+            redisTemplate.opsForValue().set(key, value, ttl);
+        } catch (Exception e) {
+            log.debug("Failed to write key {} to Redis: {}", key, e.getMessage());
         }
     }
 }

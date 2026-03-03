@@ -5,6 +5,7 @@ import feign.Request;
 import feign.Retryer;
 import feign.codec.ErrorDecoder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,6 +22,7 @@ import org.springframework.context.annotation.Configuration;
  * @since 1.0.0
  */
 @Configuration
+@ConditionalOnClass(name = "feign.Feign")
 public class FeignClientConfiguration {
 
     @Value("${feign.client.config.default.logger-level:BASIC}")

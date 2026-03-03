@@ -67,6 +67,19 @@ public class ApiResponse<T> {
     @Schema(description = "Distributed span ID for request tracing", example = "1a2b3c4d5e6f7g8h")
     private String spanId;
 
+    /**
+     * Request identifier for end-to-end correlation across systems.
+     * <p>
+     * Convention:
+     * - Prefer using {@link #withRequestId(String)} or relying on
+     *   {@code GlobalResponseBodyAdvice} to populate this value from
+     *   the incoming request (X-Request-Id) or tracing context.
+     * - Controllers should avoid setting this manually unless they have a
+     *   strong reason to override the auto-generated value.
+     */
+    @Schema(description = "Request ID for end-to-end correlation across systems", example = "req-1234567890")
+    private String requestId;
+
     @Schema(description = "Response timestamp", example = "2025-12-31T00:00:00Z")
     @Builder.Default
     private Instant timestamp = Instant.now();
@@ -208,6 +221,17 @@ public class ApiResponse<T> {
      */
     public ApiResponse<T> withTraceId(String traceId) {
         this.traceId = traceId;
+        return this;
+    }
+
+    /**
+     * Add request ID to the response for cross-system correlation.
+     *
+     * @param requestId Request ID
+     * @return This ApiResponse with request ID
+     */
+    public ApiResponse<T> withRequestId(String requestId) {
+        this.requestId = requestId;
         return this;
     }
 }

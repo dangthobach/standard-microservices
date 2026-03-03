@@ -2,6 +2,7 @@ package com.enterprise.common.config;
 
 import com.enterprise.common.cqrs.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.ResolvableType;
@@ -42,6 +43,7 @@ import java.util.Map;
  */
 @Slf4j
 @Configuration
+@ConditionalOnBean({InMemoryCommandBus.class, InMemoryQueryBus.class})
 public class CqrsConfiguration {
 
     private final ApplicationContext applicationContext;

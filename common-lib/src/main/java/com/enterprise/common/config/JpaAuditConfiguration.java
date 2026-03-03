@@ -1,5 +1,6 @@
 package com.enterprise.common.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
@@ -28,6 +29,7 @@ import java.util.Optional;
  * 4. Uses "system" for background tasks without authentication
  *
  * Usage:
+ * 
  * <pre>
  * @Entity
  * public class User extends AuditableEntity<UUID> {
@@ -37,6 +39,7 @@ import java.util.Optional;
  * </pre>
  *
  * Example JWT Claims:
+ * 
  * <pre>
  * {
  *   "sub": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
@@ -50,6 +53,7 @@ import java.util.Optional;
  */
 @Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
+@ConditionalOnClass(name = "org.springframework.data.jpa.repository.JpaRepository")
 public class JpaAuditConfiguration {
 
     /**
@@ -66,10 +70,10 @@ public class JpaAuditConfiguration {
     @Bean
     public AuditorAware<String> auditorProvider() {
         return () -> Optional.ofNullable(SecurityContextHolder.getContext())
-            .map(SecurityContext::getAuthentication)
-            .filter(Authentication::isAuthenticated)
-            .map(this::extractUsername)
-            .or(() -> Optional.of("system")); // Fallback for background tasks
+                .map(SecurityContext::getAuthentication)
+                .filter(Authentication::isAuthenticated)
+                .map(this::extractUsername)
+                .or(() -> Optional.of("system")); // Fallback for background tasks
     }
 
     /**

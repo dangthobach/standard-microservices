@@ -5,6 +5,7 @@ import com.enterprise.common.util.TracingUtil;
 import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -16,7 +17,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 /**
  * Global Response Body Advice
  * <p>
- * Automatically enriches all ApiResponse objects with distributed tracing information
+ * Automatically enriches all ApiResponse objects with distributed tracing
+ * information
  * (trace ID and span ID) before sending to the client.
  * <p>
  * Features:
@@ -24,7 +26,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
  * - Works with Micrometer Tracing
  * - No need to manually add tracing in every controller
  * <p>
- * This advice only modifies ApiResponse objects. Other response types are unchanged.
+ * This advice only modifies ApiResponse objects. Other response types are
+ * unchanged.
  *
  * @author Enterprise Team
  * @since 1.0.0
@@ -32,6 +35,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 @Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class GlobalResponseBodyAdvice implements ResponseBodyAdvice<Object> {
 
     private final Tracer tracer;
@@ -69,25 +73,34 @@ public class GlobalResponseBodyAdvice implements ResponseBodyAdvice<Object> {
             MediaType selectedContentType,
             Class<? extends HttpMessageConverter<?>> selectedConverterType,
             ServerHttpRequest request,
-            ServerHttpResponse response
-    ) {
+            ServerHttpResponse response) {
         if (body instanceof ApiResponse<?> apiResponse) {
-            enrichWithTracing(apiResponse);
+            enrichWithTracing(apiResponse, request);
         }
 
         return body;
     }
 
     /**
-     * Add tracing information to ApiResponse.
+     * Add tracing and requestId information to ApiResponse.
      *
      * @param apiResponse ApiResponse to enrich
+     * @param request     Current HTTP request (may contain X-Request-Id header)
      */
-    private void enrichWithTracing(ApiResponse<?> apiResponse) {
+    private void enrichWithTracing(ApiResponse<?> apiResponse, ServerHttpRequest request) {
         try {
             // Get traceId and spanId from current span
             String traceId = TracingUtil.getTraceIdWithFallback(tracer);
             String spanId = TracingUtil.getSpanIdWithFallback(tracer);
+
+            // Derive requestId from header if present, otherwise fall back to traceId
+            String requestId = null;
+            if (request != null && request.getHeaders() != null) {
+                requestId = request.getHeaders().getFirst("X-Request-Id");
+            }
+            if (requestId == null) {
+                requestId = traceId;
+            }
 
             // Only set if not already set by controller
             if (apiResponse.getTraceId() == null && traceId != null) {
@@ -98,11 +111,16 @@ public class GlobalResponseBodyAdvice implements ResponseBodyAdvice<Object> {
                 apiResponse.setSpanId(spanId);
             }
 
-            log.trace("Enriched response with tracing: traceId={}, spanId={}", traceId, spanId);
+            if (apiResponse.getRequestId() == null && requestId != null) {
+                apiResponse.setRequestId(requestId);
+            }
+
+            log.trace("Enriched response with tracing: traceId={}, spanId={}, requestId={}",
+                    traceId, spanId, requestId);
 
         } catch (Exception e) {
-            log.warn("Failed to enrich response with tracing information", e);
-            // Don't fail the request if tracing fails
+            log.warn("Failed to enrich response with tracing/requestId information", e);
+            // Don't fail the request if tracing enrichment fails
         }
     }
 }

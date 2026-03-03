@@ -8,6 +8,8 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,32 +22,34 @@ import org.springframework.context.annotation.Configuration;
  * - Sets up global security requirements
  */
 @Configuration
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+@ConditionalOnClass(name = "org.springdoc.webmvc.ui.SwaggerUiConfigProperties")
 public class OpenAPIConfig {
 
-    @Value("${spring.application.name:Standard Microservice}")
-    private String applicationName;
+        @Value("${spring.application.name:Standard Microservice}")
+        private String applicationName;
 
-    @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title(applicationName + " API")
-                        .version("1.0.0")
-                        .description("API Documentation for " + applicationName)
-                        .contact(new Contact()
-                                .name("Enterprise Team")
-                                .email("team@enterprise.com")
-                                .url("https://enterprise.com"))
-                        .license(new License()
-                                .name("Apache 2.0")
-                                .url("https://www.apache.org/licenses/LICENSE-2.0")))
-                .addSecurityItem(new SecurityRequirement().addList("bearer-jwt"))
-                .components(new Components()
-                        .addSecuritySchemes("bearer-jwt",
-                                new SecurityScheme()
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")
-                                        .description("Enter your JWT token in the format: Bearer <token>")));
-    }
+        @Bean
+        public OpenAPI customOpenAPI() {
+                return new OpenAPI()
+                                .info(new Info()
+                                                .title(applicationName + " API")
+                                                .version("1.0.0")
+                                                .description("API Documentation for " + applicationName)
+                                                .contact(new Contact()
+                                                                .name("Enterprise Team")
+                                                                .email("team@enterprise.com")
+                                                                .url("https://enterprise.com"))
+                                                .license(new License()
+                                                                .name("Apache 2.0")
+                                                                .url("https://www.apache.org/licenses/LICENSE-2.0")))
+                                .addSecurityItem(new SecurityRequirement().addList("bearer-jwt"))
+                                .components(new Components()
+                                                .addSecuritySchemes("bearer-jwt",
+                                                                new SecurityScheme()
+                                                                                .type(SecurityScheme.Type.HTTP)
+                                                                                .scheme("bearer")
+                                                                                .bearerFormat("JWT")
+                                                                                .description("Enter your JWT token in the format: Bearer <token>")));
+        }
 }
