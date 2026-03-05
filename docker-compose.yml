@@ -399,6 +399,11 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       CONSUL_HOST: consul
       CONSUL_PORT: 8500
+      DB_HOST: host.docker.internal
+      DB_PORT: 5432
+      DB_NAME: enterprise_db?currentSchema=integration_schema
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}

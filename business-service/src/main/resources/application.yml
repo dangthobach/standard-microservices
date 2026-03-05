@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: business-service
+  main:
+    allow-bean-definition-overriding: true
 
   # Virtual Threads Configuration (Java 21+ / Spring Boot 3.2+)
   threads:
@@ -166,6 +168,6 @@ feign:
 # MinIO (SeaweedFS S3) Configuration
 minio:
   url: ${MINIO_URL:http://localhost:8333}
-  access-key: ${MINIO_ACCESS_KEY}
-  secret-key: ${MINIO_SECRET_KEY}
+  access-key: ${MINIO_ACCESS_KEY:admin}
+  secret-key: ${MINIO_SECRET_KEY:admin}
   bucket: ${MINIO_BUCKET:product-files}
