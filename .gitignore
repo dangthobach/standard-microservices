@@ -53,3 +53,7 @@ spring-boot-devtools.properties
 
 # Git
 .git/
+
+# Exclude lock files and factory paths
+*.lock
+*factory*
