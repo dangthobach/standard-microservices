@@ -8,7 +8,7 @@ Write-Host ""
 
 # Bước 1: Infrastructure Layer (Databases, Cache, Message Queue)
 Write-Host "[1/5] Starting Infrastructure Layer..." -ForegroundColor Yellow
-docker-compose up -d consul postgres redis zookeeper
+docker-compose up -d consul redis zookeeper
 
 Write-Host "Waiting for infrastructure services to be healthy..." -ForegroundColor Gray
 Start-Sleep -Seconds 10
@@ -48,6 +48,12 @@ docker-compose up -d gateway-service
 Write-Host "  - Starting Business Service..." -ForegroundColor Gray
 docker-compose up -d business-service
 
+Write-Host "  - Starting Process Management Service..." -ForegroundColor Gray
+docker-compose up -d process-management-service
+
+Write-Host "  - Starting Integration Service..." -ForegroundColor Gray
+docker-compose up -d integration-service
+
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "All services started!" -ForegroundColor Green
@@ -63,6 +69,8 @@ Write-Host "Service URLs:" -ForegroundColor Cyan
 Write-Host "  - Gateway:      http://localhost:8080" -ForegroundColor White
 Write-Host "  - IAM Service:  http://localhost:8081" -ForegroundColor White
 Write-Host "  - Business:     http://localhost:8082" -ForegroundColor White
+Write-Host "  - Process Mgmt: http://localhost:8083" -ForegroundColor White
+Write-Host "  - Integration:  http://localhost:8084" -ForegroundColor White
 Write-Host "  - Keycloak:     http://localhost:8180" -ForegroundColor White
 Write-Host "  - Consul UI:    http://localhost:8500" -ForegroundColor White
 Write-Host "  - Grafana:      http://localhost:3000 (admin/admin)" -ForegroundColor White
@@ -74,7 +82,7 @@ Write-Host ""
 Write-Host "Checking application service health..." -ForegroundColor Cyan
 Start-Sleep -Seconds 10
 
-$services = @("iam-service", "gateway-service", "business-service")
+$services = @("iam-service", "gateway-service", "business-service", "process-management-service", "integration-service")
 foreach ($service in $services) {
     $status = docker inspect --format='{{.State.Health.Status}}' $service 2>$null
     if ($status -eq "healthy") {
