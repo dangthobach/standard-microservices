@@ -23,7 +23,7 @@ spring:
 
   # DataSource Configuration
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:integration_db}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:enterprise_db}?currentSchema=${DB_SCHEMA:integration_schema}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
@@ -35,12 +35,24 @@ spring:
   # JPA Configuration
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: ${DB_SCHEMA:integration_schema}
         format_sql: true
+
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    create-schemas: true
+    default-schema: ${DB_SCHEMA:integration_schema}
+    schemas: ${DB_SCHEMA:integration_schema}
 
   # Cache Configuration (L1 + L2)
   cache:

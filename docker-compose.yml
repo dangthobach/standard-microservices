@@ -277,7 +277,8 @@ services:
       CONSUL_PORT: 8500
       DB_HOST: host.docker.internal
       DB_PORT: 5432
-      DB_NAME: enterprise_db?currentSchema=iam_schema
+      DB_NAME: enterprise_db
+      DB_SCHEMA: iam_schema
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       KEYCLOAK_SERVER_URL: http://keycloak:8080
@@ -316,7 +317,8 @@ services:
       CONSUL_PORT: 8500
       DB_HOST: host.docker.internal
       DB_PORT: 5432
-      DB_NAME: enterprise_db?currentSchema=business_schema
+      DB_NAME: enterprise_db
+      DB_SCHEMA: business_schema
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -362,7 +364,8 @@ services:
       CONSUL_PORT: 8500
       DB_HOST: host.docker.internal
       DB_PORT: 5432
-      DB_NAME: process_db
+      DB_NAME: enterprise_db
+      DB_SCHEMA: flowable
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -401,7 +404,8 @@ services:
       CONSUL_PORT: 8500
       DB_HOST: host.docker.internal
       DB_PORT: 5432
-      DB_NAME: enterprise_db?currentSchema=integration_schema
+      DB_NAME: enterprise_db
+      DB_SCHEMA: integration_schema
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       REDIS_HOST: redis

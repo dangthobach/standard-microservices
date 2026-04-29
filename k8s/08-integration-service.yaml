@@ -33,7 +33,9 @@ spec:
         - name: DB_PORT
           value: "5432"
         - name: DB_NAME
-          value: "integration_db"
+          value: "enterprise_db"
+        - name: DB_SCHEMA
+          value: "integration_schema"
         - name: DB_USER
           valueFrom:
             secretKeyRef:

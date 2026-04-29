@@ -11,9 +11,10 @@ data:
   keycloak.realm: "enterprise"
 
   # PostgreSQL Configuration
-  postgres.iam.host: "postgres-iam-service"
-  postgres.business.host: "postgres-business-service"
-  postgres.process.host: "postgres-process-service"
+  # Standardized: single PostgreSQL service for all microservices (schema-per-service).
+  postgres.iam.host: "postgres-service"
+  postgres.business.host: "postgres-service"
+  postgres.process.host: "postgres-service"
 
   # Redis Configuration
   redis.host: "redis-service"

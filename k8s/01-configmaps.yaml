@@ -11,7 +11,7 @@ data:
       profiles:
         active: prod
       datasource:
-        url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+        url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=${DB_SCHEMA:business_schema}
         username: ${DB_USER}
         password: ${DB_PASSWORD}
         hikari:
@@ -20,6 +20,19 @@ data:
           connection-timeout: 20000
           idle-timeout: 300000
           max-lifetime: 1800000
+      flyway:
+        enabled: true
+        locations: classpath:db/migration
+        baseline-on-migrate: true
+        create-schemas: true
+        default-schema: ${DB_SCHEMA:business_schema}
+        schemas: ${DB_SCHEMA:business_schema}
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        properties:
+          hibernate:
+            default_schema: ${DB_SCHEMA:business_schema}
       rabbitmq:
         host: ${RABBITMQ_HOST}
         port: ${RABBITMQ_PORT}
@@ -69,12 +82,25 @@ data:
       profiles:
         active: prod
       datasource:
-        url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+        url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=${DB_SCHEMA:iam_schema}
         username: ${DB_USER}
         password: ${DB_PASSWORD}
         hikari:
           maximum-pool-size: 30
           minimum-idle: 5
+      flyway:
+        enabled: true
+        locations: classpath:db/migration
+        baseline-on-migrate: true
+        create-schemas: true
+        default-schema: ${DB_SCHEMA:iam_schema}
+        schemas: ${DB_SCHEMA:iam_schema}
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        properties:
+          hibernate:
+            default_schema: ${DB_SCHEMA:iam_schema}
       redis:
         host: ${REDIS_HOST}
         port: ${REDIS_PORT}
@@ -104,12 +130,19 @@ data:
       profiles:
         active: prod
       datasource:
-        url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+        url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=${DB_SCHEMA:flowable}
         username: ${DB_USER}
         password: ${DB_PASSWORD}
         hikari:
           maximum-pool-size: 40
           minimum-idle: 10
+      flyway:
+        enabled: true
+        locations: classpath:db/migration
+        baseline-on-migrate: true
+        create-schemas: true
+        default-schema: ${DB_SCHEMA:flowable}
+        schemas: ${DB_SCHEMA:flowable}
       rabbitmq:
         host: ${RABBITMQ_HOST}
         port: ${RABBITMQ_PORT}
@@ -117,6 +150,7 @@ data:
         password: ${RABBITMQ_PASSWORD}
     
     flowable:
+      database-schema: ${DB_SCHEMA:flowable}
       database-schema-update: true
       async-executor-activate: true
       async-executor:

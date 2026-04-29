@@ -35,7 +35,7 @@ spring:
 
   # DataSource Configuration
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:business_db}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:enterprise_db}?currentSchema=${DB_SCHEMA:business_schema}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -54,17 +54,29 @@ spring:
   # JPA Configuration
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: ${DB_SCHEMA:business_schema}
         format_sql: true
         use_sql_comments: true
         jdbc:
           batch_size: 20
         order_inserts: true
         order_updates: true
+
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    create-schemas: true
+    default-schema: ${DB_SCHEMA:business_schema}
+    schemas: ${DB_SCHEMA:business_schema}
 
   # Security OAuth2 Configuration
   security:

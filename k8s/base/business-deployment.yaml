@@ -59,7 +59,9 @@ spec:
                   name: app-config
                   key: postgres.business.host
             - name: DB_NAME
-              value: "business_db"
+              value: "enterprise_db"
+            - name: DB_SCHEMA
+              value: "business_schema"
             - name: DB_USER
               valueFrom:
                 secretKeyRef:

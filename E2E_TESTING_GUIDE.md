@@ -84,17 +84,17 @@ docker run -d --name postgres \
   -e POSTGRES_PASSWORD=postgres \
   -p 5432:5432 postgres:15
 
-# Create databases
-psql -U postgres -c "CREATE DATABASE business_db;"
-psql -U postgres -c "CREATE DATABASE iam_db;"
-psql -U postgres -c "CREATE DATABASE process_db;"
+# Create single database for the platform
+psql -U postgres -c "CREATE DATABASE enterprise_db;"
+# Schemas are created automatically by Flyway on service startup (create-schemas=true).
 ```
 
 ### 3. Verify Migrations Applied
 
 **IAM Service - Check roles and users exist:**
 ```sql
--- Connect to iam_db
+-- Connect to enterprise_db and IAM schema
+SET search_path TO iam_schema;
 SELECT name FROM roles WHERE name IN ('ROLE_CHECKER', 'ROLE_CONFIRMER');
 -- Should return 2 rows
 
@@ -219,8 +219,9 @@ Business Service consumes → Updates Product.status in DB
 
 ### 2. Database Verification
 
-**Product Status in business_db:**
+**Product Status in `enterprise_db` (`business_schema`):**
 ```sql
+SET search_path TO business_schema;
 SELECT id, name, sku, status, active, process_instance_id 
 FROM products 
 WHERE sku LIKE 'LAP-TEST%'
@@ -235,8 +236,9 @@ After checker: status=PENDING_CONFIRMATION
 After confirmer: status=ACTIVE, active=true
 ```
 
-**Process Instance in process_db:**
+**Process Instance in `enterprise_db` (`flowable` schema):**
 ```sql
+SET search_path TO flowable;
 SELECT * FROM act_ru_execution 
 WHERE business_key_ = '<productId>';
 -- Should show active execution until completion

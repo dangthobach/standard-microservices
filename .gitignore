@@ -17,6 +17,7 @@ target/
 .mvn/
 mvnw
 mvnw.cmd
+.m2/
 
 # Logs
 *.log

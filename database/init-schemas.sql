@@ -13,12 +13,20 @@
 
 DROP SCHEMA IF EXISTS iam_schema CASCADE;
 DROP SCHEMA IF EXISTS business_schema CASCADE;
+DROP SCHEMA IF EXISTS integration_schema CASCADE;
+DROP SCHEMA IF EXISTS flowable CASCADE;
 
 CREATE SCHEMA iam_schema;
 COMMENT ON SCHEMA iam_schema IS 'Schema for IAM (Identity and Access Management) Service';
 
 CREATE SCHEMA business_schema;
 COMMENT ON SCHEMA business_schema IS 'Schema for Business Service';
+
+CREATE SCHEMA integration_schema;
+COMMENT ON SCHEMA integration_schema IS 'Schema for Integration Service';
+
+CREATE SCHEMA flowable;
+COMMENT ON SCHEMA flowable IS 'Schema for Process Management Service (Flowable engine)';
 
 -- ============================================================================
 -- 2. CREATE USERS (Optional - for security isolation)
@@ -365,7 +373,9 @@ BEGIN
     RAISE NOTICE '  Assign roles via Keycloak role mapping';
     RAISE NOTICE '';
     RAISE NOTICE 'Connection strings:';
-    RAISE NOTICE '  IAM:      jdbc:postgresql://localhost:5432/postgres?currentSchema=iam_schema';
-    RAISE NOTICE '  Business: jdbc:postgresql://localhost:5432/postgres?currentSchema=business_schema';
+    RAISE NOTICE '  IAM:         jdbc:postgresql://localhost:5432/enterprise_db?currentSchema=iam_schema';
+    RAISE NOTICE '  Business:    jdbc:postgresql://localhost:5432/enterprise_db?currentSchema=business_schema';
+    RAISE NOTICE '  Integration: jdbc:postgresql://localhost:5432/enterprise_db?currentSchema=integration_schema';
+    RAISE NOTICE '  Process:     jdbc:postgresql://localhost:5432/enterprise_db?currentSchema=flowable';
     RAISE NOTICE '============================================================================';
 END $$;

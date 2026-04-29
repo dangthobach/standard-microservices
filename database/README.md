@@ -7,9 +7,12 @@ This directory contains SQL scripts to initialize PostgreSQL database for the En
 ## Architecture
 
 **Single Database, Multiple Schemas Approach:**
-- Database: `postgres` (existing)
-- Schema 1: `iam_schema` (IAM Service)
-- Schema 2: `business_schema` (Business Service)
+- Database: `enterprise_db` (single database for the platform)
+- Schemas:
+  - `iam_schema` (IAM Service)
+  - `business_schema` (Business Service)
+  - `integration_schema` (Integration Service)
+  - `flowable` (Process Management Service / Flowable)
 
 This approach provides:
 - ✅ **Logical isolation** between services
@@ -25,7 +28,7 @@ This approach provides:
 - Connection details:
   - Host: `localhost`
   - Port: `5432`
-  - Database: `postgres`
+  - Database: `enterprise_db`
   - Username: `postgres`
   - Password: `postgres`
 
@@ -115,7 +118,7 @@ spring:
     name: iam-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=iam_schema
+    url: jdbc:postgresql://localhost:5432/enterprise_db?currentSchema=iam_schema
     username: iam_user
     password: iam_password_123
     driver-class-name: org.postgresql.Driver
@@ -151,7 +154,7 @@ spring:
     name: business-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=business_schema
+    url: jdbc:postgresql://localhost:5432/enterprise_db?currentSchema=business_schema
     username: business_user
     password: business_password_123
     driver-class-name: org.postgresql.Driver

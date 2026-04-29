@@ -252,6 +252,12 @@ git push origin main
 
 Flyway migrations run automatically on service startup.
 
+### PostgreSQL deployment checklist
+
+Chi tiết triển khai Postgres on-prem/Docker/K8s (bao gồm bước kiểm tra DB/service/schema khớp cấu hình hiện tại):
+
+- `docs/POSTGRES_DEPLOYMENT_GUIDE.md`
+
 ### Kubernetes Production
 
 ```bash
@@ -266,6 +272,9 @@ kubectl exec -it deployment/business-service -n product-mgmt-prod -- \
 kubectl exec -it deployment/business-service -n product-mgmt-prod -- \
   mvn flyway:info
 ```
+
+> Lưu ý: Kiến trúc hiện tại dùng **1 database `enterprise_db` + schema-per-service**.
+> Nếu cần kiểm tra Flyway trực tiếp bằng `psql`, hãy set `search_path` về schema tương ứng và query `flyway_schema_history`.
 
 ---
 
@@ -364,7 +373,7 @@ kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
 ```bash
 # Check Flyway schema history
 kubectl exec -it deployment/business-service -n product-mgmt-prod -- \
-  psql -h postgres-service -U postgres -d business_db -c "SELECT * FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 5;"
+  psql -h postgres-service -U postgres -d enterprise_db -c "SET search_path TO business_schema; SELECT * FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 5;"
 
 # Repair migration
 kubectl exec -it deployment/business-service -n product-mgmt-prod -- \
@@ -436,11 +445,11 @@ kubectl patch hpa business-service-hpa -n product-mgmt-prod \
 ```bash
 # Backup
 kubectl exec -it postgres-service-pod -n product-mgmt-prod -- \
-  pg_dump -U postgres business_db > backup-$(date +%Y%m%d).sql
+  pg_dump -U postgres enterprise_db > backup-$(date +%Y%m%d).sql
 
 # Restore
 kubectl exec -i postgres-service-pod -n product-mgmt-prod -- \
-  psql -U postgres business_db < backup-20260204.sql
+  psql -U postgres enterprise_db < backup-20260204.sql
 ```
 
 ### RabbitMQ Backup
